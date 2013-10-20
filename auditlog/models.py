@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -49,7 +50,7 @@ class LogEntry(models.Model):
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
     changes = models.TextField(blank=True, verbose_name=_("change message"))
-    actor = models.ForeignKey('auth.User', blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
 
     class Meta:

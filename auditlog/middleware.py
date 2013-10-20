@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.functional import curry
 from auditlog.models import LogEntry
@@ -15,13 +16,13 @@ class AuditLogMiddleware(object):
         else:
             user = None
 
-        insert_user = curry(self.insert_user, user)
-        pre_save.connect(insert_user, sender=LogEntry, dispatch_uid=(self.__class__, request), weak=False)
+        set_actor = curry(self.set_actor, user)
+        pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=(self.__class__, request), weak=False)
 
     def process_response(self, request, response):
         pre_save.disconnect(dispatch_uid=(self.__class__, request))
         return response
 
-    def insert_user(self, user, sender, instance, **kwargs):
-        if sender == LogEntry and isinstance(instance, sender):
+    def set_actor(self, user, sender, instance, **kwargs):
+        if sender == LogEntry and isinstance(user, settings.AUTH_USER_MODEL):
             instance.actor = user
