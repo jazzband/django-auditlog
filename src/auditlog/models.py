@@ -15,27 +15,31 @@ class LogEntryManager(models.Manager):
         Helper method to create a new log entry. This method automatically fills in some data when it is left out. It
         was created to keep things DRY.
         """
-        if not 'content_type' in kwargs:
-            kwargs['content_type'] = ContentType.objects.get_for_model(instance)
-        if not 'object_pk' in kwargs:
-            kwargs['object_pk'] = instance.pk
-        if not 'object_repr' in kwargs:
-            kwargs['object_repr'] = str(instance)
-        if not 'object_id' in kwargs:
-            pk_field = instance._meta.pk.name
-            pk = getattr(instance, pk_field, None)
-            if isinstance(pk, int):
-                kwargs['object_id'] = pk
+        changes = kwargs.get('changes', None)
 
-        # Delete log entries with the same pk as a newly created model. This should only happen when all records were
-        # deleted / the table was truncated.
-        if kwargs.get('action', None) is LogEntry.Action.CREATE:
-            if kwargs.get('object_id', None) is not None and self.exists(object_id=kwargs.get('object_id')):
-                self.filter(object_id=kwargs.get('object_id')).delete()
-            else:
-                self.filter(object_pk=kwargs.get('object_pk', '')).delete()
+        if changes is not None:
+            if not 'content_type' in kwargs:
+                kwargs['content_type'] = ContentType.objects.get_for_model(instance)
+            if not 'object_pk' in kwargs:
+                kwargs['object_pk'] = instance.pk
+            if not 'object_repr' in kwargs:
+                kwargs['object_repr'] = str(instance)
+            if not 'object_id' in kwargs:
+                pk_field = instance._meta.pk.name
+                pk = getattr(instance, pk_field, None)
+                if isinstance(pk, int):
+                    kwargs['object_id'] = pk
 
-        return self.create(**kwargs)
+            # Delete log entries with the same pk as a newly created model. This should only happen when all records were
+            # deleted / the table was truncated.
+            if kwargs.get('action', None) is LogEntry.Action.CREATE:
+                if kwargs.get('object_id', None) is not None and self.exists(object_id=kwargs.get('object_id')):
+                    self.filter(object_id=kwargs.get('object_id')).delete()
+                else:
+                    self.filter(object_pk=kwargs.get('object_pk', '')).delete()
+
+            return self.create(**kwargs)
+        return None
 
 
 class LogEntry(models.Model):
