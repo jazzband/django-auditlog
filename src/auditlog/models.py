@@ -33,10 +33,10 @@ class LogEntryManager(models.Manager):
             # Delete log entries with the same pk as a newly created model. This should only happen when all records were
             # deleted / the table was truncated.
             if kwargs.get('action', None) is LogEntry.Action.CREATE:
-                if kwargs.get('object_id', None) is not None and self.exists(object_id=kwargs.get('object_id')):
-                    self.filter(object_id=kwargs.get('object_id')).delete()
+                if kwargs.get('object_id', None) is not None and self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).exists():
+                    self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).delete()
                 else:
-                    self.filter(object_pk=kwargs.get('object_pk', '')).delete()
+                    self.filter(content_type=kwargs.get('content_type'), object_pk=kwargs.get('object_pk', '')).delete()
 
             return self.create(**kwargs)
         return None
