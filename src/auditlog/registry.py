@@ -53,7 +53,8 @@ class AuditLogModelRegistry(object):
         """
         Connect signals for the model.
         """
-        for signal, receiver in self._signals:
+        for signal in self._signals:
+            receiver = self._signals[signal]
             signal.connect(receiver, sender=model, dispatch_uid=self._dispatch_uid(signal, model))
 
     def _disconnect_signals(self, model):
@@ -70,4 +71,4 @@ class AuditLogModelRegistry(object):
         return (self.__class__, model, signal)
 
 
-registry = AuditLogModelRegistry()
+auditlog = AuditLogModelRegistry()

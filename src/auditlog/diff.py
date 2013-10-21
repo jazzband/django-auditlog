@@ -23,8 +23,8 @@ def model_instance_diff(old, new):
         fields = set()
 
     for field in fields:
-        old_value = getattr(old, field.name, None)
-        new_value = getattr(new, field.name, None)
+        old_value = str(getattr(old, field.name, None))
+        new_value = str(getattr(new, field.name, None))
 
         if old_value != new_value:
             diff[field.name] = (old_value, new_value)

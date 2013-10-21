@@ -19,13 +19,23 @@ class LogEntryManager(models.Manager):
             kwargs['content_type'] = ContentType.objects.get_for_model(instance)
         if not 'object_pk' in kwargs:
             kwargs['object_pk'] = instance.pk
+        if not 'object_repr' in kwargs:
+            kwargs['object_repr'] = str(instance)
         if not 'object_id' in kwargs:
             pk_field = instance._meta.pk.name
             pk = getattr(instance, pk_field, None)
             if isinstance(pk, int):
                 kwargs['object_id'] = pk
 
-        self.create(**kwargs)
+        # Delete log entries with the same pk as a newly created model. This should only happen when all records were
+        # deleted / the table was truncated.
+        if kwargs.get('action', None) is LogEntry.Action.CREATE:
+            if kwargs.get('object_id', None) is not None and self.exists(object_id=kwargs.get('object_id')):
+                self.filter(object_id=kwargs.get('object_id')).delete()
+            else:
+                self.filter(object_pk=kwargs.get('object_pk', '')).delete()
+
+        return self.create(**kwargs)
 
 
 class LogEntry(models.Model):
@@ -53,6 +63,8 @@ class LogEntry(models.Model):
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
 
+    objects = LogEntryManager()
+
     class Meta:
         get_latest_by = 'timestamp'
         ordering = ['-timestamp']
@@ -61,13 +73,15 @@ class LogEntry(models.Model):
 
     def __unicode__(self):
         if self.action == self.Action.CREATE:
-            return _("Created {repr:s}").format(self.object_repr)
+            fstring = _("Created {repr:s}")
         elif self.action == self.Action.UPDATE:
-            return _("Updated {repr:s}").format(self.object_repr)
+            fstring = _("Updated {repr:s}")
         elif self.action == self.Action.DELETE:
-            return _("Deleted {repr:s}").format(self.object_repr)
+            fstring = _("Deleted {repr:s}")
         else:
-            return u'{verbose_name:s} #{id:s}'.format(verbose_name=self._meta.verbose_name.capitalize(), id=self.id)
+            fstring = _("Logged {repr:s}")
+
+        return fstring.format(repr=self.object_repr)
 
 
 class AuditLogHistoryField(generic.GenericRelation):
@@ -76,8 +90,13 @@ class AuditLogHistoryField(generic.GenericRelation):
     easier to implement the audit log in models, and makes future changes easier.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, pk_indexable=True, **kwargs):
         kwargs['to'] = LogEntry
-        kwargs['object_id_field'] = 'object_id'
+
+        if pk_indexable:
+            kwargs['object_id_field'] = 'object_id'
+        else:
+            kwargs['object_id_field'] = 'object_pk'
+
         kwargs['content_type_field'] = 'content_type'
         super(AuditLogHistoryField, self).__init__(**kwargs)
