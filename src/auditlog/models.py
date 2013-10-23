@@ -44,7 +44,13 @@ class LogEntryManager(models.Manager):
 
 class LogEntry(models.Model):
     """
-    Represents an entry in the audit log, containing data.
+    Represents an entry in the audit log. The content type is saved along with the textual and numeric (if available)
+    primary key, as well as the textual representation of the object when it was saved. It holds the action performed
+    and the fields that were changed in the transaction.
+
+    If AuditLogMiddleware is used, the actor will be set automatically. Keep in mind that editing / re-saving LogEntry
+    instances may set the actor to a wrong value - editing LogEntry instances is not recommended (and it should not be
+    necessary).
     """
 
     class Action:
@@ -92,6 +98,10 @@ class AuditLogHistoryField(generic.GenericRelation):
     """
     A subclass of django.contrib.contenttypes.generic.GenericRelation that sets some default variables. This makes it
     easier to implement the audit log in models, and makes future changes easier.
+
+    By default this field will assume that your primary keys are numeric, simply because this is the most common case.
+    However, if you have a non-integer primary key, you can simply pass pk_indexable=False to the constructor, and
+    Auditlog will fall back to using a non-indexed text based field for this model.
     """
 
     def __init__(self, pk_indexable=True, **kwargs):
