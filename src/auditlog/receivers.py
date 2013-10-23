@@ -26,16 +26,20 @@ def log_update(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through auditlog.registry.registry instead.
     """
     if instance.pk is not None:
-        old = sender.objects.get(pk=instance.pk)
-        new = instance
+        try:
+            old = sender.objects.get(pk=instance.pk)
+        except sender.DoesNotExist:
+            pass
+        else:
+            new = instance
 
-        changes = model_instance_diff(old, new)
+            changes = model_instance_diff(old, new)
 
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.UPDATE,
-            changes=json.dumps(changes),
-        )
+            log_entry = LogEntry.objects.log_create(
+                instance,
+                action=LogEntry.Action.UPDATE,
+                changes=json.dumps(changes),
+            )
 
 
 def log_delete(sender, instance, **kwargs):
