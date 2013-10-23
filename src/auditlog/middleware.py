@@ -24,5 +24,5 @@ class AuditLogMiddleware(object):
         return response
 
     def set_actor(self, user, sender, instance, **kwargs):
-        if sender == LogEntry and isinstance(user, settings.AUTH_USER_MODEL):
+        if sender == LogEntry and isinstance(user, settings.AUTH_USER_MODEL) and instance.actor is None:
             instance.actor = user
