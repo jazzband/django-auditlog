@@ -22,9 +22,13 @@ class AltPrimaryKeyModel(models.Model):
     """
 
     key = models.CharField(max_length=100, primary_key=True)
-    value = models.DecimalField(decimal_places=4, max_digits=12)
 
-    history = AuditLogHistoryField()
+    text = models.TextField(blank=True)
+    boolean = models.BooleanField(default=False)
+    integer = models.IntegerField(blank=True, null=True)
+    datetime = models.DateTimeField(auto_now=True)
+
+    history = AuditLogHistoryField(pk_indexable=False)
 
 
 class ProxyModel(SimpleModel):
@@ -57,3 +61,5 @@ class ManyRelatedModel(models.Model):
 
 
 auditlog.register(SimpleModel)
+auditlog.register(AltPrimaryKeyModel)
+auditlog.register(ProxyModel)
