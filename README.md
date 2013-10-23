@@ -10,9 +10,11 @@ Auditlog provides a log of changes made to a model instance. It also saves the u
 Installation
 ------------
 
-Auditlog is not yet on Pypi, but will be there once I find it stable enough.
+The easiest way to install Auditlog is from PyPI (https://pypi.python.org/pypi/django-auditlog/). If you have ```pip``` installed, you can simply run the following command:
 
-The current recommended installation is to clone the git repository (or download the zipped files) and copy the ```src/auditlog``` directory into your Django project.
+```pip install django-auditlog```
+
+You can also clone the git repository (or download the zipped files) and run ```setup.py``` or copy the ```src/auditlog``` directory into your Django project.
 
 You can enable Auditlog by simply adding ```'auditlog'``` to your ```INSTALLED_APPS``` setting in your project's ```settings.py``` file.
 
