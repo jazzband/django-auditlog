@@ -5,7 +5,7 @@ from auditlog.receivers import log_create, log_update, log_delete
 
 class AuditLogModelRegistry(object):
     """
-    A registry that keeps track of the models that use auditlog.
+    A registry that keeps track of the models that use Auditlog to track changes.
     """
 
     def __init__(self, create=True, update=True, delete=True, custom=None):
