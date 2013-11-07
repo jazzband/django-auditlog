@@ -48,7 +48,7 @@ class LogEntry(models.Model):
     primary key, as well as the textual representation of the object when it was saved. It holds the action performed
     and the fields that were changed in the transaction.
 
-    If AuditLogMiddleware is used, the actor will be set automatically. Keep in mind that editing / re-saving LogEntry
+    If AuditlogMiddleware is used, the actor will be set automatically. Keep in mind that editing / re-saving LogEntry
     instances may set the actor to a wrong value - editing LogEntry instances is not recommended (and it should not be
     necessary).
     """
@@ -94,7 +94,7 @@ class LogEntry(models.Model):
         return fstring.format(repr=self.object_repr)
 
 
-class AuditLogHistoryField(generic.GenericRelation):
+class AuditlogHistoryField(generic.GenericRelation):
     """
     A subclass of django.contrib.contenttypes.generic.GenericRelation that sets some default variables. This makes it
     easier to implement the audit log in models, and makes future changes easier.
@@ -113,4 +113,4 @@ class AuditLogHistoryField(generic.GenericRelation):
             kwargs['object_id_field'] = 'object_pk'
 
         kwargs['content_type_field'] = 'content_type'
-        super(AuditLogHistoryField, self).__init__(**kwargs)
+        super(AuditlogHistoryField, self).__init__(**kwargs)

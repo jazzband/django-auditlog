@@ -4,7 +4,7 @@ from django.utils.functional import curry
 from auditlog.models import LogEntry
 
 
-class AuditLogMiddleware(object):
+class AuditlogMiddleware(object):
     """
     Middleware to couple the request's user to log items. This is accomplished by currying the signal receiver with the
     user from the request (or None if the user is not authenticated).

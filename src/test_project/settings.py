@@ -23,7 +23,7 @@ TEMPLATE_LOADERS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
-    'auditlog.middleware.AuditLogMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
 )
 
 ROOT_URLCONF = 'test_project.urls'

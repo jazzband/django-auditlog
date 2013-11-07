@@ -1,5 +1,5 @@
 from django.db import models
-from auditlog.models import AuditLogHistoryField
+from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 
 
@@ -13,7 +13,7 @@ class SimpleModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditLogHistoryField()
+    history = AuditlogHistoryField()
 
 
 class AltPrimaryKeyModel(models.Model):
@@ -28,7 +28,7 @@ class AltPrimaryKeyModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditLogHistoryField(pk_indexable=False)
+    history = AuditlogHistoryField(pk_indexable=False)
 
 
 class ProxyModel(SimpleModel):
@@ -47,7 +47,7 @@ class RelatedModel(models.Model):
 
     related = models.ForeignKey('self')
 
-    history = AuditLogHistoryField()
+    history = AuditlogHistoryField()
 
 
 class ManyRelatedModel(models.Model):
@@ -57,7 +57,7 @@ class ManyRelatedModel(models.Model):
 
     related = models.ManyToManyField('self')
 
-    history = AuditLogHistoryField()
+    history = AuditlogHistoryField()
 
 
 auditlog.register(SimpleModel)
