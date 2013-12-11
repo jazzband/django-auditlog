@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.functional import curry
+from django.db.models.loading import get_model
 from auditlog.models import LogEntry
 
 
@@ -37,5 +38,10 @@ class AuditlogMiddleware(object):
         Signal receiver with an extra, required 'user' kwarg. This method becomes a real (valid) signal receiver when
         it is curried with the actor.
         """
-        if sender == LogEntry and isinstance(user, settings.AUTH_USER_MODEL) and instance.actor is None:
+        try:
+            app_label, model_name = settings.AUTH_USER_MODEL.split('.')
+            auth_user_model = get_model(app_label, model_name)
+        except:
+            auth_user_model = get_model('auth', 'user')
+        if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
             instance.actor = user
