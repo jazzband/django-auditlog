@@ -99,6 +99,29 @@ class LogEntry(models.Model):
             fstring = _("Logged {repr:s}")
 
         return fstring.format(repr=self.object_repr)
+
+    @property
+    def changes_dict(self):
+        try:
+            return json.loads(self.changes)
+        except ValueError:
+            return {}
+
+    @property
+    def changes_str(self, colon=': ', arrow=u' \u2192 ', separator='; '):
+        substrings = []
+
+        for field, values in self.changes_dict.iteritems():
+            substring = u'{fieldname:s}{colon:s}{old:s}{arrow:s}{new:s}'.format(
+                fieldname=field,
+                colon=colon,
+                old=values[0],
+                arrow=arrow,
+                new=values[1],
+            )
+            substrings.append(substring)
+
+        return separator.join(substrings)
         
 
 class AuditlogHistoryField(generic.GenericRelation):
