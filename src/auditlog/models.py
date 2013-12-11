@@ -99,13 +99,6 @@ class LogEntry(models.Model):
             fstring = _("Logged {repr:s}")
 
         return fstring.format(repr=self.object_repr)
-
-    def html_formated_changes(self):
-        changes_result = []
-        changes_dict = json.loads(self.changes.encode('utf-8'))
-        for field, changes in changes_dict.items():
-            changes_result.append('<strong>%s</strong> from %s <strong>to</strong> %s' % (field, changes[0], changes[1]))
-        return changes_result
         
 
 class AuditlogHistoryField(generic.GenericRelation):
