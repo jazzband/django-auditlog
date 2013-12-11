@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.functional import curry
+from django.db.models.loading import get_model
+
 from auditlog.models import LogEntry
 
 
@@ -24,5 +26,10 @@ class AuditLogMiddleware(object):
         return response
 
     def set_actor(self, user, sender, instance, **kwargs):
-        if sender == LogEntry and isinstance(user, settings.AUTH_USER_MODEL) and instance.actor is None:
+        try:
+            app_label, model_name = settings.AUTH_USER_MODEL.split('.')
+            auth_user_model = get_model(app_label, model_name)
+        except:
+            auth_user_model = get_model('auth', 'user')
+        if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
             instance.actor = user
