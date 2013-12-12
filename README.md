@@ -3,46 +3,16 @@ django-auditlog
 
 **Please remember that this app is still in development and not yet suitable for production environments.**
 
-```django-auditlog``` (Auditlog) is created out of the need for a simple Django app that logs changes to models, including the user that changed the models. Some requirements were that the overhead had to be low and that the app should be able to handle high volumes of log entries. Full-blown version control (with functionalities like reverting changes) was not needed, and would cause too much overhead. After looking for some time I did not find an app like that.
+```django-auditlog``` (Auditlog) is a reusable app for Django that makes logging object changes a breeze. Auditlog tries to use as much as Python and Django’s built in functionality to keep the list of dependencies as short as possible. Also, Auditlog aims to be fast and simple to use.
 
-Auditlog provides a log of changes made to a model instance. It also saves the user that made the changes (only when changes were made in a request). Unlike the log from Django's admin (```django.contrib.admin```) Auditlog also saves a summary of the changes in JSON format, so changes can be tracked easily and the right people can be blamed for unwanted changes.
+Auditlog is created out of the need for a simple Django app that logs changes to models, including the user that changed the models (later referred to as actor). Existing solutions seemed to offer a type of version control, which was not needed and would cause too much overhead.
 
-Installation
-------------
+The core idea of Auditlog is similar to the log from Django’s admin. Unlike the log from Django’s admin (django.contrib.admin) Auditlog is much more flexible and also saves a summary of the changes in JSON format, so changes can be tracked easily.
 
-The easiest way to install Auditlog is from PyPI (https://pypi.python.org/pypi/django-auditlog/). If you have ```pip``` installed, you can simply run the following command:
+Documentation
+-------------
 
-```pip install django-auditlog```
-
-You can also clone the git repository (or download the zipped files) and run ```setup.py``` or copy the ```src/auditlog``` directory into your Django project.
-
-You can enable Auditlog by simply adding ```'auditlog'``` to your ```INSTALLED_APPS``` setting in your project's ```settings.py``` file.
-
-If you want your log entries to automatically contain the actor, you also need to add ```'auditlog.middleware.AuditLogMiddleware'``` to the ```MIDDLEWARE_CLASSES``` setting in the same file.
-
-Usage
------
-
-For the features below to work, you need to add the following imports to the top of the ```models.py``` file.
-
-```python
-from auditlog.models import AuditLogHistoryField
-from auditlog.registry import auditlog
-```
-
-Before Auditlog logs mutations on model instances, each model must be registered. This can be done by adding the following line of code to the ```models.py``` file (below the model itself). Change ```MyModel``` to the model you want to register.
-
-```python
-auditlog.register(MyModel)
-```
-
-It is possible to have a model instances history directly available through a custom field. For this, you can add the following code to a subclass of ```models.Model```:
-
-```python
-history = AuditLogHistoryField()
-```
-
-Note that use of the field is not required for Auditlog to work, it is just a shortcut to get the log entries easier. Also, registering the model is not required for the field to work. This allows you to keep access to log entries once logging is no longer needed and you can add it to an abstract model without implicitly registering all subclasses of that model for logging.
+The documentation for ``django-auditlog`` can be found on http://django-auditlog.readthedocs.org.
 
 License
 -------
