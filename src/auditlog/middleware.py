@@ -33,7 +33,8 @@ class AuditlogMiddleware(object):
 
         return response
 
-    def set_actor(self, user, sender, instance, **kwargs):
+    @staticmethod
+    def set_actor(user, sender, instance, **kwargs):
         """
         Signal receiver with an extra, required 'user' kwarg. This method becomes a real (valid) signal receiver when
         it is curried with the actor.
@@ -41,7 +42,7 @@ class AuditlogMiddleware(object):
         try:
             app_label, model_name = settings.AUTH_USER_MODEL.split('.')
             auth_user_model = get_model(app_label, model_name)
-        except:
+        except ValueError:
             auth_user_model = get_model('auth', 'user')
         if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
             instance.actor = user
