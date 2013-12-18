@@ -119,6 +119,9 @@ class LogEntry(models.Model):
 
     @property
     def changes_dict(self):
+        """
+        Return the changes recorded in this log entry as a dictionary object.
+        """
         try:
             return json.loads(self.changes)
         except ValueError:
@@ -126,6 +129,11 @@ class LogEntry(models.Model):
 
     @property
     def changes_str(self, colon=': ', arrow=u' \u2192 ', separator='; '):
+        """
+        Return the changes recorded in this log entry as a string. The formatting of the string can be customized by
+        setting alternate values for colon, arrow and separator. If the formatting is still not satisfying, please use
+        changes_dict() and format the string yourself.
+        """
         substrings = []
 
         for field, values in self.changes_dict.iteritems():
