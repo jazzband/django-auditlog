@@ -18,19 +18,15 @@ class LogEntryManager(models.Manager):
         was created to keep things DRY.
         """
         changes = kwargs.get('changes', None)
+        pk = self._get_pk_value(instance)
 
         if changes is not None:
-            if not 'content_type' in kwargs:
-                kwargs['content_type'] = ContentType.objects.get_for_model(instance)
-            if not 'object_pk' in kwargs:
-                kwargs['object_pk'] = instance.pk
-            if not 'object_repr' in kwargs:
-                kwargs['object_repr'] = str(instance)
-            if not 'object_id' in kwargs:
-                pk_field = instance._meta.pk.name
-                pk = getattr(instance, pk_field, None)
-                if isinstance(pk, int):
-                    kwargs['object_id'] = pk
+            kwargs.setdefault('content_type', ContentType.objects.get_for_model(instance))
+            kwargs.setdefault('object_pk', pk)
+            kwargs.setdefault('object_repr', str(instance))
+
+            if isinstance(pk, int):
+                kwargs.setdefault('object_id', pk)
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
@@ -43,16 +39,17 @@ class LogEntryManager(models.Manager):
             return self.create(**kwargs)
         return None
         
-    def get_for_object(self, obj):
+    def get_for_object(self, instance):
         """
         Get log entries for the specified object.
         """
-        content_type = ContentType.objects.get_for_model(obj.__class__)
+        content_type = ContentType.objects.get_for_model(instance.__class__)
+        pk = self._get_pk_value(instance)
 
-        if isinstance(obj.pk, int):
-            return self.filter(content_type=content_type, object_id=obj.pk)
+        if isinstance(pk, int):
+            return self.filter(content_type=content_type, object_id=pk)
         else:
-            return self.filter(content_type=content_type, object_pk=obj.pk)
+            return self.filter(content_type=content_type, object_pk=pk)
 
     def get_for_model(self, model):
         """
@@ -60,6 +57,13 @@ class LogEntryManager(models.Manager):
         """
         content_type = ContentType.objects.get_for_model(model)
         return self.filter(content_type=content_type)
+
+    def _get_pk_value(self, instance):
+        """
+        Get the primary key field value for a model instance.
+        """
+        pk_field = instance._meta.pk.name
+        return getattr(instance, pk_field, None)
 
 
 class LogEntry(models.Model):
