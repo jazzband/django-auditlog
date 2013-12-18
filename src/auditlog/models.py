@@ -43,10 +43,23 @@ class LogEntryManager(models.Manager):
             return self.create(**kwargs)
         return None
         
-    def get_entries_from_model(self, model):
+    def get_for_object(self, obj):
+        """
+        Get log entries for the specified object.
+        """
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+
+        if isinstance(obj.pk, int):
+            return self.filter(content_type=content_type, object_id=obj.pk)
+        else:
+            return self.filter(content_type=content_type, object_pk=obj.pk)
+
+    def get_for_model(self, model):
+        """
+        Get log entries for all objects of a specified type.
+        """
         content_type = ContentType.objects.get_for_model(model)
-        object_id = model.pk
-        return self.get_query_set().filter(content_type=content_type, object_id=object_id)
+        return self.filter(content_type=content_type)
 
 
 class LogEntry(models.Model):
@@ -112,8 +125,8 @@ class LogEntry(models.Model):
         substrings = []
 
         for field, values in self.changes_dict.iteritems():
-            substring = u'{fieldname:s}{colon:s}{old:s}{arrow:s}{new:s}'.format(
-                fieldname=field,
+            substring = u'{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}'.format(
+                field_name=field,
                 colon=colon,
                 old=values[0],
                 arrow=arrow,
