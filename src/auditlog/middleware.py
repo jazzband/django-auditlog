@@ -42,7 +42,7 @@ class AuditlogMiddleware(object):
         """
         pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
 
-        return response
+        return None
 
     @staticmethod
     def set_actor(user, sender, instance, **kwargs):
