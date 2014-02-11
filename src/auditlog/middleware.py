@@ -1,3 +1,5 @@
+import time
+
 from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.functional import curry
@@ -21,17 +23,26 @@ class AuditlogMiddleware(object):
         else:
             user = None
 
+        request.auditlog_ts = time.time()
         set_actor = curry(self.set_actor, user)
-        pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=(self.__class__, request), weak=False)
+        pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts), weak=False)
 
     def process_response(self, request, response):
         """
         Disconnects the signal receiver to prevent it from staying active.
         """
         # Disconnecting the signal receiver is required because it will not be garbage collected (non-weak reference)
-        pre_save.disconnect(dispatch_uid=(self.__class__, request))
+        pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
 
         return response
+
+    def process_exception(self, request, exception):
+        """
+        Disconnects the signal receiver to prevent it from staying active in case of an exception.
+        """
+        pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
+
+        return None
 
     @staticmethod
     def set_actor(user, sender, instance, **kwargs):
