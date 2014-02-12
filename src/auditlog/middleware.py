@@ -32,7 +32,8 @@ class AuditlogMiddleware(object):
         Disconnects the signal receiver to prevent it from staying active.
         """
         # Disconnecting the signal receiver is required because it will not be garbage collected (non-weak reference)
-        pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
+        if hasattr(request, 'auditlog_ts'):     				# admin wipes auditlog_ts from request...
+            pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
 
         return response
 
@@ -40,7 +41,8 @@ class AuditlogMiddleware(object):
         """
         Disconnects the signal receiver to prevent it from staying active in case of an exception.
         """
-        pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
+        if hasattr(request, 'auditlog_ts'):
+            pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
 
         return None
 
