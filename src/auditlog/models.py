@@ -78,6 +78,11 @@ class LogEntry(models.Model):
     """
 
     class Action:
+        """
+        The actions that Auditlog distinguishes: creating, updating and deleting objects. Viewing objects is not logged.
+        The values of the actions are numeric, a higher integer value means a more intrusive action. This may be useful
+        in some cases when comparing actions because __lt, __lte, __gt, __gte can be used in queries.
+        """
         CREATE = 0
         UPDATE = 1
         DELETE = 2
@@ -157,6 +162,9 @@ class AuditlogHistoryField(generic.GenericRelation):
     By default this field will assume that your primary keys are numeric, simply because this is the most common case.
     However, if you have a non-integer primary key, you can simply pass pk_indexable=False to the constructor, and
     Auditlog will fall back to using a non-indexed text based field for this model.
+
+    Using this field will not automatically register the model for automatic logging. This is done so you can be more
+    flexible with how you use this field.
     """
 
     def __init__(self, pk_indexable=True, **kwargs):

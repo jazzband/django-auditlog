@@ -20,19 +20,16 @@ class AuditlogMiddleware(object):
         """
         if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated():
             user = request.user
-        else:
-            user = None
-
-        request.auditlog_ts = time.time()
-        set_actor = curry(self.set_actor, user)
-        pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts), weak=False)
+            request.auditlog_ts = time.time()
+            set_actor = curry(self.set_actor, user)
+            pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts), weak=False)
 
     def process_response(self, request, response):
         """
         Disconnects the signal receiver to prevent it from staying active.
         """
         # Disconnecting the signal receiver is required because it will not be garbage collected (non-weak reference)
-        if hasattr(request, 'auditlog_ts'):     				# admin wipes auditlog_ts from request...
+        if hasattr(request, 'auditlog_ts'):
             pre_save.disconnect(sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts))
 
         return response

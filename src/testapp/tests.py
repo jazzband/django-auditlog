@@ -1,5 +1,10 @@
 import datetime
-from django.test import TestCase
+from django.contrib.auth.models import User, AnonymousUser
+from django.core.exceptions import ValidationError
+from django.db.models.signals import pre_save
+from django.http import HttpResponse
+from django.test import TestCase, RequestFactory
+from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from testapp.models import SimpleModel, AltPrimaryKeyModel, ProxyModel
 
@@ -67,3 +72,64 @@ class AltPrimaryKeyModelTest(SimpleModelTest):
 class ProxyModelTest(SimpleModelTest):
     def setUp(self):
         self.obj = ProxyModel.objects.create(text='I am not what you think.')
+
+
+class MiddlewareTest(TestCase):
+    """
+    Test the middleware responsible for connecting and disconnecting the signals used in automatic logging.
+    """
+    def setUp(self):
+        self.middleware = AuditlogMiddleware()
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(username='test', email='test@example.com', password='top_secret')
+
+    def test_request_anonymous(self):  # TODO does not seem to validate
+        """No actor will be logged when a user is not logged in."""
+        # Create a request
+        request = self.factory.get('/')
+        request.user = AnonymousUser()
+
+        # Run middleware
+        self.middleware.process_request(request)
+
+        # Validate result
+        self.assertFalse(pre_save.has_listeners(LogEntry))
+
+    def test_request(self):
+        """The actor will be logged when a user is logged in."""
+        # Create a request
+        request = self.factory.get('/')
+        request.user = self.user
+        # Run middleware
+        self.middleware.process_request(request)
+
+        # Validate result
+        self.assertTrue(pre_save.has_listeners(LogEntry))
+
+    def test_response(self):  # TODO does not seem to validate
+        """The signal will be disconnected when the request is processed."""
+        # Create a request
+        request = self.factory.get('/')
+        request.user = self.user
+
+        # Run middleware
+        self.middleware.process_request(request)
+        self.assertTrue(pre_save.has_listeners(LogEntry))  # The signal should be present before trying to disconnect it.
+        self.middleware.process_response(request, HttpResponse())
+
+        # Validate result
+        self.assertFalse(pre_save.has_listeners(LogEntry))
+
+    def test_exception(self):
+        """The signal will be disconnected when an exception is raised."""
+        # Create a request
+        request = self.factory.get('/')
+        request.user = self.user
+
+        # Run middleware
+        self.middleware.process_request(request)
+        self.assertTrue(pre_save.has_listeners(LogEntry))  # The signal should be present before trying to disconnect it.
+        self.middleware.process_exception(request, ValidationError("Test"))
+
+        # Validate result
+        self.assertFalse(pre_save.has_listeners(LogEntry))
