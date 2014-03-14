@@ -83,7 +83,7 @@ class MiddlewareTest(TestCase):
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username='test', email='test@example.com', password='top_secret')
 
-    def test_request_anonymous(self):  # TODO does not seem to validate
+    def test_request_anonymous(self):
         """No actor will be logged when a user is not logged in."""
         # Create a request
         request = self.factory.get('/')
@@ -94,6 +94,9 @@ class MiddlewareTest(TestCase):
 
         # Validate result
         self.assertFalse(pre_save.has_listeners(LogEntry))
+
+        # Finalize transaction
+        self.middleware.process_exception(request, None)
 
     def test_request(self):
         """The actor will be logged when a user is logged in."""
@@ -106,7 +109,10 @@ class MiddlewareTest(TestCase):
         # Validate result
         self.assertTrue(pre_save.has_listeners(LogEntry))
 
-    def test_response(self):  # TODO does not seem to validate
+        # Finalize transaction
+        self.middleware.process_exception(request, None)
+
+    def test_response(self):
         """The signal will be disconnected when the request is processed."""
         # Create a request
         request = self.factory.get('/')
