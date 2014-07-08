@@ -9,5 +9,8 @@ setup(
     license='MIT',
     author='Jan-Jelle Kester',
     author_email='janjelle@jjkester.nl',
-    description='Audit log app for Django'
+    description='Audit log app for Django',
+    install_requires=[
+        'Django>=1.5'
+    ]
 )
