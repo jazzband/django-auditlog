@@ -1,8 +1,3 @@
-.. django-auditlog documentation master file, created by
-   sphinx-quickstart on Wed Nov  6 20:39:48 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 ``django-auditlog`` documentation
 =================================
 
@@ -26,6 +21,7 @@ Contents
 
    installation
    usage
+   internals
 
 
 Contribute to Auditlog
@@ -35,4 +31,5 @@ If you found an issue with Auditlog or want to improve the code, please submit a
 Before submitting a new issue, please make sure there is no issue submitted that involves the same issue.
 
 GitHub repository: https://github.com/jjkester/django-auditlog
+
 Issues: https://github.com/jjkester/django-auditlog/issues
