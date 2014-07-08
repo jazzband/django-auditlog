@@ -177,3 +177,10 @@ class AuditlogHistoryField(generic.GenericRelation):
 
         kwargs['content_type_field'] = 'content_type'
         super(AuditlogHistoryField, self).__init__(**kwargs)
+
+# South compatibility for AuditlogHistoryField
+try:
+    from south.modelsinspector import add_introspection_rules
+    add_introspection_rules([], ["^southtut\.fields\.UpperCaseField"])
+except ImportError:
+    pass
