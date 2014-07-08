@@ -38,11 +38,16 @@ project's configuration file::
 
 It is recommended to keep all middleware that alters the request loaded before Auditlog's middleware.
 
-Please keep in mind that every object change in a request that gets logged automatically will have the current request's
-user as actor.
+.. warning::
+
+    Please keep in mind that every object change in a request that gets logged automatically will have the current request's
+    user as actor. To only have some object changes to be logged with the current request's user as actor manual logging is
+    required.
 
 Object history
 --------------
+
+.. py:currentmodule:: auditlog.models
 
 Auditlog ships with a custom field that enables you to easily get the log entries that are relevant to your object. This
 functionality is built on Django's content types framework (``django.contrib.contenttypes``). Using this field in your
@@ -58,6 +63,10 @@ models is equally easy as any other field::
 
     auditlog.register(MyModel)
 
-``AuditlogHistoryField`` accepts an optional ``pk_indexable`` parameter, which is either ``True`` or ``False``, this
-defaults to ``True``. If your model has a custom primary key that is not an integer value, ``pk_indexable`` needs to be
+:py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or ``False``, this
+defaults to ``True``. If your model has a custom primary key that is not an integer value, :py:attr:`pk_indexable` needs to be
 set to ``False``. Keep in mind that this might slow down queries.
+
+.. versionadded:: 0.2.1
+
+    South compatibility for :py:class:`AuditlogHistoryField`
