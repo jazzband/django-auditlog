@@ -1,6 +1,5 @@
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Model
-from auditlog.receivers import log_create, log_update, log_delete
 
 
 class AuditLogModelRegistry(object):
@@ -9,7 +8,8 @@ class AuditLogModelRegistry(object):
     """
 
     def __init__(self, create=True, update=True, delete=True, custom=None):
-        self._registry = []
+        from auditlog.receivers import log_create, log_update, log_delete
+        self._registry = {}
         self._signals = {}
 
         if create:
@@ -22,15 +22,23 @@ class AuditLogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model):
+    def register(self, model, **kwargs):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
+
+        Kwargs:
+          - `include_fields`: list of field names to include in diff
+          - `exclude_fields`: list of field names to exclude in diff
         """
         if issubclass(model, Model):
-            self._registry.append(model)
+            self._registry[model] = {
+                'include_fields': kwargs.get('include_fields', []),
+                'exclude_fields': kwargs.get('exclude_fields', []),
+            }
             self._connect_signals(model)
         else:
             raise TypeError('Supplied model is not a valid model.')
+        print self._registry
 
     def contains(self, model):
         """
@@ -43,7 +51,7 @@ class AuditLogModelRegistry(object):
         Unregister a model with auditlog. This will not affect the database.
         """
         try:
-            self._registry.pop(model)
+            del self._registry[model]
         except KeyError:
             pass
         else:
@@ -70,5 +78,10 @@ class AuditLogModelRegistry(object):
         """
         return (self.__class__, model, signal)
 
+    def get_model_fields(self, model):
+        return {
+            'include_fields': self._registry[model]['include_fields'],
+            'exclude_fields': self._registry[model]['exclude_fields'],
+        }
 
 auditlog = AuditLogModelRegistry()
