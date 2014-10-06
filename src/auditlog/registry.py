@@ -38,7 +38,6 @@ class AuditLogModelRegistry(object):
             self._connect_signals(model)
         else:
             raise TypeError('Supplied model is not a valid model.')
-        print self._registry
 
     def contains(self, model):
         """
