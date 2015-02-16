@@ -25,7 +25,7 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault('object_pk', pk)
             kwargs.setdefault('object_repr', str(instance))
 
-            if isinstance(pk, long):
+            if isinstance(pk, (int, long)):
                 kwargs.setdefault('object_id', pk)
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
@@ -50,7 +50,7 @@ class LogEntryManager(models.Manager):
         content_type = ContentType.objects.get_for_model(instance.__class__)
         pk = self._get_pk_value(instance)
 
-        if isinstance(pk, int):
+        if isinstance(pk, (int, long)):
             return self.filter(content_type=content_type, object_id=pk)
         else:
             return self.filter(content_type=content_type, object_pk=pk)
@@ -104,7 +104,7 @@ class LogEntry(models.Model):
 
     content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
     object_pk = models.TextField(verbose_name=_("object pk"))
-    object_id = models.PositiveIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
+    object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
     changes = models.TextField(blank=True, verbose_name=_("change message"))
