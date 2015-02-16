@@ -1,5 +1,8 @@
+from __future__ import unicode_literals
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
+from django.utils.encoding import smart_text
 
 
 def model_instance_diff(old, new, **kwargs):
@@ -11,9 +14,9 @@ def model_instance_diff(old, new, **kwargs):
     from auditlog.registry import auditlog
 
     if not(old is None or isinstance(old, Model)):
-        raise TypeError('The supplied old instance is not a valid model instance.')
+        raise TypeError("The supplied old instance is not a valid model instance.")
     if not(new is None or isinstance(new, Model)):
-        raise TypeError('The supplied new instance is not a valid model instance.')
+        raise TypeError("The supplied new instance is not a valid model instance.")
 
     diff = {}
 
@@ -45,12 +48,12 @@ def model_instance_diff(old, new, **kwargs):
 
     for field in fields:
         try:
-            old_value = unicode(getattr(old, field.name, None))
+            old_value = smart_text(getattr(old, field.name, None))
         except ObjectDoesNotExist:
             old_value = None
 
         try:
-            new_value = unicode(getattr(new, field.name, None))
+            new_value = smart_text(getattr(new, field.name, None))
         except ObjectDoesNotExist:
             new_value = None
 

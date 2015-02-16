@@ -1,9 +1,13 @@
+from __future__ import unicode_literals
+
 import json
 
 from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible, smart_text
+from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
 
@@ -23,9 +27,9 @@ class LogEntryManager(models.Manager):
         if changes is not None:
             kwargs.setdefault('content_type', ContentType.objects.get_for_model(instance))
             kwargs.setdefault('object_pk', pk)
-            kwargs.setdefault('object_repr', str(instance))
+            kwargs.setdefault('object_repr', smart_text(instance))
 
-            if isinstance(pk, (int, long)):
+            if isinstance(pk, integer_types):
                 kwargs.setdefault('object_id', pk)
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
@@ -50,7 +54,7 @@ class LogEntryManager(models.Manager):
         content_type = ContentType.objects.get_for_model(instance.__class__)
         pk = self._get_pk_value(instance)
 
-        if isinstance(pk, (int, long)):
+        if isinstance(pk, integer_types):
             return self.filter(content_type=content_type, object_id=pk)
         else:
             return self.filter(content_type=content_type, object_pk=pk)
@@ -75,6 +79,7 @@ class LogEntryManager(models.Manager):
         return getattr(instance, pk_field, None)
 
 
+@python_2_unicode_compatible
 class LogEntry(models.Model):
     """
     Represents an entry in the audit log. The content type is saved along with the textual and numeric (if available)
@@ -119,7 +124,7 @@ class LogEntry(models.Model):
         verbose_name = _("log entry")
         verbose_name_plural = _("log entries")
 
-    def __unicode__(self):
+    def __str__(self):
         if self.action == self.Action.CREATE:
             fstring = _("Created {repr:s}")
         elif self.action == self.Action.UPDATE:
@@ -142,7 +147,7 @@ class LogEntry(models.Model):
             return {}
 
     @property
-    def changes_str(self, colon=': ', arrow=u' \u2192 ', separator='; '):
+    def changes_str(self, colon=': ', arrow=smart_text(' \u2192 '), separator='; '):
         """
         Return the changes recorded in this log entry as a string. The formatting of the string can be customized by
         setting alternate values for colon, arrow and separator. If the formatting is still not satisfying, please use
@@ -150,8 +155,8 @@ class LogEntry(models.Model):
         """
         substrings = []
 
-        for field, values in self.changes_dict.iteritems():
-            substring = u'{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}'.format(
+        for field, values in iteritems(self.changes_dict):
+            substring = smart_text('{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}').format(
                 field_name=field,
                 colon=colon,
                 old=values[0],
@@ -191,5 +196,6 @@ class AuditlogHistoryField(generic.GenericRelation):
 try:
     from south.modelsinspector import add_introspection_rules
     add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
+    raise DeprecationWarning("South support will be dropped in django-auditlog 0.4.0 or later.")
 except ImportError:
     pass
