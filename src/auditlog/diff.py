@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model
 
 
@@ -27,9 +28,10 @@ def model_instance_diff(old, new, **kwargs):
         model_fields = auditlog.get_model_fields(new._meta.model)
     else:
         fields = set()
+        model_fields = None
 
     # Check if fields must be filtered
-    if (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
+    if model_fields and (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
         filtered_fields = []
         if model_fields['include_fields']:
             filtered_fields = [field for field in fields
@@ -42,8 +44,15 @@ def model_instance_diff(old, new, **kwargs):
         fields = filtered_fields
 
     for field in fields:
-        old_value = unicode(getattr(old, field.name, None))
-        new_value = unicode(getattr(new, field.name, None))
+        try:
+            old_value = unicode(getattr(old, field.name, None))
+        except ObjectDoesNotExist:
+            old_value = None
+
+        try:
+            new_value = unicode(getattr(new, field.name, None))
+        except ObjectDoesNotExist:
+            new_value = None
 
         if old_value != new_value:
             diff[field.name] = (old_value, new_value)

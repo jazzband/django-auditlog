@@ -25,7 +25,7 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault('object_pk', pk)
             kwargs.setdefault('object_repr', str(instance))
 
-            if isinstance(pk, int):
+            if isinstance(pk, long):
                 kwargs.setdefault('object_id', pk)
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
@@ -41,8 +41,12 @@ class LogEntryManager(models.Manager):
 
     def get_for_object(self, instance):
         """
-        Get log entries for the specified object.
+        Get log entries for the specified model instance.
         """
+        # Return empty queryset if the given model instance is not a model instance.
+        if not isinstance(instance, models.Model):
+            return self.none()
+
         content_type = ContentType.objects.get_for_model(instance.__class__)
         pk = self._get_pk_value(instance)
 
@@ -55,7 +59,12 @@ class LogEntryManager(models.Manager):
         """
         Get log entries for all objects of a specified type.
         """
+        # Return empty queryset if the given object is not valid.
+        if not issubclass(model, models.Model):
+            return self.none()
+
         content_type = ContentType.objects.get_for_model(model)
+
         return self.filter(content_type=content_type)
 
     def _get_pk_value(self, instance):
