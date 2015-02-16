@@ -181,6 +181,6 @@ class AuditlogHistoryField(generic.GenericRelation):
 # South compatibility for AuditlogHistoryField
 try:
     from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], ["^southtut\.fields\.UpperCaseField"])
+    add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
 except ImportError:
     pass
