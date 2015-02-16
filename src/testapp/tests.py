@@ -6,7 +6,8 @@ from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from testapp.models import SimpleModel, AltPrimaryKeyModel, ProxyModel
+from testapp.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
+    SimpleIncludeModel, SimpleExcludeModel
 
 
 class SimpleModelTest(TestCase):
@@ -139,3 +140,41 @@ class MiddlewareTest(TestCase):
 
         # Validate result
         self.assertFalse(pre_save.has_listeners(LogEntry))
+
+
+class SimpeIncludeModelTest(TestCase):
+    """Log only changes in include_fields"""
+
+    def test_register_include_fields(self):
+        sim = SimpleIncludeModel(label='Include model', text='Looong text')
+        sim.save()
+        self.assertTrue(sim.history.count() == 1, msg="There is one log entry")
+
+        # Change label, record
+        sim.label = 'Changed label'
+        sim.save()
+        self.assertTrue(sim.history.count() == 2, msg="There are two log entries")
+
+        # Change text, ignore
+        sim.text = 'Short text'
+        sim.save()
+        self.assertTrue(sim.history.count() == 2, msg="There are two log entries")
+
+
+class SimpeExcludeModelTest(TestCase):
+    """Log only changes that are not in exclude_fields"""
+
+    def test_register_exclude_fields(self):
+        sem = SimpleIncludeModel(label='Exclude model', text='Looong text')
+        sem.save()
+        self.assertTrue(sem.history.count() == 1, msg="There is one log entry")
+
+        # Change label, ignore
+        sem.label = 'Changed label'
+        sem.save()
+        self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
+
+        # Change text, record
+        sem.text = 'Short text'
+        sem.save()
+        self.assertTrue(sem.history.count() == 2, msg="There are two log entries")

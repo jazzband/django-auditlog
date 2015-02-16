@@ -60,6 +60,30 @@ class ManyRelatedModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class SimpleIncludeModel(models.Model):
+    """
+    A simple model used for register's include_fields kwarg
+    """
+
+    label = models.CharField(max_length=100)
+    text = models.TextField(blank=True)
+
+    history = AuditlogHistoryField()
+
+
+class SimpleExcludeModel(models.Model):
+    """
+    A simple model used for register's exclude_fields kwarg
+    """
+
+    label = models.CharField(max_length=100)
+    text = models.TextField(blank=True)
+
+    history = AuditlogHistoryField()
+
+
 auditlog.register(SimpleModel)
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(ProxyModel)
+auditlog.register(SimpleIncludeModel, include_fields=['label', ])
+auditlog.register(SimpleExcludeModel, exclude_fields=['label', ])

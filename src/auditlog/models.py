@@ -38,7 +38,7 @@ class LogEntryManager(models.Manager):
 
             return self.create(**kwargs)
         return None
-        
+
     def get_for_object(self, instance):
         """
         Get log entries for the specified object.
@@ -152,7 +152,7 @@ class LogEntry(models.Model):
             substrings.append(substring)
 
         return separator.join(substrings)
-        
+
 
 class AuditlogHistoryField(generic.GenericRelation):
     """
