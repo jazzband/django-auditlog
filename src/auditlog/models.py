@@ -65,9 +65,9 @@ class LogEntryManager(models.Manager):
         pk_field = instance._meta.pk.name
         pk = getattr(instance, pk_field, None)
 
-        # Check to make sure that we got an pk not a class object.
-        if hasattr(pk, '_meta'):
-            pk = getattr(instance, '%s_id' % pk_field, None)
+        # Check to make sure that we got an pk not a model object.
+        if isinstance(pk, models.Model):
+            pk = self._get_pk_value(pk)
         return pk
 
 
