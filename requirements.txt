@@ -1,4 +1,4 @@
 Django>=1.5
 
 #allows use of verified JSON model fields
-django-jsonfield==0.9.13
+django-jsonfield>=0.9.13
