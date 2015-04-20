@@ -1,3 +1,5 @@
+*Since my time is very, very limited at the moment and my personal need for the functionality provided by django-auditlog has gone development might be very slow. However, I am happy to look at pull requests for issues. If you like to be a permanent contributor, please contact me (janjelle [at] jjkester [dot] nl).*
+
 django-auditlog
 ===============
 
