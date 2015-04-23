@@ -54,6 +54,11 @@ def model_instance_diff(old, new, **kwargs):
         except ObjectDoesNotExist:
             new_value = None
 
+        # Generic IPAddress field sets default ''
+        # JSONField stores sets default to '[]
+        if old_value == 'None' and new_value in ['', '[]']:
+            continue
+
         if old_value != new_value:
             diff[field.name] = (old_value, new_value)
 
