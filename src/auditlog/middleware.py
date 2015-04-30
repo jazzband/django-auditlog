@@ -21,7 +21,7 @@ class AuditlogMiddleware(object):
         if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated():
             user = request.user
             request.auditlog_ts = time.time()
-            set_actor = curry(self.set_actor, user)
+            set_actor = curry(self.set_actor, request, user)
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=(self.__class__, request.auditlog_ts), weak=False)
 
     def process_response(self, request, response):
@@ -44,7 +44,7 @@ class AuditlogMiddleware(object):
         return None
 
     @staticmethod
-    def set_actor(user, sender, instance, **kwargs):
+    def set_actor(request, user, sender, instance, **kwargs):
         """
         Signal receiver with an extra, required 'user' kwarg. This method becomes a real (valid) signal receiver when
         it is curried with the actor.
@@ -56,3 +56,11 @@ class AuditlogMiddleware(object):
             auth_user_model = get_model('auth', 'user')
         if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
             instance.actor = user
+
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(',')[0]
+            else:
+                ip = request.META.get('REMOTE_ADDR')
+
+            instance.remote_addr = ip
