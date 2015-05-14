@@ -9,6 +9,14 @@ way to do this is by using the Python Package Index (PyPI). Simply run the follo
 Instead of installing Auditlog via PyPI, you can also clone the Git repository or download the source code via GitHub.
 The repository can be found at https://github.com/jjkester/django-auditlog/.
 
+**Requirements**
+
+- Python 2.7 or 3.4
+- Django 1.7 or 1.8
+
+Auditlog is currently tested with Python 2.7 and 3.4 and Django 1.7 and 1.8. The test report can be found at
+https://travis-ci.org/jjkester/django-auditlog.
+
 Adding Auditlog to your Django application
 ------------------------------------------
 
