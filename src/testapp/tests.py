@@ -165,7 +165,7 @@ class SimpeExcludeModelTest(TestCase):
     """Log only changes that are not in exclude_fields"""
 
     def test_register_exclude_fields(self):
-        sem = SimpleIncludeModel(label='Exclude model', text='Looong text')
+        sem = SimpleExcludeModel(label='Exclude model', text='Looong text')
         sem.save()
         self.assertTrue(sem.history.count() == 1, msg="There is one log entry")
 
