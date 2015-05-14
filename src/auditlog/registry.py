@@ -1,14 +1,16 @@
+from __future__ import unicode_literals
+
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Model
 
 
-class AuditLogModelRegistry(object):
+class AuditlogModelRegistry(object):
     """
     A registry that keeps track of the models that use Auditlog to track changes.
     """
-
     def __init__(self, create=True, update=True, delete=True, custom=None):
         from auditlog.receivers import log_create, log_update, log_delete
+
         self._registry = {}
         self._signals = {}
 
@@ -37,7 +39,7 @@ class AuditLogModelRegistry(object):
             }
             self._connect_signals(model)
         else:
-            raise TypeError('Supplied model is not a valid model.')
+            raise TypeError("Supplied model is not a valid model.")
 
     def contains(self, model):
         """
@@ -83,4 +85,11 @@ class AuditLogModelRegistry(object):
             'exclude_fields': self._registry[model]['exclude_fields'],
         }
 
-auditlog = AuditLogModelRegistry()
+
+class AuditLogModelRegistry(AuditlogModelRegistry):
+    def __init__(self, *args, **kwargs):
+        super(AuditLogModelRegistry, self).__init__(*args, **kwargs)
+        raise DeprecationWarning("Use AuditlogModelRegistry instead of AuditLogModelRegistry, AuditLogModelRegistry will be removed in django-auditlog 0.4.0 or later.")
+
+
+auditlog = AuditlogModelRegistry()

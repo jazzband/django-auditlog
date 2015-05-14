@@ -15,6 +15,5 @@ class Migration(migrations.Migration):
             model_name='logentry',
             name='object_id',
             field=models.BigIntegerField(db_index=True, null=True, verbose_name='object id', blank=True),
-            preserve_default=True,
         ),
     ]
