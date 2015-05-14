@@ -9,5 +9,5 @@ env:
   - DJANGO_VERSION=1.8
 install:
   - "pip install -r requirements.txt"
-  - "pip install -u Django==$DJANGO_VERSION"
+  - "pip install Django==$DJANGO_VERSION"
 script: "python src/manage.py test testapp.tests"
