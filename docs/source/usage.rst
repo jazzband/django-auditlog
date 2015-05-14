@@ -21,6 +21,22 @@ It is recommended to place the register code (``auditlog.register(MyModel)``) at
 This ensures that every time your model is imported it will also be registered to log changes. Auditlog makes sure that
 each model is only registered once, otherwise duplicate log entries would occur.
 
+**Excluding fields**
+
+Fields that are excluded will not trigger saving a new log entry and will not show up in the recorded changes.
+
+To exclude specific fields from the log you can pass ``include_fields`` resp. ``exclude_fields`` to the ``register``
+method. If ``exclude_fields`` is specified the fields with the given names will not be included in the generated log
+entries. If ``include_fields`` is specified only the fields with the given names will be included in the generated log
+entries. Explicitly excluding fields through ``exclude_fields`` takes precedence over specifying which fields to
+include.
+
+For example, to exclude the field ``last_updated``, use ``auditlog.register(MyModel, exclude_fields=['last_updated'])``.
+
+.. versionadded:: 0.3.0
+
+    Excluding fields
+
 Actors
 ------
 
@@ -63,10 +79,6 @@ models is equally easy as any other field::
 
     auditlog.register(MyModel)
 
-:py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or ``False``, this
-defaults to ``True``. If your model has a custom primary key that is not an integer value, :py:attr:`pk_indexable` needs to be
-set to ``False``. Keep in mind that this might slow down queries.
-
-.. versionadded:: 0.2.1
-
-    South compatibility for :py:class:`AuditlogHistoryField`
+:py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or
+``False``, this defaults to ``True``. If your model has a custom primary key that is not an integer value,
+:py:attr:`pk_indexable` needs to be set to ``False``. Keep in mind that this might slow down queries.
