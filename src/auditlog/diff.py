@@ -5,11 +5,18 @@ from django.db.models import Model
 from django.utils.encoding import smart_text
 
 
-def model_instance_diff(old, new, **kwargs):
+def model_instance_diff(old, new):
     """
-    Calculate the differences between two model instances. One of the instances may be None (i.e., a newly
+    Calculates the differences between two model instances. One of the instances may be None (i.e., a newly
     created model or deleted model). This will cause all fields with a value to have changed (from None).
 
+    :param old: The old state of the model instance.
+    :type old: Model
+    :param new: The new state of the model instance.
+    :type new: Model
+    :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
+             as value.
+    :rtype: {str: (str|None, str|None)}
     """
     from auditlog.registry import auditlog
 

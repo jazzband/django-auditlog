@@ -24,18 +24,21 @@ class AuditlogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model, **kwargs):
+    def register(self, model, include_fields=[], exclude_fields=[]):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
-        Kwargs:
-          - `include_fields`: list of field names to include in diff
-          - `exclude_fields`: list of field names to exclude in diff
+        :param model: The model to register.
+        :type model: Model
+        :param include_fields: The fields to include. Implicitly excludes all other fields.
+        :type include_fields: [str]
+        :param exclude_fields: The fields to exclude. Overrides the fields to include.
+        :type exclude_fields: [str]
         """
         if issubclass(model, Model):
             self._registry[model] = {
-                'include_fields': kwargs.get('include_fields', []),
-                'exclude_fields': kwargs.get('exclude_fields', []),
+                'include_fields': include_fields,
+                'exclude_fields': exclude_fields,
             }
             self._connect_signals(model)
         else:
@@ -44,12 +47,20 @@ class AuditlogModelRegistry(object):
     def contains(self, model):
         """
         Check if a model is registered with auditlog.
+
+        :param model: The model to check.
+        :type model: Model
+        :return: Whether the model has been registered.
+        :rtype: bool
         """
         return model in self._registry
 
     def unregister(self, model):
         """
         Unregister a model with auditlog. This will not affect the database.
+
+        :param model: The model to unregister.
+        :type model: Model
         """
         try:
             del self._registry[model]

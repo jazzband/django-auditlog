@@ -144,7 +144,7 @@ class LogEntry(models.Model):
     @property
     def changes_dict(self):
         """
-        Return the changes recorded in this log entry as a dictionary object.
+        :return: The changes recorded in this log entry as a dictionary object.
         """
         try:
             return json.loads(self.changes)
@@ -157,6 +157,11 @@ class LogEntry(models.Model):
         Return the changes recorded in this log entry as a string. The formatting of the string can be customized by
         setting alternate values for colon, arrow and separator. If the formatting is still not satisfying, please use
         changes_dict() and format the string yourself.
+
+        :param colon: The string to place between the field name and the values.
+        :param arrow: The string to place between each old and new value.
+        :param separator: The string to place between each field.
+        :return: A readable string of the changes in this log entry.
         """
         substrings = []
 
@@ -187,6 +192,10 @@ class AuditlogHistoryField(generic.GenericRelation):
     """
 
     def __init__(self, pk_indexable=True, **kwargs):
+        """
+        :param pk_indexable: Whether the primary key for this model is not an integer or long.
+        :type pk_indexable: bool
+        """
         kwargs['to'] = LogEntry
 
         if pk_indexable:
