@@ -13,6 +13,7 @@ Registering your model for logging can be done with a single line of code, as th
     from django.db import models
 
     class MyModel(models.Model):
+        pass
         # Model definition goes here
 
     auditlog.register(MyModel)
@@ -31,7 +32,9 @@ entries. If ``include_fields`` is specified only the fields with the given names
 entries. Explicitly excluding fields through ``exclude_fields`` takes precedence over specifying which fields to
 include.
 
-For example, to exclude the field ``last_updated``, use ``auditlog.register(MyModel, exclude_fields=['last_updated'])``.
+For example, to exclude the field ``last_updated``, use::
+
+    auditlog.register(MyModel, exclude_fields=['last_updated'])
 
 .. versionadded:: 0.3.0
 
