@@ -9,4 +9,4 @@ env:
 install:
   - "pip install -r requirements.txt"
   - "pip install Django==$DJANGO_VERSION"
-script: "python src/manage.py test testapp.tests"
+script: "python src/manage.py test testapp"
