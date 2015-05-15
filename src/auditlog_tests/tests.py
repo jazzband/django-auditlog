@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from testapp.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
+from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
     SimpleIncludeModel, SimpleExcludeModel
 
 
