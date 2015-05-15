@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import QuerySet, Q
 from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
@@ -58,6 +59,23 @@ class LogEntryManager(models.Manager):
             return self.filter(content_type=content_type, object_id=pk)
         else:
             return self.filter(content_type=content_type, object_pk=pk)
+
+    def get_for_objects(self, queryset):
+        """
+        Get log entries for the objects in the specified queryset.
+
+        :param queryset: The queryset to get the log entries for.
+        :type queryset: QuerySet
+        :return: The LogEntry objects for the objects in the given queryset.
+        :rtype: QuerySet
+        """
+        if not isinstance(queryset, QuerySet) or queryset.count() == 0:
+            return self.none()
+
+        content_type = ContentType.objects.get_for_model(queryset.model)
+        primary_keys = queryset.values_list(queryset.model._meta.pk.name, flat=True)
+
+        return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys) | Q(object_pk__in=primary_keys))
 
     def get_for_model(self, model):
         """
