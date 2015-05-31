@@ -7,8 +7,8 @@ from django.utils.encoding import smart_text
 
 def model_instance_diff(old, new):
     """
-    Calculates the differences between two model instances. One of the instances may be None (i.e., a newly
-    created model or deleted model). This will cause all fields with a value to have changed (from None).
+    Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
+    created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
 
     :param old: The old state of the model instance.
     :type old: Model
@@ -16,7 +16,7 @@ def model_instance_diff(old, new):
     :type new: Model
     :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
              as value.
-    :rtype: {str: (str|None, str|None)}
+    :rtype: dict
     """
     from auditlog.registry import auditlog
 

@@ -31,9 +31,9 @@ class AuditlogModelRegistry(object):
         :param model: The model to register.
         :type model: Model
         :param include_fields: The fields to include. Implicitly excludes all other fields.
-        :type include_fields: [str]
+        :type include_fields: list
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
-        :type exclude_fields: [str]
+        :type exclude_fields: list
         """
         if issubclass(model, Model):
             self._registry[model] = {
