@@ -82,8 +82,33 @@ class SimpleExcludeModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class AdditionDataIncludedModel(models.Model):
+    """
+    A model where get_additional_data is defined which allows for logging extra
+    information about the model in JSON
+    """
+
+    label = models.CharField(max_length=100)
+    text = models.TextField(blank=True)
+    related = models.ForeignKey(SimpleModel)
+
+    history = AuditlogHistoryField()
+
+    def get_additional_data(self):
+        """
+        Returns JSON that captures a snapshot of additional details of the
+        model instance. This method, if defined, is accessed by auditlog
+        manager and added to each logentry instance on creation.
+        """
+        object_details = {
+            'related_model_id': self.related.id,
+            'related_model_text': self.related.text
+        }
+        return object_details
+
 auditlog.register(SimpleModel)
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(SimpleIncludeModel, include_fields=['label', ])
 auditlog.register(SimpleExcludeModel, exclude_fields=['label', ])
+auditlog.register(AdditionDataIncludedModel)
