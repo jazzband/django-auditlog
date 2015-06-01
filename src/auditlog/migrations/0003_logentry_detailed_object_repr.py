@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='logentry',
-            name='detailed_object_repr',
+            name='additional_data',
             field=jsonfield.fields.JSONField(null=True, blank=True),
         ),
     ]
