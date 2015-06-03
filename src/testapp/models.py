@@ -82,7 +82,7 @@ class SimpleExcludeModel(models.Model):
     history = AuditlogHistoryField()
 
 
-class AdditionDataIncludedModel(models.Model):
+class AdditionalDataIncludedModel(models.Model):
     """
     A model where get_additional_data is defined which allows for logging extra
     information about the model in JSON
@@ -111,4 +111,4 @@ auditlog.register(AltPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(SimpleIncludeModel, include_fields=['label', ])
 auditlog.register(SimpleExcludeModel, exclude_fields=['label', ])
-auditlog.register(AdditionDataIncludedModel)
+auditlog.register(AdditionalDataIncludedModel)

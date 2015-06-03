@@ -7,7 +7,7 @@ from django.test import TestCase, RequestFactory
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from testapp.models import (SimpleModel, AltPrimaryKeyModel, ProxyModel,
-    SimpleIncludeModel, SimpleExcludeModel, AdditionDataIncludedModel,)
+    SimpleIncludeModel, SimpleExcludeModel, AdditionalDataIncludedModel,)
 
 
 class SimpleModelTest(TestCase):
@@ -191,7 +191,7 @@ class AdditionalDataModelTest(TestCase):
 
     def test_model_with_additional_data(self):
         related_model = SimpleModel.objects.create(text='Log my reference')
-        obj_with_additional_data = AdditionDataIncludedModel(
+        obj_with_additional_data = AdditionalDataIncludedModel(
             label='Additional data to log entries', related=related_model)
         obj_with_additional_data.save()
         self.assertTrue(obj_with_additional_data.history.count() == 1,
