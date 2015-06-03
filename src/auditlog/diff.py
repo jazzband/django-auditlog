@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Model
+from django.db.models import Model, NOT_PROVIDED
 from django.utils.encoding import smart_text
 
 
 def model_instance_diff(old, new, **kwargs):
     """
     Calculate the differences between two model instances. One of the instances may be None (i.e., a newly
-    created model or deleted model). This will cause all fields with a value to have changed (from None).
-
+    created model or deleted model). This will cause all fields with a value to have changed (from the fields default
+    value).
     """
     from auditlog.registry import auditlog
 
@@ -48,17 +48,17 @@ def model_instance_diff(old, new, **kwargs):
 
     for field in fields:
         try:
-            old_value = smart_text(getattr(old, field.name, None))
+            old_value = getattr(old, field.name, None)
         except ObjectDoesNotExist:
-            old_value = None
+            old_value = field.default if field.default is not NOT_PROVIDED else None
 
         try:
-            new_value = smart_text(getattr(new, field.name, None))
+            new_value = getattr(new, field.name, None)
         except ObjectDoesNotExist:
             new_value = None
 
         if old_value != new_value:
-            diff[field.name] = (old_value, new_value)
+            diff[field.name] = (smart_text(old_value), smart_text(new_value))
 
     if len(diff) == 0:
         diff = None
