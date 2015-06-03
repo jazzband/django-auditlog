@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+import threading
 
 from django.conf import settings
 from django.contrib.contenttypes import generic
@@ -119,6 +120,7 @@ class LogEntry(models.Model):
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
     changes = models.TextField(blank=True, verbose_name=_("change message"))
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
+    remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
 
     objects = LogEntryManager()
@@ -140,6 +142,13 @@ class LogEntry(models.Model):
             fstring = _("Logged {repr:s}")
 
         return fstring.format(repr=self.object_repr)
+
+    def clean(self):
+        threadlocal = threading.local()
+
+        # Set remote_addr on creation if empty and available in thread
+        if not self.pk and self.remote_addr is None and hasattr(threadlocal, 'auditlog'):
+            self.remote_addr = threading.local().auditlog.get('remote_addr', None)
 
     @property
     def changes_dict(self):
