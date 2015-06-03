@@ -7,7 +7,7 @@ from django.test import TestCase, RequestFactory
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
-    SimpleIncludeModel, SimpleExcludeModel
+    SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel
 
 
 class SimpleModelTest(TestCase):
@@ -73,6 +73,20 @@ class AltPrimaryKeyModelTest(SimpleModelTest):
 class ProxyModelTest(SimpleModelTest):
     def setUp(self):
         self.obj = ProxyModel.objects.create(text='I am not what you think.')
+
+
+class ManyRelatedModelTest(TestCase):
+    """
+    Test the behaviour of a many-to-many relationship.
+    """
+    def setUp(self):
+        self.obj = ManyRelatedModel.objects.create()
+        self.rel_obj = ManyRelatedModel.objects.create()
+        self.obj.related.add(self.rel_obj)
+
+    def test_related(self):
+        self.assertEqual(LogEntry.objects.get_for_objects(self.obj.related.all()).count(), self.rel_obj.history.count())
+        self.assertEqual(LogEntry.objects.get_for_objects(self.obj.related.all()).first(), self.rel_obj.history.first())
 
 
 class MiddlewareTest(TestCase):

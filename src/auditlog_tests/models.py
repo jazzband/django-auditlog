@@ -85,5 +85,8 @@ class SimpleExcludeModel(models.Model):
 auditlog.register(SimpleModel)
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(ProxyModel)
+auditlog.register(RelatedModel)
+auditlog.register(ManyRelatedModel)
+auditlog.register(ManyRelatedModel.related.through)
 auditlog.register(SimpleIncludeModel, include_fields=['label', ])
 auditlog.register(SimpleExcludeModel, exclude_fields=['text', ])
