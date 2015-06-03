@@ -5,6 +5,26 @@ from django.db.models import Model, NOT_PROVIDED
 from django.utils.encoding import smart_text
 
 
+def get_fields_in_model(instance):
+    """
+    Returns the list of fields in the given model instance. Checks whether to use the official _meta API or use the raw
+    data. This method excludes many to many fields.
+
+    :param instance: The model instance to get the fields for
+    :type instance: Model
+    :return: The list of fields for the given model (instance)
+    :rtype: list
+    """
+    assert isinstance(instance, Model)
+
+    # Check if the Django 1.8 _meta API is available
+    use_api = hasattr(instance._meta, 'get_fields') and callable(instance._meta.get_fields)
+
+    if use_api:
+        return [f for f in instance._meta.get_fields() if not f.many_to_many]
+    return instance._meta.fields
+
+
 def model_instance_diff(old, new, **kwargs):
     """
     Calculate the differences between two model instances. One of the instances may be None (i.e., a newly
@@ -21,13 +41,13 @@ def model_instance_diff(old, new, **kwargs):
     diff = {}
 
     if old is not None and new is not None:
-        fields = set(old._meta.fields + new._meta.fields)
+        fields = set(get_fields_in_model(old) + get_fields_in_model(new))
         model_fields = auditlog.get_model_fields(new._meta.model)
     elif old is not None:
-        fields = set(old._meta.fields)
+        fields = set(get_fields_in_model(old))
         model_fields = auditlog.get_model_fields(old._meta.model)
     elif new is not None:
-        fields = set(new._meta.fields)
+        fields = set(get_fields_in_model(new))
         model_fields = auditlog.get_model_fields(new._meta.model)
     else:
         fields = set()
