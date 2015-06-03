@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import json
-import threading
 
 from django.conf import settings
 from django.contrib.contenttypes import generic
@@ -142,13 +141,6 @@ class LogEntry(models.Model):
             fstring = _("Logged {repr:s}")
 
         return fstring.format(repr=self.object_repr)
-
-    def clean(self):
-        threadlocal = threading.local()
-
-        # Set remote_addr on creation if empty and available in thread
-        if not self.pk and self.remote_addr is None and hasattr(threadlocal, 'auditlog'):
-            self.remote_addr = threading.local().auditlog.get('remote_addr', None)
 
     @property
     def changes_dict(self):

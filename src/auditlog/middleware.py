@@ -70,3 +70,5 @@ class AuditlogMiddleware(object):
             auth_user_model = get_model('auth', 'user')
         if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
             instance.actor = user
+        if hasattr(threadlocal, 'auditlog'):
+            instance.remote_addr = threading.local().auditlog['remote_addr']
