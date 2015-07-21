@@ -9,3 +9,4 @@ install:
   - "pip install -r requirements.txt"
   - "pip install Django==$DJANGO_VERSION"
 script: "python src/runtests.py"
+sudo: false
