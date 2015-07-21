@@ -11,6 +11,8 @@ from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
+from jsonfield import JSONField
+
 
 class LogEntryManager(models.Manager):
     """
@@ -32,6 +34,10 @@ class LogEntryManager(models.Manager):
 
             if isinstance(pk, integer_types):
                 kwargs.setdefault('object_id', pk)
+
+            get_additional_data = getattr(instance, 'get_additional_data', None)
+            if callable(get_additional_data):
+                kwargs.setdefault('additional_data', get_additional_data())
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
@@ -138,6 +144,7 @@ class LogEntry(models.Model):
     changes = models.TextField(blank=True, verbose_name=_("change message"))
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
+    additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
 
     objects = LogEntryManager()
 
