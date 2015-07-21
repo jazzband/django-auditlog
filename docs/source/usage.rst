@@ -44,7 +44,8 @@ Actors
 ------
 
 When using automatic logging, the actor is empty by default. However, auditlog can set the actor from the current
-request automatically. This does not need any custom code, adding a middleware class is enough.
+request automatically. This does not need any custom code, adding a middleware class is enough. When an actor is logged
+the remote address of that actor will be logged as well.
 
 To enable the automatic logging of the actors, simply add the following to your ``MIDDLEWARE_CLASSES`` setting in your
 project's configuration file::

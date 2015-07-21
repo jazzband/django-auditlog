@@ -6,9 +6,12 @@ from django.conf import settings
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import QuerySet, Q
 from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
+
+from jsonfield import JSONField
 
 
 class LogEntryManager(models.Manager):
@@ -37,6 +40,10 @@ class LogEntryManager(models.Manager):
 
             if isinstance(pk, integer_types):
                 kwargs.setdefault('object_id', pk)
+
+            get_additional_data = getattr(instance, 'get_additional_data', None)
+            if callable(get_additional_data):
+                kwargs.setdefault('additional_data', get_additional_data())
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
@@ -69,6 +76,23 @@ class LogEntryManager(models.Manager):
             return self.filter(content_type=content_type, object_id=pk)
         else:
             return self.filter(content_type=content_type, object_pk=pk)
+
+    def get_for_objects(self, queryset):
+        """
+        Get log entries for the objects in the specified queryset.
+
+        :param queryset: The queryset to get the log entries for.
+        :type queryset: QuerySet
+        :return: The LogEntry objects for the objects in the given queryset.
+        :rtype: QuerySet
+        """
+        if not isinstance(queryset, QuerySet) or queryset.count() == 0:
+            return self.none()
+
+        content_type = ContentType.objects.get_for_model(queryset.model)
+        primary_keys = queryset.values_list(queryset.model._meta.pk.name, flat=True)
+
+        return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys) | Q(object_pk__in=primary_keys)).distinct()
 
     def get_for_model(self, model):
         """
@@ -142,7 +166,9 @@ class LogEntry(models.Model):
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
     changes = models.TextField(blank=True, verbose_name=_("change message"))
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
+    remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
+    additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
 
     objects = LogEntryManager()
 

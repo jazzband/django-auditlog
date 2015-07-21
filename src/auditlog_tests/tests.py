@@ -6,8 +6,8 @@ from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from testapp.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
-    SimpleIncludeModel, SimpleExcludeModel
+from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
+    SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, AdditionalDataIncludedModel
 
 
 class SimpleModelTest(TestCase):
@@ -73,6 +73,20 @@ class AltPrimaryKeyModelTest(SimpleModelTest):
 class ProxyModelTest(SimpleModelTest):
     def setUp(self):
         self.obj = ProxyModel.objects.create(text='I am not what you think.')
+
+
+class ManyRelatedModelTest(TestCase):
+    """
+    Test the behaviour of a many-to-many relationship.
+    """
+    def setUp(self):
+        self.obj = ManyRelatedModel.objects.create()
+        self.rel_obj = ManyRelatedModel.objects.create()
+        self.obj.related.add(self.rel_obj)
+
+    def test_related(self):
+        self.assertEqual(LogEntry.objects.get_for_objects(self.obj.related.all()).count(), self.rel_obj.history.count())
+        self.assertEqual(LogEntry.objects.get_for_objects(self.obj.related.all()).first(), self.rel_obj.history.first())
 
 
 class MiddlewareTest(TestCase):
@@ -178,3 +192,28 @@ class SimpeExcludeModelTest(TestCase):
         sem.text = 'Short text'
         sem.save()
         self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
+
+
+class AdditionalDataModelTest(TestCase):
+    """Log additional data if get_additional_data is defined in the model"""
+
+    def test_model_without_additional_data(self):
+        obj_wo_additional_data = SimpleModel.objects.create(text='No additional '
+                                                                 'data')
+        obj_log_entry = obj_wo_additional_data.history.get()
+        self.assertIsNone(obj_log_entry.additional_data)
+
+    def test_model_with_additional_data(self):
+        related_model = SimpleModel.objects.create(text='Log my reference')
+        obj_with_additional_data = AdditionalDataIncludedModel(
+            label='Additional data to log entries', related=related_model)
+        obj_with_additional_data.save()
+        self.assertTrue(obj_with_additional_data.history.count() == 1,
+                        msg="There is 1 log entry")
+        log_entry = obj_with_additional_data.history.get()
+        self.assertIsNotNone(log_entry.additional_data)
+        extra_data = log_entry.additional_data
+        self.assertTrue(extra_data['related_model_text'] == related_model.text,
+                        msg="Related model's text is logged")
+        self.assertTrue(extra_data['related_model_id'] == related_model.id,
+                        msg="Related model's id is logged")
