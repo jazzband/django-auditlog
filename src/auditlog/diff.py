@@ -5,6 +5,29 @@ from django.db.models import Model, NOT_PROVIDED
 from django.utils.encoding import smart_text
 
 
+def track_field(field):
+    """
+    Returns whether the given field should be tracked by Auditlog.
+
+    Untracked fields are many-to-many relations and relations to the Auditlog LogEntry model.
+
+    :param field: The field to check.
+    :type field: Field
+    :return: Whether the given field should be tracked.
+    :rtype: bool
+    """
+    from auditlog.models import LogEntry
+    # Do not track many to many relations
+    if field.many_to_many:
+        return False
+
+    # Do not track relations to LogEntry
+    if getattr(field, 'rel') is not None and field.rel.to == LogEntry:
+        return False
+
+    return True
+
+
 def get_fields_in_model(instance):
     """
     Returns the list of fields in the given model instance. Checks whether to use the official _meta API or use the raw
@@ -15,14 +38,13 @@ def get_fields_in_model(instance):
     :return: The list of fields for the given model (instance)
     :rtype: list
     """
-    from auditlog.models import AuditlogHistoryField
     assert isinstance(instance, Model)
 
     # Check if the Django 1.8 _meta API is available
     use_api = hasattr(instance._meta, 'get_fields') and callable(instance._meta.get_fields)
 
     if use_api:
-        return [f for f in instance._meta.get_fields() if not (f.many_to_many or isinstance(f, AuditlogHistoryField))]
+        return [f for f in instance._meta.get_fields() if track_field(f)]
     return instance._meta.fields
 
 
