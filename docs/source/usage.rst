@@ -1,6 +1,16 @@
 Usage
 =====
 
+.. py:currentmodule:: auditlog.models
+
+Manually logging changes
+------------------------
+
+Auditlog log entries are simple :py:class:`LogEntry` model instances. This makes creating a new log entry very easy. For
+even more convenience, :py:class:`LogEntryManager` provides a number of methods which take some work out of your hands.
+
+See :doc:`internals` for all details.
+
 Automatically logging changes
 -----------------------------
 
@@ -13,6 +23,7 @@ Registering your model for logging can be done with a single line of code, as th
     from django.db import models
 
     class MyModel(models.Model):
+        pass
         # Model definition goes here
 
     auditlog.register(MyModel)
@@ -20,6 +31,24 @@ Registering your model for logging can be done with a single line of code, as th
 It is recommended to place the register code (``auditlog.register(MyModel)``) at the bottom of your ``models.py`` file.
 This ensures that every time your model is imported it will also be registered to log changes. Auditlog makes sure that
 each model is only registered once, otherwise duplicate log entries would occur.
+
+**Excluding fields**
+
+Fields that are excluded will not trigger saving a new log entry and will not show up in the recorded changes.
+
+To exclude specific fields from the log you can pass ``include_fields`` resp. ``exclude_fields`` to the ``register``
+method. If ``exclude_fields`` is specified the fields with the given names will not be included in the generated log
+entries. If ``include_fields`` is specified only the fields with the given names will be included in the generated log
+entries. Explicitly excluding fields through ``exclude_fields`` takes precedence over specifying which fields to
+include.
+
+For example, to exclude the field ``last_updated``, use::
+
+    auditlog.register(MyModel, exclude_fields=['last_updated'])
+
+.. versionadded:: 0.3.0
+
+    Excluding fields
 
 Actors
 ------
@@ -48,11 +77,9 @@ It is recommended to keep all middleware that alters the request loaded before A
 Object history
 --------------
 
-.. py:currentmodule:: auditlog.models
-
 Auditlog ships with a custom field that enables you to easily get the log entries that are relevant to your object. This
-functionality is built on Django's content types framework (``django.contrib.contenttypes``). Using this field in your
-models is equally easy as any other field::
+functionality is built on Django's content types framework (:py:mod:`django.contrib.contenttypes`). Using this field in
+your models is equally easy as any other field::
 
     from auditlog.models import AuditlogHistoryField
     from auditlog.registry import auditlog
@@ -64,10 +91,33 @@ models is equally easy as any other field::
 
     auditlog.register(MyModel)
 
-:py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or ``False``, this
-defaults to ``True``. If your model has a custom primary key that is not an integer value, :py:attr:`pk_indexable` needs to be
-set to ``False``. Keep in mind that this might slow down queries.
+:py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or
+``False``, this defaults to ``True``. If your model has a custom primary key that is not an integer value,
+:py:attr:`pk_indexable` needs to be set to ``False``. Keep in mind that this might slow down queries.
 
-.. versionadded:: 0.2.1
+Many-to-many relationships
+--------------------------
 
-    South compatibility for :py:class:`AuditlogHistoryField`
+.. versionadded:: 0.3.0
+
+.. warning::
+
+    To-many relations are not officially supported. However, this section shows a workaround which can be used for now.
+    In the future, this workaround may be used in an official API or a completly different strategy might be chosen.
+    **Do not rely on the workaround here to be stable across releases.**
+
+By default, many-to-many relationships are not tracked by Auditlog.
+
+The history for a many-to-many relationship without an explicit 'through' model can be recorded by registering this
+model as follows::
+
+    auditlog.register(MyModel.related.through)
+
+The log entries for all instances of the 'through' model that are related to a ``MyModel`` instance can be retrieved
+with the :py:meth:`LogEntryManager.get_for_objects` method. The resulting QuerySet can be combined with any other
+queryset of :py:class:`LogEntry` instances. This way it is possible to get a list of all changes on an object and its
+related objects::
+
+    obj = MyModel.objects.first()
+    rel_history = LogEntry.objects.get_for_objects(obj.related.all())
+    full_history = (obj.history.all() | rel_history.all()).order_by('-timestamp')

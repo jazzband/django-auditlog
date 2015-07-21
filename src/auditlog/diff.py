@@ -48,11 +48,18 @@ def get_fields_in_model(instance):
     return instance._meta.fields
 
 
-def model_instance_diff(old, new, **kwargs):
+def model_instance_diff(old, new):
     """
-    Calculate the differences between two model instances. One of the instances may be None (i.e., a newly
-    created model or deleted model). This will cause all fields with a value to have changed (from the fields default
-    value).
+    Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
+    created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
+
+    :param old: The old state of the model instance.
+    :type old: Model
+    :param new: The new state of the model instance.
+    :type new: Model
+    :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
+             as value.
+    :rtype: dict
     """
     from auditlog.registry import auditlog
 
@@ -64,7 +71,7 @@ def model_instance_diff(old, new, **kwargs):
     diff = {}
 
     if old is not None and new is not None:
-        fields = set(get_fields_in_model(old) + get_fields_in_model(new))
+        fields = set(old._meta.fields + new._meta.fields)
         model_fields = auditlog.get_model_fields(new._meta.model)
     elif old is not None:
         fields = set(get_fields_in_model(old))
@@ -91,12 +98,12 @@ def model_instance_diff(old, new, **kwargs):
 
     for field in fields:
         try:
-            old_value = getattr(old, field.name, None)
+            old_value = smart_text(getattr(old, field.name, None))
         except ObjectDoesNotExist:
             old_value = field.default if field.default is not NOT_PROVIDED else None
 
         try:
-            new_value = getattr(new, field.name, None)
+            new_value = smart_text(getattr(new, field.name, None))
         except ObjectDoesNotExist:
             new_value = None
 

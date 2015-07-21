@@ -16,13 +16,19 @@ from jsonfield import JSONField
 
 class LogEntryManager(models.Manager):
     """
-    Custom manager for the LogEntry model.
+    Custom manager for the :py:class:`LogEntry` model.
     """
 
     def log_create(self, instance, **kwargs):
         """
-        Helper method to create a new log entry. This method automatically fills in some data when it is left out. It
-        was created to keep things DRY.
+        Helper method to create a new log entry. This method automatically populates some fields when no explicit value
+        is given.
+
+        :param instance: The model instance to log a change for.
+        :type instance: Model
+        :param kwargs: Field overrides for the :py:class:`LogEntry` object.
+        :return: The new log entry or `None` if there were no changes.
+        :rtype: LogEntry
         """
         changes = kwargs.get('changes', None)
         pk = self._get_pk_value(instance)
@@ -53,6 +59,11 @@ class LogEntryManager(models.Manager):
     def get_for_object(self, instance):
         """
         Get log entries for the specified model instance.
+
+        :param instance: The model instance to get log entries for.
+        :type instance: Model
+        :return: QuerySet of log entries for the given model instance.
+        :rtype: QuerySet
         """
         # Return empty queryset if the given model instance is not a model instance.
         if not isinstance(instance, models.Model):
@@ -86,6 +97,11 @@ class LogEntryManager(models.Manager):
     def get_for_model(self, model):
         """
         Get log entries for all objects of a specified type.
+
+        :param model: The model to get log entries for.
+        :type model: class
+        :return: QuerySet of log entries for the given model.
+        :rtype: QuerySet
         """
         # Return empty queryset if the given object is not valid.
         if not issubclass(model, models.Model):
@@ -98,6 +114,10 @@ class LogEntryManager(models.Manager):
     def _get_pk_value(self, instance):
         """
         Get the primary key field value for a model instance.
+
+        :param instance: The model instance to get the primary key for.
+        :type instance: Model
+        :return: The primary key value of the given model instance.
         """
         pk_field = instance._meta.pk.name
         pk = getattr(instance, pk_field, None)
@@ -124,7 +144,10 @@ class LogEntry(models.Model):
         """
         The actions that Auditlog distinguishes: creating, updating and deleting objects. Viewing objects is not logged.
         The values of the actions are numeric, a higher integer value means a more intrusive action. This may be useful
-        in some cases when comparing actions because __lt, __lte, __gt, __gte can be used in queries.
+        in some cases when comparing actions because the ``__lt``, ``__lte``, ``__gt``, ``__gte`` lookup filters can be
+        used in queries.
+
+        The valid actions are :py:attr:`Action.CREATE`, :py:attr:`Action.UPDATE` and :py:attr:`Action.DELETE`.
         """
         CREATE = 0
         UPDATE = 1
@@ -170,7 +193,7 @@ class LogEntry(models.Model):
     @property
     def changes_dict(self):
         """
-        Return the changes recorded in this log entry as a dictionary object.
+        :return: The changes recorded in this log entry as a dictionary object.
         """
         try:
             return json.loads(self.changes)
@@ -182,7 +205,12 @@ class LogEntry(models.Model):
         """
         Return the changes recorded in this log entry as a string. The formatting of the string can be customized by
         setting alternate values for colon, arrow and separator. If the formatting is still not satisfying, please use
-        changes_dict() and format the string yourself.
+        :py:func:`LogEntry.changes_dict` and format the string yourself.
+
+        :param colon: The string to place between the field name and the values.
+        :param arrow: The string to place between each old and new value.
+        :param separator: The string to place between each field.
+        :return: A readable string of the changes in this log entry.
         """
         substrings = []
 
@@ -201,15 +229,18 @@ class LogEntry(models.Model):
 
 class AuditlogHistoryField(generic.GenericRelation):
     """
-    A subclass of django.contrib.contenttypes.generic.GenericRelation that sets some default variables. This makes it
-    easier to implement the audit log in models, and makes future changes easier.
+    A subclass of py:class:`django.contrib.contenttypes.generic.GenericRelation` that sets some default variables. This
+    makes it easier to access Auditlog's log entries, for example in templates.
 
     By default this field will assume that your primary keys are numeric, simply because this is the most common case.
-    However, if you have a non-integer primary key, you can simply pass pk_indexable=False to the constructor, and
+    However, if you have a non-integer primary key, you can simply pass ``pk_indexable=False`` to the constructor, and
     Auditlog will fall back to using a non-indexed text based field for this model.
 
     Using this field will not automatically register the model for automatic logging. This is done so you can be more
     flexible with how you use this field.
+
+    :param pk_indexable: Whether the primary key for this model is not an :py:class:`int` or :py:class:`long`.
+    :type pk_indexable: bool
     """
 
     def __init__(self, pk_indexable=True, **kwargs):
