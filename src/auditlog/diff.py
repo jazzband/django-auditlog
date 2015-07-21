@@ -22,7 +22,7 @@ def track_field(field):
         return False
 
     # Do not track relations to LogEntry
-    if getattr(field, 'rel') is not None and field.rel.to == LogEntry:
+    if getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
         return False
 
     return True
