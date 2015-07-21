@@ -15,13 +15,14 @@ def get_fields_in_model(instance):
     :return: The list of fields for the given model (instance)
     :rtype: list
     """
+    from auditlog.models import AuditlogHistoryField
     assert isinstance(instance, Model)
 
     # Check if the Django 1.8 _meta API is available
     use_api = hasattr(instance._meta, 'get_fields') and callable(instance._meta.get_fields)
 
     if use_api:
-        return [f for f in instance._meta.get_fields() if not f.many_to_many]
+        return [f for f in instance._meta.get_fields() if not (f.many_to_many or isinstance(f, AuditlogHistoryField))]
     return instance._meta.fields
 
 
