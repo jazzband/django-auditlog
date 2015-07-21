@@ -8,7 +8,7 @@ import jsonfield.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auditlog', '0002_auto_support_long_primary_keys'),
+        ('auditlog', '0003_logentry_remote_addr'),
     ]
 
     operations = [
