@@ -20,7 +20,7 @@ https://travis-ci.org/jjkester/django-auditlog.
 Adding Auditlog to your Django application
 ------------------------------------------
 
-To use Auditlog in your application, just add ``'auditlog'`` to your project's ``INSTALLED_APPS`` setting and run either
+To use Auditlog in your application, just add ``'auditlog'`` to your project's ``INSTALLED_APPS`` setting and run
 ``manage.py migrate`` to create/upgrade the necessary database structure.
 
 If you want Auditlog to automatically set the actor for log entries you also need to enable the middleware by adding
