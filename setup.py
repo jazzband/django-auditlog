@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='django-auditlog',
-    version='0.3.0',
+    version='0.3.1',
     packages=['auditlog', 'auditlog.migrations'],
     package_dir={'': 'src'},
     url='https://github.com/jjkester/django-auditlog',
