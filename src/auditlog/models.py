@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 
 from django.conf import settings
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import QuerySet, Q
@@ -227,9 +227,9 @@ class LogEntry(models.Model):
         return separator.join(substrings)
 
 
-class AuditlogHistoryField(generic.GenericRelation):
+class AuditlogHistoryField(GenericRelation):
     """
-    A subclass of py:class:`django.contrib.contenttypes.generic.GenericRelation` that sets some default variables. This
+    A subclass of py:class:`django.contrib.contenttypes.fields.GenericRelation` that sets some default variables. This
     makes it easier to access Auditlog's log entries, for example in templates.
 
     By default this field will assume that your primary keys are numeric, simply because this is the most common case.
