@@ -6,3 +6,8 @@ src/auditlog/middleware.py
 src/auditlog/models.py
 src/auditlog/receivers.py
 src/auditlog/registry.py
+src/auditlog/migrations/0001_initial.py
+src/auditlog/migrations/0002_auto_support_long_primary_keys.py
+src/auditlog/migrations/0003_logentry_remote_addr.py
+src/auditlog/migrations/0004_logentry_detailed_object_repr.py
+src/auditlog/migrations/__init__.py
