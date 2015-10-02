@@ -6,7 +6,11 @@ import time
 from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.functional import curry
-from django.db.models.loading import get_model
+try:
+    from django.apps import apps
+    get_model = apps.get_model
+except ImportError:  # Django < 1.9 pragma: no cover
+    from django.db.models.loading import get_model
 from auditlog.models import LogEntry
 
 
