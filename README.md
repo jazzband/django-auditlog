@@ -1,5 +1,3 @@
-*Since my time is very, very limited at the moment and my personal need for the functionality provided by django-auditlog has gone development might be very slow. However, I am happy to look at pull requests for issues. If you like to be a permanent contributor, please contact me (janjelle [at] jjkester [dot] nl).*
-
 django-auditlog
 ===============
 
@@ -9,14 +7,14 @@ django-auditlog
 
 ```django-auditlog``` (Auditlog) is a reusable app for Django that makes logging object changes a breeze. Auditlog tries to use as much as Python and Django’s built in functionality to keep the list of dependencies as short as possible. Also, Auditlog aims to be fast and simple to use.
 
-Auditlog is created out of the need for a simple Django app that logs changes to models, including the user that changed the models (later referred to as actor). Existing solutions seemed to offer a type of version control, which was not needed and would cause too much overhead.
+Auditlog is created out of the need for a simple Django app that logs changes to models along with the user who made the changes (later referred to as actor). Existing solutions seemed to offer a type of version control, which was found excessive and expensive in terms of database storage and performance.
 
-The core idea of Auditlog is similar to the log from Django’s admin. Unlike the log from Django’s admin (django.contrib.admin) Auditlog is much more flexible and also saves a summary of the changes in JSON format, so changes can be tracked easily.
+The core idea of Auditlog is similar to the log from Django’s admin. Unlike the log from Django’s admin (```django.contrib.admin```) Auditlog is much more flexible. Also, Auditlog saves a summary of the changes in JSON format, so changes can be tracked easily.
 
 Documentation
 -------------
 
-The documentation for ``django-auditlog`` can be found on http://django-auditlog.readthedocs.org.
+The documentation for ```django-auditlog``` can be found on http://django-auditlog.readthedocs.org. The source files are available in the ```docs``` folder.
 
 License
 -------
