@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
+from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
     SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, AdditionalDataIncludedModel
 
@@ -217,3 +218,44 @@ class AdditionalDataModelTest(TestCase):
                         msg="Related model's text is logged")
         self.assertTrue(extra_data['related_model_id'] == related_model.id,
                         msg="Related model's id is logged")
+
+
+class UnregisterTest(TestCase):
+    def setUp(self):
+        auditlog.unregister(SimpleModel)
+        self.obj = SimpleModel.objects.create(text='No history')
+
+    def tearDown(self):
+        # Re-register for future tests
+        auditlog.register(SimpleModel)
+
+    def test_unregister_create(self):
+        """Creation is not logged after unregistering."""
+        # Get the object to work with
+        obj = self.obj
+
+        # Check for log entries
+        self.assertTrue(obj.history.count() == 0, msg="There are no log entries")
+
+    def test_unregister_update(self):
+        """Updates are not logged after unregistering."""
+        # Get the object to work with
+        obj = self.obj
+
+        # Change something
+        obj.boolean = True
+        obj.save()
+
+        # Check for log entries
+        self.assertTrue(obj.history.count() == 0, msg="There are no log entries")
+
+    def test_unregister_delete(self):
+        """Deletion is not logged after unregistering."""
+        # Get the object to work with
+        obj = self.obj
+
+        # Delete the object
+        obj.delete()
+
+        # Check for log entries
+        self.assertTrue(LogEntry.objects.count() == 0, msg="There are no log entries")

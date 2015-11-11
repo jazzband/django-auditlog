@@ -81,8 +81,8 @@ class AuditlogModelRegistry(object):
         """
         Disconnect signals for the model.
         """
-        for signal, receiver in self._signals:
-            signal.disconnect(dispatch_uid=self._dispatch_uid(signal, model))
+        for signal, receiver in self._signals.items():
+            signal.disconnect(sender=model, dispatch_uid=self._dispatch_uid(signal, model))
 
     def _dispatch_uid(self, signal, model):
         """
