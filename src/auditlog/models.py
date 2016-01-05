@@ -92,7 +92,11 @@ class LogEntryManager(models.Manager):
         content_type = ContentType.objects.get_for_model(queryset.model)
         primary_keys = queryset.values_list(queryset.model._meta.pk.name, flat=True)
 
-        return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys) | Q(object_pk__in=primary_keys)).distinct()
+        if isinstance(primary_keys[0], integer_types):
+            return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys)).distinct()
+        else:
+            return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
+
 
     def get_for_model(self, model):
         """
