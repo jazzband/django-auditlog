@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 import json
+import logging
 
 from auditlog.diff import model_instance_diff
-from auditlog.models import LogEntry
 
 
 def log_create(sender, instance, created, **kwargs):
@@ -15,11 +15,10 @@ def log_create(sender, instance, created, **kwargs):
     if created:
         changes = model_instance_diff(None, instance)
 
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.CREATE,
-            changes=json.dumps(changes),
-        )
+        logging.info({ "LogType": "AuditLog", "Class": str(instance.__class__.__name__),
+                       "InstanceID": int(instance.id), "Action": "Create",
+                       "Changes": json.dumps(changes)}
+                     )
 
 
 def log_update(sender, instance, **kwargs):
@@ -40,11 +39,10 @@ def log_update(sender, instance, **kwargs):
 
             # Log an entry only if there are changes
             if changes:
-                log_entry = LogEntry.objects.log_create(
-                    instance,
-                    action=LogEntry.Action.UPDATE,
-                    changes=json.dumps(changes),
-                )
+                logging.info({ 'LogType': 'AuditLog', 'Class': str(instance.__class__.__name__),
+                               'InstanceID': int(instance.id), 'Action': 'Update',
+                               'Changes':json.dumps(changes)}
+                             )
 
 
 def log_delete(sender, instance, **kwargs):
@@ -56,8 +54,7 @@ def log_delete(sender, instance, **kwargs):
     if instance.pk is not None:
         changes = model_instance_diff(instance, None)
 
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.DELETE,
-            changes=json.dumps(changes),
-        )
+        logging.info({ 'LogType': 'AuditLog', 'Class': str(instance.__class__.__name__),
+                       'InstanceID': int(instance.id), 'Action': 'Delete',
+                       'Changes': changes}
+                     )
