@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='logentry',
             name='object_pk',
-            field=models.TextField(verbose_name='object pk', db_index=True),
+            field=models.CharField(verbose_name='object pk', db_index=True, max_length=255),
         ),
     ]
