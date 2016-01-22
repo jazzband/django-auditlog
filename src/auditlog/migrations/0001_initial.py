@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='LogEntry',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('object_pk', models.TextField(verbose_name='object pk')),
+                ('object_pk', models.CharField(max_length=255, verbose_name='object pk')),
                 ('object_id', models.PositiveIntegerField(db_index=True, null=True, verbose_name='object id', blank=True)),
                 ('object_repr', models.TextField(verbose_name='object representation')),
                 ('action', models.PositiveSmallIntegerField(verbose_name='action', choices=[(0, 'create'), (1, 'update'), (2, 'delete')])),
