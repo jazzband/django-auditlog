@@ -97,7 +97,6 @@ class LogEntryManager(models.Manager):
         else:
             return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
 
-
     def get_for_model(self, model):
         """
         Get log entries for all objects of a specified type.
