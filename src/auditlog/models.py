@@ -163,7 +163,7 @@ class LogEntry(models.Model):
         )
 
     content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
-    object_pk = models.TextField(db_index=True, verbose_name=_("object pk"))
+    object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
     object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
