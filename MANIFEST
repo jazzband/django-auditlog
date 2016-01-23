@@ -13,4 +13,5 @@ src/auditlog/migrations/0003_logentry_remote_addr.py
 src/auditlog/migrations/0004_logentry_detailed_object_repr.py
 src/auditlog/migrations/0005_logentry_additional_data_verbose_name.py
 src/auditlog/migrations/0006_object_pk_index.py
+src/auditlog/migrations/0007_object_pk_type.py
 src/auditlog/migrations/__init__.py
