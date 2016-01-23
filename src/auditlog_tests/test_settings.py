@@ -22,3 +22,5 @@ DATABASES = {
         'NAME': 'auditlog_tests.db',
     }
 }
+
+ROOT_URLCONF = []
