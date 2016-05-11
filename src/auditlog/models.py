@@ -11,7 +11,7 @@ from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
-from jsonfield import JSONField
+from jsonfield.fields import JSONField
 
 
 class LogEntryManager(models.Manager):
