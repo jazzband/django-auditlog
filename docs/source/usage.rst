@@ -121,3 +121,17 @@ related objects::
     obj = MyModel.objects.first()
     rel_history = LogEntry.objects.get_for_objects(obj.related.all())
     full_history = (obj.history.all() | rel_history.all()).order_by('-timestamp')
+
+Management commands
+-------------------
+
+.. versionadded:: 0.4.0
+
+Auditlog provides the ``auditlogflush`` management command to clear all log entries from the database.
+
+The command asks for confirmation, it is not possible to execute the command without giving any form of (simulated) user
+input.
+
+.. warning::
+
+    Using the ``auditlogflush`` command deletes all log entries permanently and irreversibly from the database.
