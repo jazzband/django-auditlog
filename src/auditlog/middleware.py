@@ -9,11 +9,17 @@ from django.utils.functional import curry
 from django.apps import apps
 from auditlog.models import LogEntry
 
+# Use MiddlewareMixin when present (Django >= 1.10)
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    MiddlewareMixin = object
+
 
 threadlocal = threading.local()
 
 
-class AuditlogMiddleware(object):
+class AuditlogMiddleware(MiddlewareMixin):
     """
     Middleware to couple the request's user to log items. This is accomplished by currying the signal receiver with the
     user from the request (or None if the user is not authenticated).
