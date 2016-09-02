@@ -3,3 +3,5 @@
 *.pyc
 *.db
 local_settings.py
+.pydevproject
+.project
