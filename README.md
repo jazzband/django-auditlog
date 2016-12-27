@@ -4,7 +4,8 @@ django-auditlog
 [![Build Status](https://travis-ci.org/jjkester/django-auditlog.svg?branch=master)](https://travis-ci.org/jjkester/django-auditlog)
 [![Docs](https://readthedocs.org/projects/django-auditlog/badge/?version=latest)](http://django-auditlog.readthedocs.org/en/latest/?badge=latest)
 
-**Please remember that this app is still in development and not yet suitable for production environments.**
+**Please remember that this app is still in development.**
+**Test this app before deploying it in production environments.**
 
 ```django-auditlog``` (Auditlog) is a reusable app for Django that makes logging object changes a breeze. Auditlog tries to use as much as Python and Django’s built in functionality to keep the list of dependencies as short as possible. Also, Auditlog aims to be fast and simple to use.
 
