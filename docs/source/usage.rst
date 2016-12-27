@@ -135,3 +135,11 @@ input.
 .. warning::
 
     Using the ``auditlogflush`` command deletes all log entries permanently and irreversibly from the database.
+
+Django Admin integration
+------------------------
+
+.. versionadded:: 0.4.1
+
+When ``auditlog`` is added to your ``INSTALLED_APPS`` setting a customized admin class is active providing an enhanced
+Django Admin interface for log entries.
