@@ -4,7 +4,9 @@ src/auditlog/__init__.py
 src/auditlog/admin.py
 src/auditlog/apps.py
 src/auditlog/diff.py
+src/auditlog/filters.py
 src/auditlog/middleware.py
+src/auditlog/mixins.py
 src/auditlog/models.py
 src/auditlog/receivers.py
 src/auditlog/registry.py
