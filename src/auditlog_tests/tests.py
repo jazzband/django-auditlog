@@ -4,11 +4,14 @@ from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
+from django.utils import timezone
+
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
-    SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, AdditionalDataIncludedModel
+    SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, AdditionalDataIncludedModel, \
+    DateTimeFieldModel
 
 
 class SimpleModelTest(TestCase):
@@ -218,6 +221,68 @@ class AdditionalDataModelTest(TestCase):
                         msg="Related model's text is logged")
         self.assertTrue(extra_data['related_model_id'] == related_model.id,
                         msg="Related model's id is logged")
+
+
+class DateTimeFieldModelTest(TestCase):
+    """Tests if DateTimeField changes are recognised correctly"""
+
+    utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
+
+    def test_model_with_same_time(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        dtm.save()
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+        # Change timestamp to same datetime and timezone
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        dtm.timestamp = timestamp
+        dtm.save()
+
+        # Nothing should have changed
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+    def test_model_with_different_timezone(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        dtm.save()
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+        # Change timestamp to same datetime in another timezone
+        timestamp = datetime.datetime(2017, 1, 10, 13, 0, tzinfo=self.utc_plus_one)
+        dtm.timestamp = timestamp
+        dtm.save()
+
+        # Nothing should have changed
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+    def test_model_with_different_time(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        dtm.save()
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+        # Change timestamp to another datetime in the same timezone
+        timestamp = datetime.datetime(2017, 1, 10, 13, 0, tzinfo=timezone.utc)
+        dtm.timestamp = timestamp
+        dtm.save()
+
+        # The time should have changed.
+        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+
+    def test_model_with_different_time_and_timezone(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        dtm.save()
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+        # Change timestamp to another datetime and another timezone
+        timestamp = datetime.datetime(2017, 1, 10, 14, 0, tzinfo=self.utc_plus_one)
+        dtm.timestamp = timestamp
+        dtm.save()
+
+        # The time should have changed.
+        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
 
 
 class UnregisterTest(TestCase):
