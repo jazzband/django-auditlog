@@ -17,7 +17,10 @@ class LogEntryAdminMixin(object):
             app_label, model = settings.AUTH_USER_MODEL.split('.')
             viewname = 'admin:%s_%s_change' % (app_label, model.lower())
             link = urlresolvers.reverse(viewname, args=[obj.actor.id])
-            return u'<a href="%s">%s</a>' % (link, obj.actor.get_full_name() or obj.actor.email)
+            try:
+                return u'<a href="%s">%s</a>' % (link, obj.actor.get_full_name())
+            except AttributeError:
+                return u'<a href="%s">%s</a>' % (link, obj.actor.email)
         return 'system'
     user_url.allow_tags = True
     user_url.short_description = 'User'
