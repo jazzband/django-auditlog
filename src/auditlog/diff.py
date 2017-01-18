@@ -49,6 +49,34 @@ def get_fields_in_model(instance):
     return instance._meta.fields
 
 
+def get_field_value(obj, field):
+    """
+    Gets the value of a given model instance field.
+    :param obj: The model instance.
+    :type obj: Model
+    :param field: The field you want to find the value of.
+    :type field: Any
+    :return: The value of the field as a string.
+    :rtype: str
+    """
+    if isinstance(field, DateTimeField):
+        # DateTimeFields are timezone-aware, so we need to convert the field
+        # to its naive form before we can accuratly compare them for changes.
+        try:
+            value = field.to_python(getattr(obj, field.name, None))
+            if value is not None:
+                value = timezone.make_naive(value, timezone=timezone.utc)
+        except ObjectDoesNotExist:
+            value = field.default if field.default is not NOT_PROVIDED else None
+    else:
+        try:
+            value = smart_text(getattr(obj, field.name, None))
+        except ObjectDoesNotExist:
+            value = field.default if field.default is not NOT_PROVIDED else None
+
+    return value
+
+
 def model_instance_diff(old, new):
     """
     Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
@@ -98,26 +126,8 @@ def model_instance_diff(old, new):
         fields = filtered_fields
 
     for field in fields:
-        if isinstance(field, DateTimeField):
-            # DateTimeFields are timezone-aware, so we need to convert the field
-            # to its naive form before we can accuratly compare them for changes.
-            old_value = field.to_python(getattr(old, field.name, None))
-            if old_value is not None:
-                old_value = timezone.make_naive(old_value, timezone.utc)
-
-            new_value = field.to_python(getattr(new, field.name, None))
-            if new_value is not None:
-                new_value = timezone.make_naive(new_value, timezone.utc)
-        else:
-            try:
-                old_value = smart_text(getattr(old, field.name, None))
-            except ObjectDoesNotExist:
-                old_value = field.default if field.default is not NOT_PROVIDED else None
-
-            try:
-                new_value = smart_text(getattr(new, field.name, None))
-            except ObjectDoesNotExist:
-                new_value = None
+        old_value = get_field_value(old, field)
+        new_value = get_field_value(new, field)
 
         if old_value != new_value:
             diff[field.name] = (smart_text(old_value), smart_text(new_value))
