@@ -106,6 +106,18 @@ class AdditionalDataIncludedModel(models.Model):
         }
         return object_details
 
+
+class DateTimeFieldModel(models.Model):
+    """
+    A model with a DateTimeField, used to test DateTimeField
+    changes are detected properly.
+    """
+    label = models.CharField(max_length=100)
+    timestamp = models.DateTimeField()
+
+    history = AuditlogHistoryField()
+
+
 auditlog.register(SimpleModel)
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -115,3 +127,4 @@ auditlog.register(ManyRelatedModel.related.through)
 auditlog.register(SimpleIncludeModel, include_fields=['label'])
 auditlog.register(SimpleExcludeModel, exclude_fields=['text'])
 auditlog.register(AdditionalDataIncludedModel)
+auditlog.register(DateTimeFieldModel)

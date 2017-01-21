@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Model, NOT_PROVIDED
+from django.db.models import Model, NOT_PROVIDED, DateTimeField
+from django.utils import timezone
 from django.utils.encoding import smart_text
 
 
@@ -46,6 +47,34 @@ def get_fields_in_model(instance):
     if use_api:
         return [f for f in instance._meta.get_fields() if track_field(f)]
     return instance._meta.fields
+
+
+def get_field_value(obj, field):
+    """
+    Gets the value of a given model instance field.
+    :param obj: The model instance.
+    :type obj: Model
+    :param field: The field you want to find the value of.
+    :type field: Any
+    :return: The value of the field as a string.
+    :rtype: str
+    """
+    if isinstance(field, DateTimeField):
+        # DateTimeFields are timezone-aware, so we need to convert the field
+        # to its naive form before we can accuratly compare them for changes.
+        try:
+            value = field.to_python(getattr(obj, field.name, None))
+            if value is not None:
+                value = timezone.make_naive(value, timezone=timezone.utc)
+        except ObjectDoesNotExist:
+            value = field.default if field.default is not NOT_PROVIDED else None
+    else:
+        try:
+            value = smart_text(getattr(obj, field.name, None))
+        except ObjectDoesNotExist:
+            value = field.default if field.default is not NOT_PROVIDED else None
+
+    return value
 
 
 def model_instance_diff(old, new):
@@ -97,15 +126,8 @@ def model_instance_diff(old, new):
         fields = filtered_fields
 
     for field in fields:
-        try:
-            old_value = smart_text(getattr(old, field.name, None))
-        except ObjectDoesNotExist:
-            old_value = field.default if field.default is not NOT_PROVIDED else None
-
-        try:
-            new_value = smart_text(getattr(new, field.name, None))
-        except ObjectDoesNotExist:
-            new_value = None
+        old_value = get_field_value(old, field)
+        new_value = get_field_value(new, field)
 
         if old_value != new_value:
             diff[field.name] = (smart_text(old_value), smart_text(new_value))
