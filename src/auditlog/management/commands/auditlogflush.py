@@ -1,13 +1,13 @@
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand
 from six import moves
 
 from auditlog.models import LogEntry
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = 'Deletes all log entries from the database.'
 
-    def handle_noargs(self, **options):
+    def handle(self, *args, **options):
         answer = None
 
         while answer not in ['', 'y', 'n']:
