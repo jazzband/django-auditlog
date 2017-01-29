@@ -10,8 +10,8 @@ from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
-    SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, AdditionalDataIncludedModel, \
-    DateTimeFieldModel
+    SimpleIncludeModel, SimpleExcludeModel, ManyRelatedModel, AdditionalDataIncludedModel, \
+    DateTimeFieldModel, ChoicesFieldModel
 
 
 class SimpleModelTest(TestCase):
@@ -44,7 +44,8 @@ class SimpleModelTest(TestCase):
         obj.save()
 
         # Check for log entries
-        self.assertTrue(obj.history.filter(action=LogEntry.Action.UPDATE).count() == 1, msg="There is one log entry for 'UPDATE'")
+        self.assertTrue(obj.history.filter(action=LogEntry.Action.UPDATE).count() == 1,
+                        msg="There is one log entry for 'UPDATE'")
 
         history = obj.history.get(action=LogEntry.Action.UPDATE)
 
@@ -61,7 +62,9 @@ class SimpleModelTest(TestCase):
         obj.delete()
 
         # Check for log entries
-        self.assertTrue(LogEntry.objects.filter(content_type=history.content_type, object_pk=history.object_pk, action=LogEntry.Action.DELETE).count() == 1, msg="There is one log entry for 'DELETE'")
+        log_count = LogEntry.objects.filter(content_type=history.content_type,
+                                            object_pk=history.object_pk, action=LogEntry.Action.DELETE).count()
+        self.assertTrue(log_count == 1, msg="There is one log entry for 'DELETE'")
 
     def test_recreate(self):
         SimpleModel.objects.all().delete()
@@ -139,7 +142,8 @@ class MiddlewareTest(TestCase):
 
         # Run middleware
         self.middleware.process_request(request)
-        self.assertTrue(pre_save.has_listeners(LogEntry))  # The signal should be present before trying to disconnect it.
+        # The signal should be present before trying to disconnect it.
+        self.assertTrue(pre_save.has_listeners(LogEntry))
         self.middleware.process_response(request, HttpResponse())
 
         # Validate result
@@ -153,7 +157,8 @@ class MiddlewareTest(TestCase):
 
         # Run middleware
         self.middleware.process_request(request)
-        self.assertTrue(pre_save.has_listeners(LogEntry))  # The signal should be present before trying to disconnect it.
+        # The signal should be present before trying to disconnect it.
+        self.assertTrue(pre_save.has_listeners(LogEntry))
         self.middleware.process_exception(request, ValidationError("Test"))
 
         # Validate result
@@ -324,3 +329,21 @@ class UnregisterTest(TestCase):
 
         # Check for log entries
         self.assertTrue(LogEntry.objects.count() == 0, msg="There are no log entries")
+<<<<<<< Updated upstream
+=======
+
+
+class ChoicesFieldModelTest(TestCase):
+
+    def setUp(self):
+        self.obj = ChoicesFieldModel.objects.create(status=ChoicesFieldModel.RED)
+
+    def test_changes_display_dict(self):
+        changes_display_dict = self.obj.history.latest().changes_display_dict
+        self.assertTrue(changes_display_dict["status"][1] == "Red", msg="The human readable text 'Red' is displayed.")
+        self.obj.status = ChoicesFieldModel.GREEN
+        self.obj.save()
+        changes_display_dict = self.obj.history.latest().changes_display_dict
+        self.assertTrue(changes_display_dict["status"][1] == "Green",
+                        msg="The human readable text 'Green' is displayed.")
+>>>>>>> Stashed changes

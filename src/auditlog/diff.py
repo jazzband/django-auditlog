@@ -77,7 +77,7 @@ def get_field_value(obj, field):
     return value
 
 
-def model_instance_diff(old, new):
+def model_instance_diff(old, new):  # noqa: C901
     """
     Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
     created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
