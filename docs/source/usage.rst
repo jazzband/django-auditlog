@@ -50,6 +50,19 @@ For example, to exclude the field ``last_updated``, use::
 
     Excluding fields
 
+**Mapping fields**
+
+If you have field names on your models that aren't intuitive or user friendly you can include a dictionary of field mappings
+during the `register()` call.
+
+.. code-block:: python
+
+    auditlog.register(MyModel, mapping_fields={'sku': 'Product No.', 'version': 'Product Revision'})
+
+.. versionadded:: 0.5.0
+
+You do not need to map all the fields of the model, any fields not mapped will be displayed as they are defined in the model.
+
 Actors
 ------
 
@@ -94,6 +107,37 @@ your models is equally easy as any other field::
 :py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or
 ``False``, this defaults to ``True``. If your model has a custom primary key that is not an integer value,
 :py:attr:`pk_indexable` needs to be set to ``False``. Keep in mind that this might slow down queries.
+
+The :py:class:`AuditlogHistoryField` provides easy access to :py:class:`LogEntry` instances related to the model instance. Here is an example of how to use it:
+
+.. code-block:: html
+
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>From</th>
+            <th>To</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for key, value in mymodel.history.latest.changes_dict.iteritems %}
+          <tr>
+            <td>{{ key }}</td>
+            <td>{{ value.0|default:"None" }}</td>
+            <td>{{ value.1|default:"None" }}</td>
+          </tr>
+        {% empty %}
+          <p>No history for this item has been logged yet.</p>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+If you want to display the changes in a more human readable format use the :py:class:`LogEntry`'s :py:attr:`changes_display_dict` instead. The :py:attr:`changes_display_dict` will translate ``choices`` fields into their human readable form, display timestamps in the form ``Jun. 31, 2017 12:55pm``, and truncate text greater than 140 characters to 140 characters with an ellipsis appended.
+
+Check out the internals for the full list of attributes you can use to get associated :py:class:`LogEntry` instances.
 
 Many-to-many relationships
 --------------------------

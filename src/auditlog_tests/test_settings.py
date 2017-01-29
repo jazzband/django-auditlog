@@ -9,6 +9,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'auditlog',
     'auditlog_tests',
+    'multiselectfield',
 ]
 
 MIDDLEWARE_CLASSES = (
@@ -19,7 +20,7 @@ MIDDLEWARE_CLASSES = (
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'auditlog_tests.db',
+        'NAME': 'auditlog_test.db',
     }
 }
 

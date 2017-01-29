@@ -10,3 +10,4 @@
 venv/
 .tox/
 local_settings.py
+.coverage

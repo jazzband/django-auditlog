@@ -10,8 +10,9 @@ from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
-    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, \
-    AdditionalDataIncludedModel, DateTimeFieldModel
+    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
+    ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
+    CharfieldTextfieldModel
 
 
 class SimpleModelTest(TestCase):
@@ -215,6 +216,18 @@ class SimpeExcludeModelTest(TestCase):
         self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
 
 
+class SimpleMappingModelTest(TestCase):
+    """Diff displays fields as mapped field names where available through mapping_fields"""
+
+    def test_register_mapping_fields(self):
+        smm = SimpleMappingModel(sku='ASD301301A6', vtxt='2.1.5', not_mapped='Not mapped')
+        smm.save()
+        self.assertTrue(smm.history.latest().changes_dict['Product No.'][1] == 'ASD301301A6',
+                        msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.")
+        self.assertTrue(smm.history.latest().changes_dict['not_mapped'][1] == 'Not mapped',
+                        msg="The diff function does not map 'not_mapped' and can be retrieved.")
+
+
 class AdditionalDataModelTest(TestCase):
     """Log additional data if get_additional_data is defined in the model"""
 
@@ -301,6 +314,20 @@ class DateTimeFieldModelTest(TestCase):
         # The time should have changed.
         self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
 
+    def test_changes_display_dict_datetime(self):
+        timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        dtm.save()
+        self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
+                        timestamp.strftime("%b %d, %Y %I:%M %p"),
+                        msg="The datetime should be formatted in a human readable way.")
+        timestamp = timezone.now()
+        dtm.timestamp = timestamp
+        dtm.save()
+        self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
+                        timestamp.strftime("%b %d, %Y %I:%M %p"),
+                        msg="The datetime should be formatted in a human readable way.")
+
 
 class UnregisterTest(TestCase):
     def setUp(self):
@@ -341,3 +368,76 @@ class UnregisterTest(TestCase):
 
         # Check for log entries
         self.assertTrue(LogEntry.objects.count() == 0, msg="There are no log entries")
+
+
+class ChoicesFieldModelTest(TestCase):
+
+    def setUp(self):
+        self.obj = ChoicesFieldModel.objects.create(
+            status=ChoicesFieldModel.RED,
+            multiselect=[ChoicesFieldModel.RED, ChoicesFieldModel.GREEN],
+            multiplechoice=[ChoicesFieldModel.RED, ChoicesFieldModel.YELLOW, ChoicesFieldModel.GREEN],
+        )
+
+    def test_changes_display_dict_single_choice(self):
+
+        self.assertTrue(self.obj.history.latest().changes_display_dict["status"][1] == "Red",
+                        msg="The human readable text 'Red' is displayed.")
+        self.obj.status = ChoicesFieldModel.GREEN
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["status"][1] == "Green", msg="The human readable text 'Green' is displayed.")
+
+    def test_changes_display_dict_multiselect(self):
+        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Red, Green",
+                        msg="The human readable text for the two choices, 'Red, Green' is displayed.")
+        self.obj.multiselect = ChoicesFieldModel.GREEN
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
+                        msg="The human readable text 'Green' is displayed.")
+        self.obj.multiselect = None
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "None",
+                        msg="The human readable text 'None' is displayed.")
+        self.obj.multiselect = ChoicesFieldModel.GREEN
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
+                        msg="The human readable text 'Green' is displayed.")
+
+    def test_changes_display_dict_multiplechoice(self):
+        self.assertTrue(self.obj.history.latest().changes_display_dict["multiplechoice"][1] == "Red, Yellow, Green",
+                        msg="The human readable text 'Red, Yellow, Green' is displayed.")
+        self.obj.multiplechoice = ChoicesFieldModel.RED
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["multiplechoice"][1] == "Red",
+                        msg="The human readable text 'Red' is displayed.")
+
+
+class CharfieldTextfieldModelTest(TestCase):
+
+    def setUp(self):
+        self.PLACEHOLDER_LONGCHAR = "s" * 255
+        self.PLACEHOLDER_LONGTEXTFIELD = "s" * 1000
+        self.obj = CharfieldTextfieldModel.objects.create(
+            longchar=self.PLACEHOLDER_LONGCHAR,
+            longtextfield=self.PLACEHOLDER_LONGTEXTFIELD,
+        )
+
+    def test_changes_display_dict_longchar(self):
+        self.assertTrue(self.obj.history.latest().changes_display_dict["longchar"][1] == \
+                        "{}...".format(self.PLACEHOLDER_LONGCHAR[:140]),
+                        msg="The string should be truncated at 140 characters with an ellipsis at the end.")
+        SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGCHAR[:139]
+        self.obj.longchar = SHORTENED_PLACEHOLDER
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["longchar"][1] == SHORTENED_PLACEHOLDER,
+                        msg="The field should display the entire string because it is less than 140 characters")
+
+    def test_changes_display_dict_longtextfield(self):
+        self.assertTrue(self.obj.history.latest().changes_display_dict["longtextfield"][1] == \
+                "{}...".format(self.PLACEHOLDER_LONGTEXTFIELD[:140]),
+                msg="The string should be truncated at 140 characters with an ellipsis at the end.")
+        SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGTEXTFIELD[:139]
+        self.obj.longtextfield = SHORTENED_PLACEHOLDER
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["longtextfield"][1] == SHORTENED_PLACEHOLDER,
+                        msg="The field should display the entire string because it is less than 140 characters")

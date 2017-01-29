@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 import json
+import ast
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -12,6 +14,7 @@ from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
 from jsonfield.fields import JSONField
+from dateutil import parser
 
 
 class LogEntryManager(models.Manager):
@@ -232,6 +235,43 @@ class LogEntry(models.Model):
 
         return separator.join(substrings)
 
+    @property
+    def changes_display_dict(self):
+        """
+        :return: The changes recorded in this log entry intended for display to users as a dictionary object.
+        """
+        model = self.content_type.model_class()
+        changes_display_dict = {}
+        for field_name, values in iteritems(self.changes_dict):
+            field = model._meta.get_field(field_name)
+            values_display = []
+            if field.choices:
+                choices_dict = dict(field.choices)
+                for value in values:
+                    try:
+                        value = ast.literal_eval(value)
+                        if type(value) is [].__class__:
+                            values_display.append(', '.join([choices_dict.get(val, 'None') for val in value]))
+                        else:
+                            values_display.append(choices_dict.get(value, 'None'))
+                    except ValueError:
+                        values_display.append(choices_dict.get(value, 'None'))
+            else:
+                for value in values:
+                    try:
+                        value = parser.parse(value)
+                        value = value.strftime("%b %d, %Y %I:%M %p")
+                    except ValueError:
+                        pass
+
+                    if len(value) > 140:
+                        value = "{}...".format(value[:140])
+
+                    values_display.append(value)
+
+            changes_display_dict[field_name] = values_display
+        return changes_display_dict
+
 
 class AuditlogHistoryField(GenericRelation):
     """
@@ -259,6 +299,7 @@ class AuditlogHistoryField(GenericRelation):
 
         kwargs['content_type_field'] = 'content_type'
         super(AuditlogHistoryField, self).__init__(**kwargs)
+
 
 # South compatibility for AuditlogHistoryField
 try:

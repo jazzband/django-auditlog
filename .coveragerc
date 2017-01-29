@@ -1,0 +1,13 @@
+[run]
+branch = true
+
+[report]
+omit =
+   *site-packages*
+   *auditlog_tests*
+   *auditlog/migrations*
+   src/runtests.py
+show_missing = True
+exclude_lines =
+   pragma: no cover
+   raise NotImplementedError

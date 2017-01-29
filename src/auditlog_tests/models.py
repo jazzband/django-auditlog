@@ -4,6 +4,8 @@ from django.db import models
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 
+from multiselectfield import MultiSelectField
+
 
 @auditlog.register()
 class SimpleModel(models.Model):
@@ -101,6 +103,18 @@ class SimpleExcludeModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class SimpleMappingModel(models.Model):
+    """
+    A simple model used for register's mapping_fields kwarg
+    """
+
+    sku = models.CharField(max_length=100)
+    vtxt = models.CharField(max_length=100)
+    not_mapped = models.CharField(max_length=100)
+
+    history = AuditlogHistoryField()
+
+
 class AdditionalDataIncludedModel(models.Model):
     """
     A model where get_additional_data is defined which allows for logging extra
@@ -137,6 +151,41 @@ class DateTimeFieldModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class ChoicesFieldModel(models.Model):
+    """
+    A model with a CharField restricted to a set of choices.
+    This model is used to test the changes_display_dict method.
+    """
+    RED = 'r'
+    YELLOW = 'y'
+    GREEN = 'g'
+
+    STATUS_CHOICES = (
+        (RED, 'Red'),
+        (YELLOW, 'Yellow'),
+        (GREEN, 'Green'),
+    )
+
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES)
+    multiselect = MultiSelectField(max_length=3, choices=STATUS_CHOICES, max_choices=3)
+    multiplechoice = models.CharField(max_length=3, choices=STATUS_CHOICES)
+
+    history = AuditlogHistoryField()
+
+
+class CharfieldTextfieldModel(models.Model):
+    """
+    A model with a max length CharField and a Textfield.
+    This model is used to test the changes_display_dict
+    method's ability to truncate long text.
+    """
+
+    longchar = models.CharField(max_length=255)
+    longtextfield = models.TextField()
+
+    history = AuditlogHistoryField()
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -144,5 +193,8 @@ auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.related.through)
 auditlog.register(SimpleExcludeModel, exclude_fields=['text'])
+auditlog.register(SimpleMappingModel, mapping_fields={'sku': 'Product No.', 'vtxt': 'Version'})
 auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
+auditlog.register(ChoicesFieldModel)
+auditlog.register(CharfieldTextfieldModel)
