@@ -1,7 +1,9 @@
+*.db
+*.egg-info
 *.log
 *.pot
 *.pyc
-*.db
-local_settings.py
-.pydevproject
+.idea
 .project
+.pydevproject
+local_settings.py

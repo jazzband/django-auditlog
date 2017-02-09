@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, NOT_PROVIDED, DateTimeField
 from django.utils import timezone
@@ -64,7 +65,7 @@ def get_field_value(obj, field):
         # to its naive form before we can accuratly compare them for changes.
         try:
             value = field.to_python(getattr(obj, field.name, None))
-            if value is not None:
+            if value is not None and settings.USE_TZ:
                 value = timezone.make_naive(value, timezone=timezone.utc)
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
