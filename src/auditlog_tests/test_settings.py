@@ -24,3 +24,5 @@ DATABASES = {
 }
 
 ROOT_URLCONF = []
+
+USE_TZ = True
