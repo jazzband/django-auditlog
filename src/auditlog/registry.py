@@ -24,7 +24,7 @@ class AuditlogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model, include_fields=[], exclude_fields=[]):
+    def register(self, model=None, include_fields=[], exclude_fields=[]):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
@@ -35,14 +35,30 @@ class AuditlogModelRegistry(object):
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
         :type exclude_fields: list
         """
-        if issubclass(model, Model):
-            self._registry[model] = {
+        def registrar(cls):
+            """Register models for a given class."""
+            if not issubclass(cls, Model):
+                raise TypeError("Supplied model is not a valid model.")
+
+            # Register the model and signals.
+            self._registry[cls] = {
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
             }
-            self._connect_signals(model)
+            self._connect_signals(cls)
+
+            # We need to return the class, as the decorator is basically
+            # syntactic sugar for:
+            # MyClass = auditlog.register(MyClass)
+            return cls
+
+        if model is None:
+            # If we're being used as a decorator, return a callable with the
+            # wrapper.
+            return lambda cls: registrar(cls)
         else:
-            raise TypeError("Supplied model is not a valid model.")
+            # Otherwise, just register the model.
+            registrar(model)
 
     def contains(self, model):
         """

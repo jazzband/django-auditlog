@@ -3,6 +3,7 @@ from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 
 
+@auditlog.register()
 class SimpleModel(models.Model):
     """
     A simple model with no special things going on.
@@ -60,6 +61,7 @@ class ManyRelatedModel(models.Model):
     history = AuditlogHistoryField()
 
 
+@auditlog.register(include_fields=['label'])
 class SimpleIncludeModel(models.Model):
     """
     A simple model used for register's include_fields kwarg
@@ -118,13 +120,11 @@ class DateTimeFieldModel(models.Model):
     history = AuditlogHistoryField()
 
 
-auditlog.register(SimpleModel)
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.related.through)
-auditlog.register(SimpleIncludeModel, include_fields=['label'])
 auditlog.register(SimpleExcludeModel, exclude_fields=['text'])
 auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
