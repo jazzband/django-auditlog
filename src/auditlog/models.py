@@ -37,6 +37,7 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault('content_type', ContentType.objects.get_for_model(instance))
             kwargs.setdefault('object_pk', pk)
             kwargs.setdefault('object_repr', smart_text(instance))
+            kwargs.setdefault('app_name', instance._meta.app_label) # get the app name 
 
             if isinstance(pk, integer_types):
                 kwargs.setdefault('object_id', pk)
@@ -172,7 +173,7 @@ class LogEntry(models.Model):
     remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
     additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
-
+    app_name = models.CharField(max_length=255, blank=True, null=True)
     objects = LogEntryManager()
 
     class Meta:
