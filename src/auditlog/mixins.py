@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from django.core import urlresolvers
+from django.urls.exceptions import NoReverseMatch
 
 MAX = 75
 
@@ -26,8 +27,12 @@ class LogEntryAdminMixin(object):
     def resource_url(self, obj):
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = 'admin:%s_%s_change' % (app_label, model)
-        link = urlresolvers.reverse(viewname, args=[obj.object_id or obj.object_pk])
-        return u'<a href="%s">%s</a>' % (link, obj.object_repr)
+        try:
+            link = urlresolvers.reverse(viewname, args=[obj.object_id])
+        except NoReverseMatch:
+            return obj.object_repr
+        else:
+            return u'<a href="%s">%s</a>' % (link, obj.object_repr)
     resource_url.allow_tags = True
     resource_url.short_description = 'Resource'
 
