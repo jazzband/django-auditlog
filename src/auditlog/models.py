@@ -48,10 +48,13 @@ class LogEntryManager(models.Manager):
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
             if kwargs.get('action', None) is LogEntry.Action.CREATE:
-                if kwargs.get('object_id', None) is not None and self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).exists():
-                    self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).delete()
+                content_type = kwargs.get('content_type')
+                object_id = kwargs.get('object_id')
+                entry_exists = self.filter(content_type=content_type, object_id=object_id).exists()
+                if kwargs.get('object_id', None) is not None and entry_exists:
+                    self.filter(content_type=content_type, object_id=object_id).delete()
                 else:
-                    self.filter(content_type=kwargs.get('content_type'), object_pk=kwargs.get('object_pk', '')).delete()
+                    self.filter(content_type=content_type, object_pk=kwargs.get('object_pk', '')).delete()
 
             return self.create(**kwargs)
         return None
@@ -162,13 +165,22 @@ class LogEntry(models.Model):
             (DELETE, _("delete")),
         )
 
-    content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
+    content_type = models.ForeignKey(
+        'contenttypes.ContentType',
+        on_delete=models.CASCADE,
+        related_name='+',
+        verbose_name=_("content type"))
     object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
     object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
     changes = models.TextField(blank=True, verbose_name=_("change message"))
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True, null=True,
+        on_delete=models.SET_NULL,
+        related_name='+',
+        verbose_name=_("actor"))
     remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
     additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
@@ -256,6 +268,7 @@ class AuditlogHistoryField(GenericRelation):
 
         kwargs['content_type_field'] = 'content_type'
         super(AuditlogHistoryField, self).__init__(**kwargs)
+
 
 # South compatibility for AuditlogHistoryField
 try:

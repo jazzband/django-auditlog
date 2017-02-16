@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 120
+exclude = src/auditlog/migrations/*, docs/*
+max-complexity = 10
