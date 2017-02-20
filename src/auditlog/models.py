@@ -7,6 +7,7 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import QuerySet, Q
 from django.utils.encoding import python_2_unicode_compatible, smart_text
@@ -243,7 +244,14 @@ class LogEntry(models.Model):
         model = self.content_type.model_class()
         changes_display_dict = {}
         for field_name, values in iteritems(self.changes_dict):
-            field = model._meta.get_field(field_name)
+            try:
+                field = model._meta.get_field(field_name)
+            except FieldDoesNotExist:
+                from auditlog.registry import auditlog
+                model_fields = auditlog.get_model_fields(model._meta.model)
+                reversed_field = model_fields['reverse_mapping_fields'].get(field_name)
+                field = model._meta.get_field(reversed_field)
+
             values_display = []
             if field.choices:
                 choices_dict = dict(field.choices)

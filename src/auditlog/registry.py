@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Model
+from django.utils.six import iteritems
 
 
 class AuditlogModelRegistry(object):
@@ -41,10 +42,12 @@ class AuditlogModelRegistry(object):
                 raise TypeError("Supplied model is not a valid model.")
 
             # Register the model and signals.
+            reverse_mapping_fields = {v: k for k, v in iteritems(mapping_fields)}
             self._registry[cls] = {
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
                 'mapping_fields': mapping_fields,
+                'reverse_mapping_fields': reverse_mapping_fields,
             }
             self._connect_signals(cls)
 
@@ -112,6 +115,7 @@ class AuditlogModelRegistry(object):
             'include_fields': self._registry[model]['include_fields'],
             'exclude_fields': self._registry[model]['exclude_fields'],
             'mapping_fields': self._registry[model]['mapping_fields'],
+            'reverse_mapping_fields': self._registry[model]['reverse_mapping_fields']
         }
 
 

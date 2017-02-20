@@ -226,6 +226,10 @@ class SimpleMappingModelTest(TestCase):
                         msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.")
         self.assertTrue(smm.history.latest().changes_dict['not_mapped'][1] == 'Not mapped',
                         msg="The diff function does not map 'not_mapped' and can be retrieved.")
+        self.assertTrue(smm.history.latest().changes_display_dict['Product No.'][1] == 'ASD301301A6',
+                        msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.")
+        self.assertTrue(smm.history.latest().changes_display_dict['not_mapped'][1] == 'Not mapped',
+                        msg="The diff function does not map 'not_mapped' and can be retrieved.")
 
 
 class AdditionalDataModelTest(TestCase):
