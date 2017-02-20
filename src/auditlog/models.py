@@ -258,12 +258,24 @@ class LogEntry(models.Model):
                         values_display.append(choices_dict.get(value, 'None'))
             else:
                 for value in values:
-                    try:
-                        value = parser.parse(value)
-                        value = value.strftime("%b %d, %Y %I:%M %p")
-                    except ValueError:
-                        pass
-
+                    if "DateTime" in field.get_internal_type():
+                        try:
+                            value = parser.parse(value)
+                            value = value.strftime("%b %d, %Y %I:%M %p")
+                        except ValueError:
+                            pass
+                    elif "Date" in field.get_internal_type():
+                        try:
+                            value = parser.parse(value)
+                            value = value.strftime("%b %d, %Y")
+                        except ValueError:
+                            pass
+                    elif "Time" in field.get_internal_type():
+                        try:
+                            value = parser.parse(value)
+                            value = value.strftime("%I:%M %p")
+                        except ValueError:
+                            pass
                     if len(value) > 140:
                         value = "{}...".format(value[:140])
 
