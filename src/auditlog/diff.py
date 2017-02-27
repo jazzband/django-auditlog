@@ -130,6 +130,11 @@ def model_instance_diff(old, new):
         old_value = get_field_value(old, field)
         new_value = get_field_value(new, field)
 
+        # Generic IPAddress field sets default ''
+        # JSONField stores sets default to '[]
+        if old_value == 'None' and new_value in ['', '[]']:
+            continue
+
         if old_value != new_value:
             diff[field.name] = (smart_text(old_value), smart_text(new_value))
 
