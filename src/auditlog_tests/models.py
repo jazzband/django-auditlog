@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
@@ -23,6 +25,21 @@ class AltPrimaryKeyModel(models.Model):
     """
 
     key = models.CharField(max_length=100, primary_key=True)
+
+    text = models.TextField(blank=True)
+    boolean = models.BooleanField(default=False)
+    integer = models.IntegerField(blank=True, null=True)
+    datetime = models.DateTimeField(auto_now=True)
+
+    history = AuditlogHistoryField(pk_indexable=False)
+
+
+class UUIDPrimaryKeyModel(models.Model):
+    """
+    A model with a UUID primary key.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     text = models.TextField(blank=True)
     boolean = models.BooleanField(default=False)
@@ -121,6 +138,7 @@ class DateTimeFieldModel(models.Model):
 
 
 auditlog.register(AltPrimaryKeyModel)
+auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
