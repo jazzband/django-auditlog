@@ -24,7 +24,11 @@ def track_field(field):
         return False
 
     # Do not track relations to LogEntry
-    if getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
+    if getattr(field, 'remote_field', None) is not None and field.remote_field.model == LogEntry:
+        return False
+
+    # 1.8 check
+    elif getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
         return False
 
     return True
