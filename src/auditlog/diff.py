@@ -137,11 +137,6 @@ def model_instance_diff(old, new):
         old_value, old_value_string = get_field_value(old, field)
         new_value, new_value_string = get_field_value(new, field)
 
-        print old_value
-        print old_value_string
-        print new_value
-        print new_value_string
-
         if old_value != new_value:
             if old_value is None and new_value_string=="":
                 pass
