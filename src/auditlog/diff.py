@@ -73,13 +73,16 @@ def get_field_value(obj, field):
                 value = timezone.make_naive(value, timezone=timezone.utc)
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
+            
     else:
         try:
-            value = smart_text(getattr(obj, field.name, None))
+            value = getattr(obj, field.name, None)
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
 
-    return value
+    value_string = smart_text(value)
+
+    return (value,value_string)
 
 
 def model_instance_diff(old, new):
@@ -131,11 +134,19 @@ def model_instance_diff(old, new):
         fields = filtered_fields
 
     for field in fields:
-        old_value = get_field_value(old, field)
-        new_value = get_field_value(new, field)
+        old_value, old_value_string = get_field_value(old, field)
+        new_value, new_value_string = get_field_value(new, field)
+
+        print old_value
+        print old_value_string
+        print new_value
+        print new_value_string
 
         if old_value != new_value:
-            diff[field.name] = (smart_text(old_value), smart_text(new_value))
+            if old_value is None and new_value_string=="":
+                pass
+            else:
+                diff[field.name] = (smart_text(old_value), smart_text(new_value))
 
     if len(diff) == 0:
         diff = None
