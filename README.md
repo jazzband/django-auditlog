@@ -1,6 +1,54 @@
 django-auditlog
 ===============
 
+# agfunder/django-auditlog
+
+This fork adds some key improvements we needed to completely track changes in our models:
+
+- tracking m2m field changes
+- tracking mptt tree structure changes
+- improving admin view
+- tracking additional parameters in additional_data
+
+Note m2m and mptt tracking results in additional logentry rows.  Because django emits separate signals for model, m2m, and mptt structure changes, we did not see a straighforward way to combine these into a single logentry row.
+
+### tracking m2m
+```
+from auditlog.registry_ext import auditlog_register_m2m
+
+class Category(models.Model):
+    name = CharField(max_length=30, null=True)
+
+class Blog(models.Model):
+    categories = ManyToManyField(Category, null=True)
+
+auditlog.register(Blog)
+auditlog_register_m2m(Blog.categories)
+```
+
+### tracking mptt
+```
+from auditlog.registry_ext import auditlog_register_mptt
+from model_utils import FieldTracker
+
+class MyTree(MPTTModel):
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    tracker = FieldTracker()
+
+auditlog.register(MyTree)
+auditlog_register_mptt(MyTree.parent)
+```
+
+### additional_data
+- we assume additional_data is a dict (to store in JSON format)
+- m2m and mptt handlers stuff additional fields into additional_data
+- changes field is human-friendly format, whereas additional_data is machine-readable format
+
+Upstream repo README continues below:
+
+---------
+
+
 [![Build Status](https://travis-ci.org/jjkester/django-auditlog.svg?branch=master)](https://travis-ci.org/jjkester/django-auditlog)
 [![Docs](https://readthedocs.org/projects/django-auditlog/badge/?version=latest)](http://django-auditlog.readthedocs.org/en/latest/?badge=latest)
 
