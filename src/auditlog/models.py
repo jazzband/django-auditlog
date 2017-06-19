@@ -41,9 +41,32 @@ class LogEntryManager(models.Manager):
             if isinstance(pk, integer_types):
                 kwargs.setdefault('object_id', pk)
 
+            # instance is inspected for get_additional_data() method, which 
+            # is used to populate additional_data field
+            # here we assume get_additional_data(), if present, returns a dict
+            #
+            # additionally, dict "add_data" can be passed into log_create,
+            # which is merged with results of get_additional_data()
+            #
+            # merged dict is stored to additional_data field
+            #
+            # this is to allow other hooks (in my case, django-auditlog-m2m)
+            # to inject more data
             get_additional_data = getattr(instance, 'get_additional_data', None)
             if callable(get_additional_data):
-                kwargs.setdefault('additional_data', get_additional_data())
+                #kwargs.setdefault('additional_data', kwargs.get('add_data', {}))
+                fn__add_data=get_additional_data()
+            else:
+                fn__add_data={}
+            arg__add_data=kwargs.get('add_data', {})
+
+            # merge both dicts
+            add_data=arg__add_data.copy()
+            add_data.update(fn__add_data)
+
+            kwargs.setdefault('additional_data', add_data)
+            # now remove add_data
+            kwargs.pop('add_data', None)
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
