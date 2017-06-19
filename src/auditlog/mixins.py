@@ -12,6 +12,14 @@ except ImportError:
 MAX = 75
 
 
+def chop(s,length):
+    if not s:
+        return ''
+    if len(s)<=length:
+        return s
+    return s[:length]+'...'
+
+
 class LogEntryAdminMixin(object):
 
     def created(self, obj):
@@ -49,18 +57,32 @@ class LogEntryAdminMixin(object):
     remote_addr_url_w.allow_tags = True
     remote_addr_url_w.short_description = 'IP'
 
+
     def msg_short(self, obj):
         if obj.action == 2:
             return ''  # delete
         changes = json.loads(obj.changes)
 
-	# single-field changes, display data
+    # single-field changes, display data
         if len(changes.keys())==1:
-            html='<span style="font-size:0.8em; font-weight:900;">%s</span><br><span style="color:darkblue">%s</span> &rarr;  <span style="color:darkgreen">%s</span>'
+            html='<span style="font-size:0.8em; font-weight:900;">%s</span><br><span style="color:red">%s</span> &rarr;  <span style="color:darkgreen">%s</span>'
             s=''
             for key in changes.keys():
+                #import pdb; pdb.set_trace()
                 val = changes[key]
-                s += format_html(html % (key ,  cgi.escape(val[0]),  cgi.escape(val[1]) ) )
+
+                if type(val[0]) is list:
+                    str_0=cgi.escape( "\n".join(val[0]) )
+                else:
+                    str_0=cgi.escape(val[0])
+
+                if type(val[1]) is list:
+                    str_1=cgi.escape( "\n".join(val[1]) )
+                else:
+                    str_1=cgi.escape(val[1])
+
+                MAX_LIST_STR_LEN=250
+                s += format_html(html % (key ,  chop(str_0,MAX_LIST_STR_LEN).replace("\n","<br>"),  chop(str_1,MAX_LIST_STR_LEN).replace("\n","<br>") ) )
             return s
 
 	# multi-field changes, list fields
