@@ -1,4 +1,5 @@
 from django.db.models.signals import m2m_changed
+from mptt.signals import node_moved
 import json
 from functools import partial
 from auditlog.models import LogEntry
@@ -30,3 +31,40 @@ def auditlog_register_m2m(m2m):
     handler = partial(m2m_changed_handler, field_name=m2m.field.name)
     m2m_changed.connect(handler, sender=m2m.through, weak=False)
 
+
+
+
+
+def mptt_changed_handler(signal, sender, **kwa):
+    removed_str = added_str = ""
+    field_name = kwa['field_name']
+    instance=kwa['instance']
+    action='node_moved'
+
+    old_parent_id=instance.tracker.previous('parent_id')
+    old_parent=sender.objects.get(pk=old_parent_id)
+    old_parent_string=str(old_parent)
+
+    new_parent=kwa['target']
+    new_parent_string=str(new_parent)
+    new_parent_id=new_parent.id
+
+    # not sure why this would happen?
+    if new_parent_id==old_parent_id:
+        return
+
+    changes = {field_name: [new_parent_string,old_parent_string ]}
+
+    new = LogEntry.objects.log_create(
+        instance,
+        action=LogEntry.Action.MOVE,
+        changes=json.dumps(changes),
+        add_data={'op':action,'ftype':'mptt','field':field_name,'object':instance._meta.model_name,'app':instance._meta.app_label,'from_parent':old_parent_id,'to_parent':new_parent_id},
+    )
+
+def auditlog_register_mptt(mp):
+    """
+    Register mptt model field to track by auditlog
+    """
+    handler = partial(mptt_changed_handler, field_name=mp.field.name)
+    node_moved.connect(handler, weak=False)

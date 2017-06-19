@@ -173,16 +173,18 @@ class LogEntry(models.Model):
         in some cases when comparing actions because the ``__lt``, ``__lte``, ``__gt``, ``__gte`` lookup filters can be
         used in queries.
 
-        The valid actions are :py:attr:`Action.CREATE`, :py:attr:`Action.UPDATE` and :py:attr:`Action.DELETE`.
+        The valid actions are :py:attr:`Action.CREATE`, :py:attr:`Action.UPDATE`, :py:attr:`Action.DELETE`, and  :py:attr:`Action.MOVE`.
         """
         CREATE = 0
         UPDATE = 1
         DELETE = 2
+        MOVE = 3
 
         choices = (
             (CREATE, _("create")),
             (UPDATE, _("update")),
             (DELETE, _("delete")),
+            (MOVE, _("move")),
         )
 
     content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
@@ -211,6 +213,8 @@ class LogEntry(models.Model):
             fstring = _("Updated {repr:s}")
         elif self.action == self.Action.DELETE:
             fstring = _("Deleted {repr:s}")
+        elif self.action == self.Action.MOVE:
+            fstring = _("Moved {repr:s}")
         else:
             fstring = _("Logged {repr:s}")
 
