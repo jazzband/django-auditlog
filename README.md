@@ -5,7 +5,7 @@ This fork adds some key improvements we needed to completely track changes in ou
 
 - tracking m2m field changes (see https://docs.djangoproject.com/en/1.11/ref/signals/#m2m-changed)
 - tracking mptt tree structure changes (see https://github.com/django-mptt/django-mptt/blob/master/mptt/signals.py)
-- eliminating spurious changes of saving empty fields turning NULL into blank string (see https://code.djangoproject.com/ticket/9590)
+- eliminating spurious changes of saving empty fields turning NULL into blank string (see https://code.djangoproject.com/ticket/9590) which add noise
 - improving admin view
 - tracking additional parameters in additional_data
 
@@ -13,9 +13,9 @@ This fork adds some key improvements we needed to completely track changes in ou
 
 After reviewing packages simplehistory, reversion, and others, we decided to base our work on django-auditlog for these reasons:
 
-- tracks all changes to models, even those made outside admin, because in django-auditlog tracking is done by signals
-- does not store entire model object for each change.  Important when tracking small changes to large objects
-- does not store changes in the same table as the tracked models.  Important when we expect many changes, to models which have many instances
+- auditlog tracks all changes to models, even those made outside admin, because in django-auditlog tracking is done by signals
+- auditlog does not store entire model object for each change.  Important when tracking small changes to large objects
+- auditlog does not store changes in the same table as the tracked models.  Important when we expect many changes, to models which have many instances
 
 Non-requirements, it does not do these:
 - full compare of past versions, we may wish to add this later
@@ -51,6 +51,7 @@ Because django emits separate signals for model, m2m, and mptt structure changes
 - stores human-readable changes in "changes" field.  This shows string representation of node parent before and after moving the mptt node.
 - stores JSON representation of changes in "additional data" field.  This includes ids of node parent before and after moving the mptt node.
 - mptt tracking depends on model_utils FieldTracker
+- mptt tracking required a new change type, "Action.MOVE"
 
 ```
 from auditlog.registry_ext import auditlog_register_mptt
@@ -68,6 +69,11 @@ auditlog_register_mptt(MyTree.parent)
 - we assume additional_data is a dict (to store in JSON format)
 - m2m and mptt handlers stuff additional fields into additional_data
 - "changes" field is human-friendly format, whereas "additional_data" field is machine-readable format
+
+## improved admin view
+- for smaller changes, shows complete change right in the changelist view
+- improved change summary in changlist view, including added color coding in changelist view, red for before/deletions, green for after/additions.  Great for quickly reviewing many small changes.
+- exposed more changelist fields and detail view fields, added filters and search fields
 
 ## More notes
 
