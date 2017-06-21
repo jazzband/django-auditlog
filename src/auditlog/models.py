@@ -44,23 +44,21 @@ class LogEntryManager(models.Manager):
             # instance is inspected for get_additional_data() method, which 
             # is used to populate additional_data field
             # here we assume get_additional_data(), if present, returns a dict
-            #
+
             # additionally, dict "add_data" can be passed into log_create,
             # which is merged with results of get_additional_data()
-            #
             # merged dict is stored to additional_data field
             #
-            # this is to allow other hooks (in my case, django-auditlog-m2m)
-            # to inject more data
+            # this is to allow other hooks (in my case, m2m and mptt tracking code)
+            # to inject more useful metadata
             get_additional_data = getattr(instance, 'get_additional_data', None)
             if callable(get_additional_data):
-                #kwargs.setdefault('additional_data', kwargs.get('add_data', {}))
                 fn__add_data=get_additional_data()
             else:
                 fn__add_data={}
             arg__add_data=kwargs.get('add_data', {})
 
-            # merge both dicts
+            # merge both dicts.  get_additional_data overrides add_data passed in
             add_data=arg__add_data.copy()
             add_data.update(fn__add_data)
 
