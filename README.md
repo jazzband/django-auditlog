@@ -9,10 +9,23 @@ This fork adds some key improvements we needed to completely track changes in ou
 - improving admin view
 - tracking additional parameters in additional_data
 
-Note m2m and mptt tracking results in additional logentry rows.  Because django emits separate signals for model, m2m, and mptt structure changes, we did not see a straighforward way to combine these into a single logentry row.
+## Requirements
 
-### tracking m2m
-- currently requires specifically naming each m2m field to be tracked
+After reviewing packages simplehistory, reversion, and others, we decided to base our work on django-auditlog for these reasons:
+
+- tracks all changes to models, even those made outside admin, because in django-auditlog tracking is done by signals
+- does not store entire model object for each change.  Important when tracking small changes to large objects
+- does not store changes in the same table as the tracked models.  Important when we expect many changes, to models which have many instances
+
+Non-requirements, it does not do these:
+- full compare of past versions, we may wish to add this later
+- reverting to old versions, this was not a requirement for us
+
+## New Features in this fork
+
+## tracking m2m
+- stores changes to m2m lists.  These could not be tracked using existing upstream code.
+- currently requires specifically naming each m2m field to be tracked.
 - stores human-readable changes in "changes" field.  This shows string representation of child table rows added and removed.
 - stores JSON representation of changes in "additional data" field.  This includes ids child table rows added and removed.
 ```
@@ -28,10 +41,17 @@ auditlog.register(Blog)
 auditlog_register_m2m(Blog.categories)
 ```
 
-### tracking mptt
-- currently requires specifically naming each mptt field to be tracked
+Note m2m and mptt tracking results in additional logentry rows.  For example, if you have a model that includes an m2m field, an mptt field, and 3 other fields, 
+
+Because django emits separate signals for model, m2m, and mptt structure changes, we did not see a straighforward way to combine these into a single logentry row.
+
+## tracking mptt structure changes
+- stores previous parent, and new parent.  These could not be tracked using existing upstream code.
+- currently requires specifically naming each mptt field to be tracked.
 - stores human-readable changes in "changes" field.  This shows string representation of node parent before and after moving the mptt node.
 - stores JSON representation of changes in "additional data" field.  This includes ids of node parent before and after moving the mptt node.
+- mptt tracking depends on model_utils FieldTracker
+
 ```
 from auditlog.registry_ext import auditlog_register_mptt
 from model_utils import FieldTracker
@@ -44,20 +64,23 @@ auditlog.register(MyTree)
 auditlog_register_mptt(MyTree.parent)
 ```
 
-### additional_data
+## additional_data
 - we assume additional_data is a dict (to store in JSON format)
 - m2m and mptt handlers stuff additional fields into additional_data
 - "changes" field is human-friendly format, whereas "additional_data" field is machine-readable format
 
-### integration with django admin change_form UI
-- we manually replaced change_form.html for models which used auditlog, so HISTORY button was replaced by a specially crafted AUDITLOG link into the auditlog logentry changeset `/admin/auditlog/logentry?q={{ original.uuid }}`
-- for each model tracked with auditlog, we:
-    - had a uuid field `uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)`
-    - inserted the uuid with `get_additional_data()`, which auditlog uses to populate additional_data field
-    - added additional_data to admin search for auditlog
-- the result was that AUDITLOG link (using uuid parameter) showed a complete list of auditlog entries for the specific object
+## More notes
 
-Upstream repo README continues below:
+### integration with django admin change_form UI
+- this integration is not fully encapsulated, but our solution is described here in case it is helpful
+- we manually replaced change_form.html for models which used auditlog, so HISTORY button was replaced by a specially crafted AUDITLOG link into the auditlog logentry changeset like `/admin/auditlog/logentry?q={{ original.uuid }}`
+- for each model tracked with auditlog, we:
+    - had a uuid field on the tracked model `uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)`
+    - inserted the uuid with `get_additional_data()`, which auditlog uses to populate additional_data field
+    - added additional_data to admin `search_fields` in auditlog's admin.py
+- the result was that AUDITLOG link (using uuid parameter) showed a complete list of auditlog entries (including regular field, m2m, and mptt) for the specific object
+
+**Upstream repo README continues below:**
 
 ---------
 
