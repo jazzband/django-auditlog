@@ -1,18 +1,20 @@
-django-auditlog
+agfunder/django-auditlog
 ===============
-
-# agfunder/django-auditlog
 
 This fork adds some key improvements we needed to completely track changes in our models:
 
-- tracking m2m field changes
-- tracking mptt tree structure changes
+- tracking m2m field changes (see https://docs.djangoproject.com/en/1.11/ref/signals/#m2m-changed)
+- tracking mptt tree structure changes (see https://github.com/django-mptt/django-mptt/blob/master/mptt/signals.py)
+- eliminating spurious changes of saving empty fields turning NULL into blank string (see https://code.djangoproject.com/ticket/9590)
 - improving admin view
 - tracking additional parameters in additional_data
 
 Note m2m and mptt tracking results in additional logentry rows.  Because django emits separate signals for model, m2m, and mptt structure changes, we did not see a straighforward way to combine these into a single logentry row.
 
 ### tracking m2m
+- currently requires specifically naming each m2m field to be tracked
+- stores human-readable changes in "changes" field.  This shows string representation of child table rows added and removed.
+- stores JSON representation of changes in "additional data" field.  This includes ids child table rows added and removed.
 ```
 from auditlog.registry_ext import auditlog_register_m2m
 
@@ -27,6 +29,9 @@ auditlog_register_m2m(Blog.categories)
 ```
 
 ### tracking mptt
+- currently requires specifically naming each mptt field to be tracked
+- stores human-readable changes in "changes" field.  This shows string representation of node parent before and after moving the mptt node.
+- stores JSON representation of changes in "additional data" field.  This includes ids of node parent before and after moving the mptt node.
 ```
 from auditlog.registry_ext import auditlog_register_mptt
 from model_utils import FieldTracker
@@ -42,7 +47,15 @@ auditlog_register_mptt(MyTree.parent)
 ### additional_data
 - we assume additional_data is a dict (to store in JSON format)
 - m2m and mptt handlers stuff additional fields into additional_data
-- changes field is human-friendly format, whereas additional_data is machine-readable format
+- "changes" field is human-friendly format, whereas "additional_data" field is machine-readable format
+
+### integration with django admin change_form UI
+- we manually replaced change_form.html for models which used auditlog, so HISTORY button was replaced by a specially crafted AUDITLOG link into the auditlog logentry changeset `/admin/auditlog/logentry?q={{ original.uuid }}`
+- for each model tracked with auditlog, we:
+    - had a uuid field `uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)`
+    - inserted the uuid with `get_additional_data()`, which auditlog uses to populate additional_data field
+    - added additional_data to admin search for auditlog
+- the result was that AUDITLOG link (using uuid parameter) showed a complete list of auditlog entries for the specific object
 
 Upstream repo README continues below:
 
