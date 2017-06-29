@@ -75,7 +75,7 @@ class LogEntryManager(models.Manager):
         if isinstance(pk, integer_types):
             return self.filter(content_type=content_type, object_id=pk)
         else:
-            return self.filter(content_type=content_type, object_pk=pk)
+            return self.filter(content_type=content_type, object_pk=smart_text(pk))
 
     def get_for_objects(self, queryset):
         """
@@ -90,10 +90,13 @@ class LogEntryManager(models.Manager):
             return self.none()
 
         content_type = ContentType.objects.get_for_model(queryset.model)
-        primary_keys = queryset.values_list(queryset.model._meta.pk.name, flat=True)
+        primary_keys = list(queryset.values_list(queryset.model._meta.pk.name, flat=True))
 
         if isinstance(primary_keys[0], integer_types):
             return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys)).distinct()
+        elif isinstance(queryset.model._meta.pk, models.UUIDField):
+            primary_keys = [smart_text(pk) for pk in primary_keys]
+            return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
         else:
             return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
 

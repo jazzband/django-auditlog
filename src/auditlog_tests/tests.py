@@ -9,9 +9,9 @@ from django.utils import timezone
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
-from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, ProxyModel, \
-    SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, AdditionalDataIncludedModel, \
-    DateTimeFieldModel
+from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
+    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, RelatedModel, ManyRelatedModel, \
+    AdditionalDataIncludedModel, DateTimeFieldModel
 
 
 class SimpleModelTest(TestCase):
@@ -72,6 +72,23 @@ class SimpleModelTest(TestCase):
 class AltPrimaryKeyModelTest(SimpleModelTest):
     def setUp(self):
         self.obj = AltPrimaryKeyModel.objects.create(key=str(datetime.datetime.now()), text='I am strange.')
+
+
+class UUIDPrimaryKeyModelModelTest(SimpleModelTest):
+    def setUp(self):
+        self.obj = UUIDPrimaryKeyModel.objects.create(text='I am strange.')
+
+    def test_get_for_object(self):
+        self.obj.boolean = True
+        self.obj.save()
+
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj).count(), 2)
+
+    def test_get_for_objects(self):
+        self.obj.boolean = True
+        self.obj.save()
+
+        self.assertEqual(LogEntry.objects.get_for_objects(UUIDPrimaryKeyModel.objects.all()).count(), 2)
 
 
 class ProxyModelTest(SimpleModelTest):
