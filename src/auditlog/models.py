@@ -61,6 +61,8 @@ class LogEntryManager(models.Manager):
             # merge both dicts.  get_additional_data overrides add_data passed in
             add_data=arg__add_data.copy()
             add_data.update(fn__add_data)
+            if add_data=={}:
+                add_data=None
 
             kwargs.setdefault('additional_data', add_data)
             # now remove add_data
