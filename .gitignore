@@ -6,4 +6,7 @@
 .idea
 .project
 .pydevproject
+.coverage
+venv/
+.tox/
 local_settings.py

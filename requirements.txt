@@ -1,2 +1,1 @@
-Django>=1.8
 django-jsonfield>=1.0.0
