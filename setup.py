@@ -12,6 +12,7 @@ setup(
     install_requires=[
         'Django>=1.8',
         'django-jsonfield>=1.0.0',
+        'django-jsonfield-compat==0.4.4',
     ],
     zip_safe=False
 )
