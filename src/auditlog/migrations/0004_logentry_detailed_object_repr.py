@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-import jsonfield.fields
+from jsonfield_compat import JSONField
 
 
 class Migration(migrations.Migration):
@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='logentry',
             name='additional_data',
-            field=jsonfield.fields.JSONField(null=True, blank=True),
+            field=JSONField(null=True, blank=True),
         ),
     ]
