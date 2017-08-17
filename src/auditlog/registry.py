@@ -65,6 +65,7 @@ class AuditlogModelRegistry(object):
 
             self._connect_signals(cls)
 
+
             # We need to return the class, as the decorator is basically
             # syntactic sugar for:
             # MyClass = auditlog.register(MyClass)
