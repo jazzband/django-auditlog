@@ -8,23 +8,27 @@ class AuditlogModelRegistry(object):
     """
     A registry that keeps track of the models that use Auditlog to track changes.
     """
-    def __init__(self, create=True, update=True, delete=True, custom=None):
+    def __init__(self, custom=None):
         from auditlog.receivers import log_create, log_update, log_delete
 
         self._registry = {}
         self._signals = {}
+        self._operationsModel = {}
+        self._signalMap = {
+            "create":post_save,
+            "update":pre_save,
+            "delete":post_delete,
+        }
+        if custom: self._signalMap["custom"]=custom
 
-        if create:
-            self._signals[post_save] = log_create
-        if update:
-            self._signals[pre_save] = log_update
-        if delete:
-            self._signals[post_delete] = log_delete
+        self._signals[post_save] = log_create
+        self._signals[pre_save] = log_update
+        self._signals[post_delete] = log_delete
 
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model=None, include_fields=[], exclude_fields=[]):
+    def register(self, model=None, include_fields=[], exclude_fields=[], **kwargs):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
@@ -34,7 +38,17 @@ class AuditlogModelRegistry(object):
         :type include_fields: list
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
         :type exclude_fields: list
+        :param operations: The operations to use in the model.
+        :type operations: list
         """
+
+        # Register the operations to the model
+        if "operations" in kwargs:
+            operations = kwargs.get("operations")
+        else:
+            operations=["create", "update", "delete"]
+        if "custom" in self._signalMap: operations.append("custom")
+
         def registrar(cls):
             """Register models for a given class."""
             if not issubclass(cls, Model):
@@ -45,6 +59,10 @@ class AuditlogModelRegistry(object):
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
             }
+
+            # Register the operations to the model
+            self._operationsModel[cls] = operations
+
             self._connect_signals(cls)
 
             # We need to return the class, as the decorator is basically
@@ -89,7 +107,8 @@ class AuditlogModelRegistry(object):
         """
         Connect signals for the model.
         """
-        for signal in self._signals:
+        for operation in self._operationsModel[model]:
+            signal = self._signalMap[operation]
             receiver = self._signals[signal]
             signal.connect(receiver, sender=model, dispatch_uid=self._dispatch_uid(signal, model))
 
@@ -97,7 +116,8 @@ class AuditlogModelRegistry(object):
         """
         Disconnect signals for the model.
         """
-        for signal, receiver in self._signals.items():
+        for operation in self._operationsModel[model]:
+            signal = self._signalMap[operation]
             signal.disconnect(sender=model, dispatch_uid=self._dispatch_uid(signal, model))
 
     def _dispatch_uid(self, signal, model):
