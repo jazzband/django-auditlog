@@ -56,8 +56,9 @@ class LogEntryManager(models.Manager):
                     self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).delete()
                 else:
                     self.filter(content_type=kwargs.get('content_type'), object_pk=kwargs.get('object_pk', '')).delete()
-
-            return self.create(**kwargs)
+            # save LogEntry to same database instance is using
+            db = instance._state.db
+            return self.create(**kwargs) if db is None or db == '' else self.using(db).create(**kwargs)
         return None
 
     def get_for_object(self, instance):
