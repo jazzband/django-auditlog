@@ -12,7 +12,7 @@ from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel
+    CharfieldTextfieldModel, PostgresArrayFieldModel
 
 
 class SimpleModelTest(TestCase):
@@ -445,3 +445,27 @@ class CharfieldTextfieldModelTest(TestCase):
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["longtextfield"][1] == SHORTENED_PLACEHOLDER,
                         msg="The field should display the entire string because it is less than 140 characters")
+
+
+class PostgresArrayFieldModelTest(TestCase):
+
+    def setUp(self):
+        self.obj = PostgresArrayFieldModel.objects.create(
+            arrayfield=[PostgresArrayFieldModel.RED, PostgresArrayFieldModel.GREEN],
+        )
+
+    def test_changes_display_dict_arrayfield(self):
+        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Red, Green",
+                        msg="The human readable text for the two choices, 'Red, Green' is displayed.")
+        self.obj.arrayfield = PostgresArrayFieldModel.GREEN
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
+                        msg="The human readable text 'Green' is displayed.")
+        self.obj.arrayfield = None
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "None",
+                        msg="The human readable text 'None' is displayed.")
+        self.obj.arrayfield = PostgresArrayFieldModel.GREEN
+        self.obj.save()
+        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
+                        msg="The human readable text 'Green' is displayed.")

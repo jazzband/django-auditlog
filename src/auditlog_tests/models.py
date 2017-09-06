@@ -1,5 +1,6 @@
 import uuid
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
@@ -186,6 +187,23 @@ class CharfieldTextfieldModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class PostgresArrayFieldModel(models.Model):
+    """
+    Test auditlog with Postgres's ArrayField
+    """
+    RED = 'r'
+    YELLOW = 'y'
+    GREEN = 'g'
+
+    STATUS_CHOICES = (
+        (RED, 'Red'),
+        (YELLOW, 'Yellow'),
+        (GREEN, 'Green'),
+    )
+
+    arrayfield = ArrayField(size=3, choices=STATUS_CHOICES)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -198,3 +216,4 @@ auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
+auditlog.register(PostgresArrayFieldModel)
