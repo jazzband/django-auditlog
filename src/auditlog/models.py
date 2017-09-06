@@ -254,8 +254,8 @@ class LogEntry(models.Model):
                 field = model._meta.get_field(reversed_field)
 
             values_display = []
-            if field.choices:
-                choices_dict = dict(field.choices)
+            if field.choices or hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
+                choices_dict = dict(field.choices or field.base_field.choices)
                 for value in values:
                     try:
                         value = ast.literal_eval(value)
