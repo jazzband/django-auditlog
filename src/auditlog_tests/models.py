@@ -203,6 +203,8 @@ class PostgresArrayFieldModel(models.Model):
 
     arrayfield = ArrayField(models.CharField(max_length=1, choices=STATUS_CHOICES), size=3)
 
+    history = AuditlogHistoryField()
+
 
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
