@@ -265,6 +265,8 @@ class LogEntry(models.Model):
                             values_display.append(choices_dict.get(value, 'None'))
                     except ValueError:
                         values_display.append(choices_dict.get(value, 'None'))
+                    except:
+                        values_display.append(choices_dict.get(value, 'None'))
             else:
                 for value in values:
                     if "DateTime" in field.get_internal_type():
