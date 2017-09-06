@@ -201,7 +201,7 @@ class PostgresArrayFieldModel(models.Model):
         (GREEN, 'Green'),
     )
 
-    arrayfield = ArrayField(size=3, choices=STATUS_CHOICES)
+    arrayfield = ArrayField(models.CharField(max_length=1, choices=STATUS_CHOICES), size=3)
 
 
 auditlog.register(AltPrimaryKeyModel)
