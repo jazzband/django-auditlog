@@ -457,15 +457,15 @@ class PostgresArrayFieldModelTest(TestCase):
     def test_changes_display_dict_arrayfield(self):
         self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Red, Green",
                         msg="The human readable text for the two choices, 'Red, Green' is displayed.")
-        self.obj.arrayfield = PostgresArrayFieldModel.GREEN
+        self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
                         msg="The human readable text 'Green' is displayed.")
-        self.obj.arrayfield = None
+        self.obj.arrayfield = []
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "None",
-                        msg="The human readable text 'None' is displayed.")
-        self.obj.arrayfield = PostgresArrayFieldModel.GREEN
+        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "",
+                        msg="The human readable text '' is displayed.")
+        self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
                         msg="The human readable text 'Green' is displayed.")
