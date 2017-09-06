@@ -1,2 +1,0 @@
-coverage==4.2
-django-multiselectfield==0.1.5
