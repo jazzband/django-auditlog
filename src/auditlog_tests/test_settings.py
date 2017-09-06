@@ -23,7 +23,7 @@ if django.VERSION <= (1, 9):
 else:
     POSTGRES_DRIVER = 'django.db.backends.postgresql'
 
-DATABASE_ROUTERS = ['auditlog_tests.router']
+DATABASE_ROUTERS = ['auditlog_tests.router.PostgresRouter']
 
 DATABASES = {
     'default': {
@@ -33,8 +33,8 @@ DATABASES = {
     'postgres': {
         'ENGINE': POSTGRES_DRIVER,
         'NAME': 'auditlog_tests_db',
-        'USER': 'auditlog_user',
-        'PASSWORD': 'auditlog_pass',
+        'USER': 'postgres',
+        'PASSWORD': '',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
