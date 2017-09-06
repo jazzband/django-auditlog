@@ -242,18 +242,23 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry intended for display to users as a dictionary object.
         """
+        # Get the model
         model = self.content_type.model_class()
         changes_display_dict = {}
+        # grab the changes_dict and iterate through
         for field_name, values in iteritems(self.changes_dict):
+            # try to get the field attribute on the model
             try:
                 field = model._meta.get_field(field_name)
             except FieldDoesNotExist:
+                # use the reverse field mapping to get the field
                 from auditlog.registry import auditlog
                 model_fields = auditlog.get_model_fields(model._meta.model)
                 reversed_field = model_fields['reverse_mapping_fields'].get(field_name)
                 field = model._meta.get_field(reversed_field)
 
             values_display = []
+            # handle choices fields and Postgres ArrayField to get human readable version
             if field.choices or hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
                 choices_dict = dict(field.choices or field.base_field.choices)
                 for value in values:
@@ -269,24 +274,28 @@ class LogEntry(models.Model):
                         values_display.append(choices_dict.get(value, 'None'))
             else:
                 for value in values:
+                    # handle case where field is a datetime type
                     if "DateTime" in field.get_internal_type():
                         try:
                             value = parser.parse(value)
                             value = value.strftime("%b %d, %Y %I:%M %p")
                         except ValueError:
                             pass
+                    # handle case where field is a date type
                     elif "Date" in field.get_internal_type():
                         try:
                             value = parser.parse(value)
                             value = value.strftime("%b %d, %Y")
                         except ValueError:
                             pass
+                    # handle case where field is a time type
                     elif "Time" in field.get_internal_type():
                         try:
                             value = parser.parse(value)
                             value = value.strftime("%I:%M %p")
                         except ValueError:
                             pass
+                    # check if length is longer than 140 and truncate with ellipsis
                     if len(value) > 140:
                         value = "{}...".format(value[:140])
 
