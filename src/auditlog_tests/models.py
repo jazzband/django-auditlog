@@ -148,6 +148,8 @@ class DateTimeFieldModel(models.Model):
     """
     label = models.CharField(max_length=100)
     timestamp = models.DateTimeField()
+    date = models.DateField()
+    time = models.TimeField()
 
     history = AuditlogHistoryField()
 

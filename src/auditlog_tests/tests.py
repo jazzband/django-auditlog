@@ -264,13 +264,17 @@ class DateTimeFieldModelTest(TestCase):
 
     def test_model_with_same_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
         # Change timestamp to same datetime and timezone
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         dtm.timestamp = timestamp
+        dtm.date = datetime.date(2017, 1, 10)
+        dtm.time = datetime.time(12, 0)
         dtm.save()
 
         # Nothing should have changed
@@ -278,7 +282,9 @@ class DateTimeFieldModelTest(TestCase):
 
     def test_model_with_different_timezone(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -290,9 +296,11 @@ class DateTimeFieldModelTest(TestCase):
         # Nothing should have changed
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
-    def test_model_with_different_time(self):
+    def test_model_with_different_datetime(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -304,9 +312,43 @@ class DateTimeFieldModelTest(TestCase):
         # The time should have changed.
         self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
 
+    def test_model_with_different_date(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm.save()
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+        # Change timestamp to another datetime in the same timezone
+        date = datetime.datetime(2017, 1, 11)
+        dtm.date = date
+        dtm.save()
+
+        # The time should have changed.
+        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+
+    def test_model_with_different_time(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm.save()
+        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+
+        # Change timestamp to another datetime in the same timezone
+        time = datetime.time(6, 0)
+        dtm.time = time
+        dtm.save()
+
+        # The time should have changed.
+        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+
     def test_model_with_different_time_and_timezone(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -320,7 +362,9 @@ class DateTimeFieldModelTest(TestCase):
 
     def test_changes_display_dict_datetime(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
                         timestamp.strftime("%b %d, %Y %I:%M %p"),
@@ -331,6 +375,38 @@ class DateTimeFieldModelTest(TestCase):
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
                         timestamp.strftime("%b %d, %Y %I:%M %p"),
                         msg="The datetime should be formatted in a human readable way.")
+
+    def test_changes_display_dict_date(self):
+        timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm.save()
+        self.assertTrue(dtm.history.latest().changes_display_dict["date"][1] == \
+                        date.strftime("%b %d, %Y"),
+                        msg="The date should be formatted in a human readable way.")
+        date = datetime.date(2017, 1, 11)
+        dtm.date = date
+        dtm.save()
+        self.assertTrue(dtm.history.latest().changes_display_dict["date"][1] == \
+                        date.strftime("%b %d, %Y"),
+                        msg="The date should be formatted in a human readable way.")
+
+    def test_changes_display_dict_date(self):
+        timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm.save()
+        self.assertTrue(dtm.history.latest().changes_display_dict["time"][1] == \
+                    time.strftime("%I:%M %p"),
+                        msg="The time should be formatted in a human readable way.")
+        time = datetime.time(6, 0)
+        dtm.time = time
+        dtm.save()
+        self.assertTrue(dtm.history.latest().changes_display_dict["time"][1] == \
+                        time.strftime("%I:%M %p"),
+                        msg="The time should be formatted in a human readable way.")
 
 
 class UnregisterTest(TestCase):
