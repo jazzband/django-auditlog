@@ -7,6 +7,9 @@ python: 3.6
 services:
   - postgresql
 
+before_script:
+  - pyenv versions
+
 env:
   - TOX_ENV=py36-django-18
   - TOX_ENV=py35-django-18
