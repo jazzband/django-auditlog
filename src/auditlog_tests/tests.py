@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
-from django.utils import dateformat, timezone
+from django.utils import dateformat, formats, timezone
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
@@ -370,14 +370,22 @@ class DateTimeFieldModelTest(TestCase):
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
                         dateformat.format(timestamp, settings.DATETIME_FORMAT),
                         msg=("The datetime should be formatted according to Django's settings for"
-                             " DATETIME_FORMAT unless USE_L10N is True."))
+                             " DATETIME_FORMAT"))
         timestamp = timezone.now()
         dtm.timestamp = timestamp
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
                         dateformat.format(timestamp, settings.DATETIME_FORMAT),
                         msg=("The datetime should be formatted according to Django's settings for"
-                             " DATETIME_FORMAT unless USE_L10N is True."))
+                             " DATETIME_FORMAT"))
+
+        # Change USE_L10N = True
+        with self.settings(USE_L10N=True, LANGUAGE_CODE='en-GB'):
+            self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
+                        formats.localize(timestamp),
+                        msg=("The datetime should be formatted according to Django's settings for"
+                             " USE_L10N is True with a different LANGUAGE_CODE."))
+
 
     def test_changes_display_dict_date(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
@@ -397,6 +405,13 @@ class DateTimeFieldModelTest(TestCase):
                         msg=("The date should be formatted according to Django's settings for"
                              " DATE_FORMAT unless USE_L10N is True."))
 
+        # Change USE_L10N = True
+        with self.settings(USE_L10N=True, LANGUAGE_CODE='en-GB'):
+            self.assertTrue(dtm.history.latest().changes_display_dict["date"][1] == \
+                        formats.localize(date),
+                        msg=("The date should be formatted according to Django's settings for"
+                             " USE_L10N is True with a different LANGUAGE_CODE."))
+
     def test_changes_display_dict_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
@@ -414,6 +429,13 @@ class DateTimeFieldModelTest(TestCase):
                         dateformat.format(time, settings.TIME_FORMAT),
                         msg=("The time should be formatted according to Django's settings for"
                              " TIME_FORMAT unless USE_L10N is True."))
+
+        # Change USE_L10N = True
+        with self.settings(USE_L10N=True, LANGUAGE_CODE='en-GB'):
+            self.assertTrue(dtm.history.latest().changes_display_dict["time"][1] == \
+                        formats.localize(time),
+                        msg=("The time should be formatted according to Django's settings for"
+                             " USE_L10N is True with a different LANGUAGE_CODE."))
 
 
 class UnregisterTest(TestCase):
