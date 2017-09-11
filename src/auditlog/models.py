@@ -242,8 +242,10 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry intended for display to users as a dictionary object.
         """
-        # Get the model
+        # Get the model and model_fields
+        from auditlog.registry import auditlog
         model = self.content_type.model_class()
+        model_fields = auditlog.get_model_fields(model._meta.model)
         changes_display_dict = {}
         # grab the changes_dict and iterate through
         for field_name, values in iteritems(self.changes_dict):
@@ -251,12 +253,8 @@ class LogEntry(models.Model):
             try:
                 field = model._meta.get_field(field_name)
             except FieldDoesNotExist:
-                # use the reverse field mapping to get the field
-                from auditlog.registry import auditlog
-                model_fields = auditlog.get_model_fields(model._meta.model)
-                reversed_field = model_fields['reverse_mapping_fields'].get(field_name)
-                field = model._meta.get_field(reversed_field)
-
+                changes_display_dict[field_name] = values
+                continue
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
             if field.choices or hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
@@ -291,8 +289,8 @@ class LogEntry(models.Model):
                         value = "{}...".format(value[:140])
 
                     values_display.append(value)
-
-            changes_display_dict[field_name] = values_display
+            verbose_name = model_fields['mapping_fields'].get(field.name, field.verbose_name)
+            changes_display_dict[verbose_name] = values_display
         return changes_display_dict
 
 
