@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import json
 import ast
-from datetime import datetime
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -10,6 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import QuerySet, Q
+from django.utils import formats
 from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
@@ -273,26 +273,17 @@ class LogEntry(models.Model):
                     except:
                         values_display.append(choices_dict.get(value, 'None'))
             else:
+                field_type = field.get_internal_type()
                 for value in values:
-                    # handle case where field is a datetime type
-                    if "DateTime" in field.get_internal_type():
+                    # handle case where field is a datetime, date, or time type
+                    if field_type in ["DateTimeField", "DateField", "TimeField"]:
                         try:
                             value = parser.parse(value)
-                            value = value.strftime("%b %d, %Y %I:%M %p")
-                        except ValueError:
-                            pass
-                    # handle case where field is a date type
-                    elif "Date" in field.get_internal_type():
-                        try:
-                            value = parser.parse(value)
-                            value = value.strftime("%b %d, %Y")
-                        except ValueError:
-                            pass
-                    # handle case where field is a time type
-                    elif "Time" in field.get_internal_type():
-                        try:
-                            value = parser.parse(value)
-                            value = value.strftime("%I:%M %p")
+                            if field_type == "DateField":
+                                value = value.date()
+                            elif field_type == "TimeField":
+                                value = value.time()
+                            value = formats.localize(value)
                         except ValueError:
                             pass
                     # check if length is longer than 140 and truncate with ellipsis
