@@ -1,10 +1,11 @@
 import datetime
+from django.conf import settings
 from django.contrib.auth.models import User, AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
-from django.utils import timezone
+from django.utils import dateformat, timezone
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
@@ -367,14 +368,16 @@ class DateTimeFieldModelTest(TestCase):
         dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
-                        timestamp.strftime("%b %d, %Y %I:%M %p"),
-                        msg="The datetime should be formatted in a human readable way.")
+                        dateformat.format(timestamp, settings.DATETIME_FORMAT),
+                        msg=("The datetime should be formatted according to Django's settings for"
+                             " DATETIME_FORMAT unless USE_L10N is True."))
         timestamp = timezone.now()
         dtm.timestamp = timestamp
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
-                        timestamp.strftime("%b %d, %Y %I:%M %p"),
-                        msg="The datetime should be formatted in a human readable way.")
+                        dateformat.format(timestamp, settings.DATETIME_FORMAT),
+                        msg=("The datetime should be formatted according to Django's settings for"
+                             " DATETIME_FORMAT unless USE_L10N is True."))
 
     def test_changes_display_dict_date(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
@@ -383,30 +386,34 @@ class DateTimeFieldModelTest(TestCase):
         dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["date"][1] == \
-                        date.strftime("%b %d, %Y"),
-                        msg="The date should be formatted in a human readable way.")
+                        dateformat.format(date, settings.DATE_FORMAT),
+                        msg=("The date should be formatted according to Django's settings for"
+                             " DATE_FORMAT unless USE_L10N is True."))
         date = datetime.date(2017, 1, 11)
         dtm.date = date
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["date"][1] == \
-                        date.strftime("%b %d, %Y"),
-                        msg="The date should be formatted in a human readable way.")
+                        dateformat.format(date, settings.DATE_FORMAT),
+                        msg=("The date should be formatted according to Django's settings for"
+                             " DATE_FORMAT unless USE_L10N is True."))
 
-    def test_changes_display_dict_date(self):
+    def test_changes_display_dict_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
         dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["time"][1] == \
-                    time.strftime("%I:%M %p"),
-                        msg="The time should be formatted in a human readable way.")
+                        dateformat.format(time, settings.TIME_FORMAT),
+                        msg=("The time should be formatted according to Django's settings for"
+                             " TIME_FORMAT unless USE_L10N is True."))
         time = datetime.time(6, 0)
         dtm.time = time
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["time"][1] == \
-                        time.strftime("%I:%M %p"),
-                        msg="The time should be formatted in a human readable way.")
+                        dateformat.format(time, settings.TIME_FORMAT),
+                        msg=("The time should be formatted according to Django's settings for"
+                             " TIME_FORMAT unless USE_L10N is True."))
 
 
 class UnregisterTest(TestCase):
