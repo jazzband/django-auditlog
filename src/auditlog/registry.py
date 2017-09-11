@@ -41,13 +41,10 @@ class AuditlogModelRegistry(object):
             if not issubclass(cls, Model):
                 raise TypeError("Supplied model is not a valid model.")
 
-            # Register the model and signals.
-            reverse_mapping_fields = {v: k for k, v in iteritems(mapping_fields)}
             self._registry[cls] = {
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
                 'mapping_fields': mapping_fields,
-                'reverse_mapping_fields': reverse_mapping_fields,
             }
             self._connect_signals(cls)
 
@@ -115,7 +112,6 @@ class AuditlogModelRegistry(object):
             'include_fields': self._registry[model]['include_fields'],
             'exclude_fields': self._registry[model]['exclude_fields'],
             'mapping_fields': self._registry[model]['mapping_fields'],
-            'reverse_mapping_fields': self._registry[model]['reverse_mapping_fields']
         }
 
 
