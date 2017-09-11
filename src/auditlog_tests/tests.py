@@ -223,14 +223,18 @@ class SimpleMappingModelTest(TestCase):
     def test_register_mapping_fields(self):
         smm = SimpleMappingModel(sku='ASD301301A6', vtxt='2.1.5', not_mapped='Not mapped')
         smm.save()
-        self.assertTrue(smm.history.latest().changes_dict['Product No.'][1] == 'ASD301301A6',
-                        msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.")
+        self.assertTrue(smm.history.latest().changes_dict['sku'][1] == 'ASD301301A6',
+                        msg="The diff function retains 'sku' and can be retrieved.")
         self.assertTrue(smm.history.latest().changes_dict['not_mapped'][1] == 'Not mapped',
                         msg="The diff function does not map 'not_mapped' and can be retrieved.")
         self.assertTrue(smm.history.latest().changes_display_dict['Product No.'][1] == 'ASD301301A6',
                         msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.")
-        self.assertTrue(smm.history.latest().changes_display_dict['not_mapped'][1] == 'Not mapped',
-                        msg="The diff function does not map 'not_mapped' and can be retrieved.")
+        self.assertTrue(smm.history.latest().changes_display_dict['Version'][1] == '2.1.5',
+                        msg=("The diff function maps 'vtxt' as 'Version' through verbose_name"
+                             " setting on the model field and can be retrieved."))
+        self.assertTrue(smm.history.latest().changes_display_dict['not mapped'][1] == 'Not mapped',
+                        msg=("The diff function uses the django default verbose name for 'not_mapped'"
+                             " and can be retrieved."))
 
 
 class AdditionalDataModelTest(TestCase):

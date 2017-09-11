@@ -110,7 +110,7 @@ class SimpleMappingModel(models.Model):
     """
 
     sku = models.CharField(max_length=100)
-    vtxt = models.CharField(max_length=100)
+    vtxt = models.CharField(verbose_name='Version', max_length=100)
     not_mapped = models.CharField(max_length=100)
 
     history = AuditlogHistoryField()
@@ -215,7 +215,7 @@ auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.related.through)
 auditlog.register(SimpleExcludeModel, exclude_fields=['text'])
-auditlog.register(SimpleMappingModel, mapping_fields={'sku': 'Product No.', 'vtxt': 'Version'})
+auditlog.register(SimpleMappingModel, mapping_fields={'sku': 'Product No.'})
 auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
