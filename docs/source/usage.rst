@@ -50,6 +50,32 @@ For example, to exclude the field ``last_updated``, use::
 
     Excluding fields
 
+**Mapping fields**
+
+If you have field names on your models that aren't intuitive or user friendly you can include a dictionary of field mappings
+during the `register()` call.
+
+.. code-block:: python
+    
+    class MyModel(modelsModel):
+        sku = models.CharField(max_length=20)
+        version = models.CharField(max_length=5)
+        product = models.CharField(max_length=50, verbose_name='Product Name')
+        history = AuditLogHistoryField()
+        
+    auditlog.register(MyModel, mapping_fields={'sku': 'Product No.', 'version': 'Product Revision'})
+    
+.. code-block:: python
+
+    log = MyModel.objects.first().history.latest()
+    log.changes_display_dict
+    // retrieves changes with keys Product No. Product Revision, and Product Name
+    // If you don't map a field it will fall back on the verbose_name
+
+.. versionadded:: 0.5.0
+
+You do not need to map all the fields of the model, any fields not mapped will fall back on their ``verbose_name``. Django provides a default ``verbose_name`` which is a "munged camel case version" so ``product_name`` would become ``Product Name`` by default.
+
 Actors
 ------
 
@@ -94,6 +120,42 @@ your models is equally easy as any other field::
 :py:class:`AuditlogHistoryField` accepts an optional :py:attr:`pk_indexable` parameter, which is either ``True`` or
 ``False``, this defaults to ``True``. If your model has a custom primary key that is not an integer value,
 :py:attr:`pk_indexable` needs to be set to ``False``. Keep in mind that this might slow down queries.
+
+The :py:class:`AuditlogHistoryField` provides easy access to :py:class:`LogEntry` instances related to the model instance. Here is an example of how to use it:
+
+.. code-block:: html
+
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>From</th>
+            <th>To</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for key, value in mymodel.history.latest.changes_dict.iteritems %}
+          <tr>
+            <td>{{ key }}</td>
+            <td>{{ value.0|default:"None" }}</td>
+            <td>{{ value.1|default:"None" }}</td>
+          </tr>
+        {% empty %}
+          <p>No history for this item has been logged yet.</p>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+If you want to display the changes in a more human readable format use the :py:class:`LogEntry`'s :py:attr:`changes_display_dict` instead. The :py:attr:`changes_display_dict` will make a few cosmetic changes to the data.
+
+- Mapping Fields property will be used to display field names, falling back on ``verbose_name`` if no mapping field is present
+- Fields with a value whose length is greater than 140 will be truncated with an ellipsis appended
+- Date, Time, and DateTime fields will follow ``L10N`` formatting. If ``USE_L10N=False`` in your settings it will fall back on the settings defaults defined for ``DATE_FORMAT``, ``TIME_FORMAT``, and ``DATETIME_FORMAT``
+- Fields with ``choices`` will be translated into their human readable form, this feature also supports choices defined on ``django-multiselectfield`` and Postgres's native ``ArrayField``
+
+Check out the internals for the full list of attributes you can use to get associated :py:class:`LogEntry` instances.
 
 Many-to-many relationships
 --------------------------
