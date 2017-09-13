@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Model
+from django.utils.six import iteritems
 
 
 class AuditlogModelRegistry(object):
@@ -24,7 +25,7 @@ class AuditlogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model=None, include_fields=[], exclude_fields=[]):
+    def register(self, model=None, include_fields=[], exclude_fields=[], mapping_fields={}):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
@@ -40,10 +41,10 @@ class AuditlogModelRegistry(object):
             if not issubclass(cls, Model):
                 raise TypeError("Supplied model is not a valid model.")
 
-            # Register the model and signals.
             self._registry[cls] = {
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
+                'mapping_fields': mapping_fields,
             }
             self._connect_signals(cls)
 
@@ -110,6 +111,7 @@ class AuditlogModelRegistry(object):
         return {
             'include_fields': self._registry[model]['include_fields'],
             'exclude_fields': self._registry[model]['exclude_fields'],
+            'mapping_fields': self._registry[model]['mapping_fields'],
         }
 
 

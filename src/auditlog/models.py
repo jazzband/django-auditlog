@@ -1,17 +1,21 @@
 from __future__ import unicode_literals
 
 import json
+import ast
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import QuerySet, Q
+from django.utils import formats
 from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
 from jsonfield.fields import JSONField
+from dateutil import parser
 
 
 class LogEntryManager(models.Manager):
@@ -52,8 +56,9 @@ class LogEntryManager(models.Manager):
                     self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).delete()
                 else:
                     self.filter(content_type=kwargs.get('content_type'), object_pk=kwargs.get('object_pk', '')).delete()
-
-            return self.create(**kwargs)
+            # save LogEntry to same database instance is using
+            db = instance._state.db
+            return self.create(**kwargs) if db is None or db == '' else self.using(db).create(**kwargs)
         return None
 
     def get_for_object(self, instance):
@@ -231,6 +236,62 @@ class LogEntry(models.Model):
             substrings.append(substring)
 
         return separator.join(substrings)
+
+    @property
+    def changes_display_dict(self):
+        """
+        :return: The changes recorded in this log entry intended for display to users as a dictionary object.
+        """
+        # Get the model and model_fields
+        from auditlog.registry import auditlog
+        model = self.content_type.model_class()
+        model_fields = auditlog.get_model_fields(model._meta.model)
+        changes_display_dict = {}
+        # grab the changes_dict and iterate through
+        for field_name, values in iteritems(self.changes_dict):
+            # try to get the field attribute on the model
+            try:
+                field = model._meta.get_field(field_name)
+            except FieldDoesNotExist:
+                changes_display_dict[field_name] = values
+                continue
+            values_display = []
+            # handle choices fields and Postgres ArrayField to get human readable version
+            if field.choices or hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
+                choices_dict = dict(field.choices or field.base_field.choices)
+                for value in values:
+                    try:
+                        value = ast.literal_eval(value)
+                        if type(value) is [].__class__:
+                            values_display.append(', '.join([choices_dict.get(val, 'None') for val in value]))
+                        else:
+                            values_display.append(choices_dict.get(value, 'None'))
+                    except ValueError:
+                        values_display.append(choices_dict.get(value, 'None'))
+                    except:
+                        values_display.append(choices_dict.get(value, 'None'))
+            else:
+                field_type = field.get_internal_type()
+                for value in values:
+                    # handle case where field is a datetime, date, or time type
+                    if field_type in ["DateTimeField", "DateField", "TimeField"]:
+                        try:
+                            value = parser.parse(value)
+                            if field_type == "DateField":
+                                value = value.date()
+                            elif field_type == "TimeField":
+                                value = value.time()
+                            value = formats.localize(value)
+                        except ValueError:
+                            pass
+                    # check if length is longer than 140 and truncate with ellipsis
+                    if len(value) > 140:
+                        value = "{}...".format(value[:140])
+
+                    values_display.append(value)
+            verbose_name = model_fields['mapping_fields'].get(field.name, field.verbose_name)
+            changes_display_dict[verbose_name] = values_display
+        return changes_display_dict
 
 
 class AuditlogHistoryField(GenericRelation):

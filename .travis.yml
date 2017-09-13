@@ -4,6 +4,9 @@ dist: trusty
 sudo: required
 language: python
 python: 3.6
+group: deprecated-2017Q3
+services:
+  - postgresql
 
 env:
   - TOX_ENV=py36-django-18
