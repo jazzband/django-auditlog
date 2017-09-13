@@ -150,8 +150,8 @@ The :py:class:`AuditlogHistoryField` provides easy access to :py:class:`LogEntry
 
 If you want to display the changes in a more human readable format use the :py:class:`LogEntry`'s :py:attr:`changes_display_dict` instead. The :py:attr:`changes_display_dict` will make a few cosmetic changes to the data.
 
-- Mapping Fields property will be used to display field names, falling back on ``verbose_name`` no mapping field is present
-- Long text and char fields will be truncated to 140 characters with an ellipsis appended
+- Mapping Fields property will be used to display field names, falling back on ``verbose_name`` if no mapping field is present
+- Fields with a value whose length is greater than 140 will be truncated with an ellipsis appended
 - Date, Time, and DateTime fields will follow ``L10N`` formatting. If ``USE_L10N=False`` in your settings it will fall back on the settings defaults defined for ``DATE_FORMAT``, ``TIME_FORMAT``, and ``DATETIME_FORMAT``
 - Fields with ``choices`` will be translated into their human readable form, this feature also supports choices defined on ``django-multiselectfield`` and Postgres's native ``ArrayField``
 
