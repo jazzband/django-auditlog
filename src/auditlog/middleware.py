@@ -9,11 +9,17 @@ from django.utils.functional import curry
 from django.apps import apps
 from auditlog.models import LogEntry
 
+# Use MiddlewareMixin when present (Django >= 1.10)
+try:
+    from django.utils.deprecation import MiddlewareMixin
+except ImportError:
+    MiddlewareMixin = object
+
 
 threadlocal = threading.local()
 
 
-class AuditlogMiddleware(object):
+class AuditlogMiddleware(MiddlewareMixin):
     """
     Middleware to couple the request's user to log items. This is accomplished by currying the signal receiver with the
     user from the request (or None if the user is not authenticated).
@@ -36,7 +42,7 @@ class AuditlogMiddleware(object):
 
         # Connect signal for automatic logging
         if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated():
-            set_actor = curry(self.set_actor, request.user)
+            set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
     def process_response(self, request, response):
@@ -58,11 +64,13 @@ class AuditlogMiddleware(object):
         return None
 
     @staticmethod
-    def set_actor(user, sender, instance, **kwargs):
+    def set_actor(user, sender, instance, signal_duid, **kwargs):
         """
         Signal receiver with an extra, required 'user' kwarg. This method becomes a real (valid) signal receiver when
         it is curried with the actor.
         """
+        if signal_duid != threadlocal.auditlog['signal_duid']:
+            return
         try:
             app_label, model_name = settings.AUTH_USER_MODEL.split('.')
             auth_user_model = apps.get_model(app_label, model_name)
