@@ -578,3 +578,16 @@ class PostgresArrayFieldModelTest(TestCase):
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
                         msg="The human readable text 'Green' is displayed.")
+
+class DateTimeModelTest(TestCase):
+    def setUp(self):
+        self.obj = DateTimeModel.objects.create(date=timezone.now())
+
+    def test_update(self):
+        """Update Test"""
+        # Get the object to work with
+        obj = self.obj
+
+        # Change with naive field
+        obj.date = timezone.make_naive(timezone.now(), timezone=timezone.utc)
+        obj.save()

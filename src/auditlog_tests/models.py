@@ -207,6 +207,14 @@ class PostgresArrayFieldModel(models.Model):
 
     history = AuditlogHistoryField()
 
+class DateTimeModel(models.Model):
+    """
+    A model for datetime to test against timezone naive error
+    """
+
+    date = models.DateTimeField(null=True, blank=True)
+
+    history = AuditlogHistoryField()
 
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
@@ -221,3 +229,4 @@ auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
+auditlog.register(DateTimeModel)
