@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 import threading
 import time
 
@@ -41,9 +42,12 @@ class AuditlogMiddleware(MiddlewareMixin):
             threadlocal.auditlog['remote_addr'] = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
 
         # Connect signal for automatic logging
-        if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated():
-            set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
-            pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
+        if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated'):
+            is_authenticated = request.user.is_authenticated() \
+                if django.VERSION < (1, 10) else request.user.is_authenticated
+            if is_authenticated:
+                set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
+                pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
     def process_response(self, request, response):
         """
