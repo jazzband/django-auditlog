@@ -1,10 +1,11 @@
 import json
 
 from django.conf import settings
-from django.core import urlresolvers
 try:
     from django.urls.exceptions import NoReverseMatch
+    from django import urls as urlresolvers
 except ImportError:
+    from django.core import urlresolvers
     from django.core.urlresolvers import NoReverseMatch
 
 MAX = 75
