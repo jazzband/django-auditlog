@@ -14,7 +14,6 @@ src/auditlog/registry.py
 src/auditlog/management/__init__.py
 src/auditlog/management/commands/__init__.py
 src/auditlog/management/commands/auditlogflush.py
-src/auditlog/migrations/0001_django-2-0.py
 src/auditlog/migrations/0001_initial.py
 src/auditlog/migrations/0002_auto_support_long_primary_keys.py
 src/auditlog/migrations/0003_logentry_remote_addr.py
