@@ -6,10 +6,10 @@ def is_authenticated(user):
 
     Function provides compatibility following deprecation of method call to
     is_authenticated() in Django 2.0.
-
     """
-
-    if django.VERSION < (1, 10):
+    if not hasattr(user, 'is_authenticated'):
+        return False
+    if hasattr(user.is_authenticated, "__call__"):
         return user.is_authenticated()
     else:
         return user.is_authenticated

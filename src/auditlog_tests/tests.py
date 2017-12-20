@@ -584,10 +584,7 @@ class PostgresArrayFieldModelTest(TestCase):
 
 
 class CompatibilityTest(TestCase):
-    """
-    Test case for compatibility functions.
-
-    """
+    """Test case for compatibility functions."""
 
     def test_is_authenticated(self):
         """Test that the 'is_authenticated' compatibility function is working.
