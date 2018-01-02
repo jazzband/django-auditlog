@@ -14,8 +14,10 @@ from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
+import pytz
 from jsonfield.fields import JSONField
 from dateutil import parser
+from dateutil.tz import gettz
 
 
 class LogEntryManager(models.Manager):
@@ -281,6 +283,9 @@ class LogEntry(models.Model):
                                 value = value.date()
                             elif field_type == "TimeField":
                                 value = value.time()
+                            elif field_type == "DateTimeField":
+                                value = value.replace(tzinfo=pytz.utc)
+                                value = value.astimezone(gettz(settings.TIME_ZONE))
                             value = formats.localize(value)
                         except ValueError:
                             pass
