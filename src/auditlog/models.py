@@ -278,7 +278,11 @@ class LogEntry(models.Model):
                     except:
                         values_display.append(choices_dict.get(value, 'None'))
             else:
-                field_type = field.get_internal_type()
+                try:
+                    field_type = field.get_internal_type()
+                except AttributeError:
+                    # if the field is a relationship it has no internal type and exclude it
+                    continue
                 for value in values:
                     # handle case where field is a datetime, date, or time type
                     if field_type in ["DateTimeField", "DateField", "TimeField"]:
