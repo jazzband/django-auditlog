@@ -9,12 +9,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import QuerySet, Q
-from django.utils import formats
+from django.utils import formats, timezone
 from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
-import pytz
 from jsonfield.fields import JSONField
 from dateutil import parser
 from dateutil.tz import gettz
@@ -293,7 +292,7 @@ class LogEntry(models.Model):
                             elif field_type == "TimeField":
                                 value = value.time()
                             elif field_type == "DateTimeField":
-                                value = value.replace(tzinfo=pytz.utc)
+                                value = value.replace(tzinfo=timezone.utc)
                                 value = value.astimezone(gettz(settings.TIME_ZONE))
                             value = formats.localize(value)
                         except ValueError:
