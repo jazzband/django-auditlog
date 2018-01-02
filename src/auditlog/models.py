@@ -259,8 +259,13 @@ class LogEntry(models.Model):
                 continue
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
-            if field.choices or hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
-                choices_dict = dict(field.choices or field.base_field.choices)
+            choices_dict = None
+            if hasattr(field, 'choices'):
+                choices_dict = dict(field.choices)
+            elif  hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
+                choices_dict = dict(field.base_field.choices)
+
+            if choices_dict:
                 for value in values:
                     try:
                         value = ast.literal_eval(value)
