@@ -170,13 +170,13 @@ class LogEntry(models.Model):
             (DELETE, _("delete")),
         )
 
-    content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
+    content_type = models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
     object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
     object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
     changes = models.TextField(blank=True, verbose_name=_("change message"))
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, on_delete=models.SET_NULL, related_name='+', verbose_name=_("actor"))
+    actor = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='+', verbose_name=_("actor"))
     remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
     additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
