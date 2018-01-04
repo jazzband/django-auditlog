@@ -1,6 +1,7 @@
 """
 Settings file for the Auditlog test suite.
 """
+import os
 import django
 
 SECRET_KEY = 'test'
@@ -53,7 +54,9 @@ DATABASES = {
 
 TEMPLATES = [
     {
+        'APP_DIRS': True,
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
         'OPTIONS': {
             'context_processors': [
                 'django.contrib.auth.context_processors.auth',
