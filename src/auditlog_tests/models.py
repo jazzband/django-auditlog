@@ -66,7 +66,7 @@ class RelatedModel(models.Model):
     A model with a foreign key.
     """
 
-    related = models.ForeignKey('self')
+    related = models.ForeignKey(to='self', on_delete=models.CASCADE)
 
     history = AuditlogHistoryField()
 
@@ -124,7 +124,7 @@ class AdditionalDataIncludedModel(models.Model):
 
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
-    related = models.ForeignKey(SimpleModel)
+    related = models.ForeignKey(to=SimpleModel, on_delete=models.CASCADE)
 
     history = AuditlogHistoryField()
 
