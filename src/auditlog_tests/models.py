@@ -209,6 +209,15 @@ class PostgresArrayFieldModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class PostgresDecimalFieldModel(models.Model):
+    """
+    Test auditlog with DecimalField on Postgres
+    """
+    decimal = models.DecimalField(decimal_places=3, max_digits=10, null=True, blank=True)
+
+    history = AuditlogHistoryField()
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -222,3 +231,4 @@ auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
+auditlog.register(PostgresDecimalFieldModel)
