@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('changes', models.TextField(verbose_name='change message', blank=True)),
                 ('timestamp', models.DateTimeField(auto_now_add=True, verbose_name='timestamp')),
                 ('actor', models.ForeignKey(related_name='+', on_delete=django.db.models.deletion.SET_NULL, verbose_name='actor', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('content_type', models.ForeignKey(related_name='+', verbose_name='content type', to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', verbose_name='content type', to='contenttypes.ContentType')),
             ],
             options={
                 'ordering': ['-timestamp'],

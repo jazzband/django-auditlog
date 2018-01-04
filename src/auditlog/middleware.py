@@ -8,6 +8,7 @@ from django.db.models.signals import pre_save
 from django.utils.functional import curry
 from django.apps import apps
 from auditlog.models import LogEntry
+from auditlog.compat import is_authenticated
 
 # Use MiddlewareMixin when present (Django >= 1.10)
 try:
@@ -41,7 +42,7 @@ class AuditlogMiddleware(MiddlewareMixin):
             threadlocal.auditlog['remote_addr'] = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
 
         # Connect signal for automatic logging
-        if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated') and request.user.is_authenticated():
+        if hasattr(request, 'user') and is_authenticated(request.user):
             set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
