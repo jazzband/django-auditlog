@@ -1,5 +1,7 @@
 import datetime
+import django
 from django.conf import settings
+from django.contrib import auth
 from django.contrib.auth.models import User, AnonymousUser
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
@@ -15,6 +17,7 @@ from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKe
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
     CharfieldTextfieldModel, PostgresArrayFieldModel
+from auditlog import compat
 
 
 class SimpleModelTest(TestCase):
@@ -581,3 +584,41 @@ class PostgresArrayFieldModelTest(TestCase):
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
                         msg="The human readable text 'Green' is displayed.")
+
+
+class CompatibilityTest(TestCase):
+    """Test case for compatibility functions."""
+
+    def test_is_authenticated(self):
+        """Test that the 'is_authenticated' compatibility function is working.
+
+        Bit of explanation: the `is_authenticated` property on request.user is
+        *always* set to 'False' for AnonymousUser, and it is *always* set to
+        'True' for *any* other (i.e. identified/authenticated) user.
+
+        So, the logic of this test is to ensure that compat.is_authenticated()
+        returns the correct value based on whether or not the User is an
+        anonymous user (simulating what goes on in the real request.user).
+
+        """
+
+        # Test compat.is_authenticated for anonymous users
+        self.user = auth.get_user(self.client)
+        if django.VERSION < (1, 10):
+            assert self.user.is_anonymous()
+        else:
+            assert self.user.is_anonymous
+        assert not compat.is_authenticated(self.user)
+
+        # Setup some other user, which is *not* anonymous, and check
+        # compat.is_authenticated
+        self.user = User.objects.create(
+            username="test.user",
+            email="test.user@mail.com",
+            password="auditlog"
+        )
+        if django.VERSION < (1, 10):
+            assert not self.user.is_anonymous()
+        else:
+            assert not self.user.is_anonymous
+        assert compat.is_authenticated(self.user)

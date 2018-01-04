@@ -8,6 +8,7 @@ SECRET_KEY = 'test'
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sessions',
     'auditlog',
     'auditlog_tests',
     'multiselectfield',
@@ -15,6 +16,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware'
     'auditlog.middleware.AuditlogMiddleware',
 )
 
