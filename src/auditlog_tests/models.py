@@ -150,6 +150,7 @@ class DateTimeFieldModel(models.Model):
     timestamp = models.DateTimeField()
     date = models.DateField()
     time = models.TimeField()
+    naive_dt = models.DateTimeField(null=True, blank=True)
 
     history = AuditlogHistoryField()
 
