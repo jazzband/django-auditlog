@@ -269,12 +269,13 @@ class DateTimeFieldModelTest(TestCase):
     """Tests if DateTimeField changes are recognised correctly"""
 
     utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
+    now = timezone.now()
 
     def test_model_with_same_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -292,7 +293,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -308,7 +309,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -324,7 +325,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -340,7 +341,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -356,7 +357,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
 
@@ -372,7 +373,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
                         dateformat.format(timestamp, settings.DATETIME_FORMAT),
@@ -398,7 +399,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["date"][1] == \
                         dateformat.format(date, settings.DATE_FORMAT),
@@ -423,7 +424,7 @@ class DateTimeFieldModelTest(TestCase):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
-        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
         self.assertTrue(dtm.history.latest().changes_display_dict["time"][1] == \
                         dateformat.format(time, settings.TIME_FORMAT),
@@ -443,6 +444,17 @@ class DateTimeFieldModelTest(TestCase):
                         formats.localize(time),
                         msg=("The time should be formatted according to Django's settings for"
                              " USE_L10N is True with a different LANGUAGE_CODE."))
+
+    def test_update_naive_dt(self):
+        timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
+        dtm.save()
+
+        # Change with naive field doesnt raise error
+        dtm.naive_dt = timezone.make_naive(timezone.now(), timezone=timezone.utc)
+        dtm.save()
 
 
 class UnregisterTest(TestCase):
@@ -647,3 +659,4 @@ class AdminPanelTest(TestCase):
         assert res.status_code == 200
         res = self.client.get("/admin/auditlog/logentry/{}/history/".format(log_pk))
         assert res.status_code == 200
+
