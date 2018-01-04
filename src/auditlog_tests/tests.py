@@ -619,3 +619,32 @@ class CompatibilityTest(TestCase):
         else:
             assert not self.user.is_anonymous
         assert compat.is_authenticated(self.user)
+
+
+class AdminPanelTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.username = "test_admin"
+        cls.password = User.objects.make_random_password()
+        cls.user, created = User.objects.get_or_create(username=cls.username)
+        cls.user.set_password(cls.password)
+        cls.user.is_staff = True
+        cls.user.is_superuser = True
+        cls.user.is_active = True
+        cls.user.save()
+        cls.obj = SimpleModel.objects.create(text='For admin logentry test')
+
+    def test_auditlog_admin(self):
+        self.client.login(username=self.username, password=self.password)
+        log_pk = self.obj.history.latest().pk
+        admin_pages = [
+            "/admin/auditlog/logentry/",
+            "/admin/auditlog/logentry/add/",
+            "/admin/auditlog/logentry/{}/".format(log_pk),
+            "/admin/auditlog/logentry/{}/delete/".format(log_pk),
+            "/admin/auditlog/logentry/{}/history/".format(log_pk),
+        ]
+        for page in admin_pages:
+            res = self.client.get(page)
+            assert res.status_code == 200
+            assert "<!DOCTYPE html" in res.content
