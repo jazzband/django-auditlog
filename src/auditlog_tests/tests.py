@@ -270,7 +270,7 @@ class DateTimeFieldModelTest(TestCase):
 
     utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
     now = timezone.now()
-    
+
     def test_model_with_same_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
@@ -444,7 +444,8 @@ class DateTimeFieldModelTest(TestCase):
                         formats.localize(time),
                         msg=("The time should be formatted according to Django's settings for"
                              " USE_L10N is True with a different LANGUAGE_CODE."))
-   def test_update_naive_dt(self):
+
+    def test_update_naive_dt(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
