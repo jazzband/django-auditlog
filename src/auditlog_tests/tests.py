@@ -8,6 +8,7 @@ from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from django.utils import dateformat, formats, timezone
+from dateutil.tz import gettz
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
@@ -375,22 +376,24 @@ class DateTimeFieldModelTest(TestCase):
         time = datetime.time(12, 0)
         dtm = DateTimeFieldModel(label='DateTimeField model', timestamp=timestamp, date=date, time=time, naive_dt=self.now)
         dtm.save()
+        localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
-                        dateformat.format(timestamp, settings.DATETIME_FORMAT),
+                        dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
                         msg=("The datetime should be formatted according to Django's settings for"
                              " DATETIME_FORMAT"))
         timestamp = timezone.now()
         dtm.timestamp = timestamp
         dtm.save()
+        localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
         self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
-                        dateformat.format(timestamp, settings.DATETIME_FORMAT),
+                        dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
                         msg=("The datetime should be formatted according to Django's settings for"
                              " DATETIME_FORMAT"))
 
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE='en-GB'):
             self.assertTrue(dtm.history.latest().changes_display_dict["timestamp"][1] == \
-                        formats.localize(timestamp),
+                        formats.localize(localized_timestamp),
                         msg=("The datetime should be formatted according to Django's settings for"
                              " USE_L10N is True with a different LANGUAGE_CODE."))
 

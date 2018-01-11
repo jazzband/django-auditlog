@@ -9,13 +9,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import QuerySet, Q
-from django.utils import formats
+from django.utils import formats, timezone
 from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
 from jsonfield.fields import JSONField
 from dateutil import parser
+from dateutil.tz import gettz
 
 
 class LogEntryManager(models.Manager):
@@ -257,8 +258,13 @@ class LogEntry(models.Model):
                 continue
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
-            if field.choices or hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
-                choices_dict = dict(field.choices or field.base_field.choices)
+            choices_dict = None
+            if hasattr(field, 'choices') and len(field.choices) > 0:
+                choices_dict = dict(field.choices)
+            if hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
+                choices_dict = dict(field.base_field.choices)
+
+            if choices_dict:
                 for value in values:
                     try:
                         value = ast.literal_eval(value)
@@ -271,7 +277,11 @@ class LogEntry(models.Model):
                     except:
                         values_display.append(choices_dict.get(value, 'None'))
             else:
-                field_type = field.get_internal_type()
+                try:
+                    field_type = field.get_internal_type()
+                except AttributeError:
+                    # if the field is a relationship it has no internal type and exclude it
+                    continue
                 for value in values:
                     # handle case where field is a datetime, date, or time type
                     if field_type in ["DateTimeField", "DateField", "TimeField"]:
@@ -281,6 +291,9 @@ class LogEntry(models.Model):
                                 value = value.date()
                             elif field_type == "TimeField":
                                 value = value.time()
+                            elif field_type == "DateTimeField":
+                                value = value.replace(tzinfo=timezone.utc)
+                                value = value.astimezone(gettz(settings.TIME_ZONE))
                             value = formats.localize(value)
                         except ValueError:
                             pass
@@ -289,7 +302,7 @@ class LogEntry(models.Model):
                         value = "{}...".format(value[:140])
 
                     values_display.append(value)
-            verbose_name = model_fields['mapping_fields'].get(field.name, field.verbose_name)
+            verbose_name = model_fields['mapping_fields'].get(field.name, getattr(field, 'verbose_name', field.name))
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
 
