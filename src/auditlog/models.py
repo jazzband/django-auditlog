@@ -302,7 +302,8 @@ class LogEntry(models.Model):
                         value = "{}...".format(value[:140])
 
                     values_display.append(value)
-            verbose_name = model_fields['mapping_fields'].get(field.name, field.verbose_name)
+            verbose_name = model_fields['mapping_fields'].get(
+                field.name, hasattr(field, 'verbose_name') and field.verbose_name or field.name)
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
 
