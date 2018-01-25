@@ -1,6 +1,12 @@
 import json
 
 from django.conf import settings
+
+try:
+    from django.utils.safestring import mark_safe
+except ImportError:
+    mark_safe = lambda str: str
+
 try:
     from django.core import urlresolvers
 except ImportError:
@@ -17,6 +23,7 @@ class LogEntryAdminMixin(object):
 
     def created(self, obj):
         return obj.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+
     created.short_description = 'Created'
 
     def user_url(self, obj):
@@ -27,9 +34,10 @@ class LogEntryAdminMixin(object):
                 link = urlresolvers.reverse(viewname, args=[obj.actor.id])
             except NoReverseMatch:
                 return u'%s' % (obj.actor)
-            return u'<a href="%s">%s</a>' % (link, obj.actor)
+            return mark_safe(u'<a href="%s">%s</a>' % (link, obj.actor))
 
         return 'system'
+
     user_url.allow_tags = True
     user_url.short_description = 'User'
 
@@ -42,7 +50,8 @@ class LogEntryAdminMixin(object):
         except NoReverseMatch:
             return obj.object_repr
         else:
-            return u'<a href="%s">%s</a>' % (link, obj.object_repr)
+            return mark_safe(u'<a href="%s">%s</a>' % (link, obj.object_repr))
+
     resource_url.allow_tags = True
     resource_url.short_description = 'Resource'
 
@@ -56,6 +65,7 @@ class LogEntryAdminMixin(object):
             i = fields.rfind(' ', 0, MAX)
             fields = fields[:i] + ' ..'
         return '%d change%s: %s' % (len(changes), s, fields)
+
     msg_short.short_description = 'Changes'
 
     def msg(self, obj):
@@ -67,6 +77,7 @@ class LogEntryAdminMixin(object):
             value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
             msg += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % tuple(value)
         msg += '</table>'
-        return msg
+        return mark_safe(msg)
+
     msg.allow_tags = True
     msg.short_description = 'Changes'
