@@ -1,9 +1,6 @@
 from __future__ import unicode_literals
 
-import json
-
-from auditlog.diff import model_instance_diff
-from auditlog.models import LogEntry
+from auditlog.backends import auditlog_backend
 
 
 def log_create(sender, instance, created, **kwargs):
@@ -12,14 +9,7 @@ def log_create(sender, instance, created, **kwargs):
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if created:
-        changes = model_instance_diff(None, instance)
-
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.CREATE,
-            changes=json.dumps(changes),
-        )
+    auditlog_backend.log_create(instance, created)
 
 
 def log_update(sender, instance, **kwargs):
@@ -28,23 +18,7 @@ def log_update(sender, instance, **kwargs):
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if instance.pk is not None:
-        try:
-            old = sender.objects.get(pk=instance.pk)
-        except sender.DoesNotExist:
-            pass
-        else:
-            new = instance
-
-            changes = model_instance_diff(old, new)
-
-            # Log an entry only if there are changes
-            if changes:
-                log_entry = LogEntry.objects.log_create(
-                    instance,
-                    action=LogEntry.Action.UPDATE,
-                    changes=json.dumps(changes),
-                )
+    auditlog_backend.log_update(instance)
 
 
 def log_delete(sender, instance, **kwargs):
@@ -53,11 +27,4 @@ def log_delete(sender, instance, **kwargs):
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if instance.pk is not None:
-        changes = model_instance_diff(instance, None)
-
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.DELETE,
-            changes=json.dumps(changes),
-        )
+    auditlog_backend.log_delete(instance)

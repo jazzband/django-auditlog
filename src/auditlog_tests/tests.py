@@ -1,4 +1,11 @@
 import datetime
+import logging
+
+try:
+    from unittest.mock import Mock, create_autospec, ANY
+except ImportError:
+    from mock import Mock, create_autospec, ANY
+
 import django
 from django.conf import settings
 from django.contrib import auth
@@ -10,9 +17,11 @@ from django.test import TestCase, RequestFactory
 from django.utils import dateformat, formats, timezone
 from dateutil.tz import gettz
 
-from auditlog.middleware import AuditlogMiddleware
+from auditlog.backends.logger import LoggerBackend
+from auditlog.middleware import AuditlogMiddleware, threadlocal
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
+
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
@@ -663,3 +672,67 @@ class AdminPanelTest(TestCase):
         res = self.client.get("/admin/auditlog/logentry/{}/history/".format(log_pk))
         assert res.status_code == 200
 
+
+class LoggerBackendTest(TestCase):
+
+    def setUp(self):
+        # Setup test logger
+        self.obj = SimpleModel.objects.create(text='I am not difficult.')
+        self.logger = create_autospec(logging.Logger)
+        threadlocal.auditlog = {
+            'signal_duid': (self.__class__, '123'),
+            'remote_addr': '8.8.8.8',
+            'actor_pk': 5,
+            'actor_name': 'Test actor',
+        }
+
+    def tearDown(self):
+        delattr(threadlocal, 'auditlog')
+
+    def test_create(self):
+        """Creation is logged correctly."""
+
+        # Get the object to work with
+        obj = self.obj
+
+        backend = LoggerBackend()
+        backend.get_logger = Mock(return_value=self.logger)
+        backend.log_create(instance=obj, created=True)
+
+        self.logger.log.assert_called_once_with(
+            level=logging.INFO,
+            msg='create on simple model 1 by actor Test actor',
+            extra=ANY)
+
+    def test_update(self):
+        """Update is logged correctly."""
+
+        # Get the object to work with
+        obj = self.obj
+
+        # edit a value to call log_update with
+        obj.text = 'foo123'
+
+        backend = LoggerBackend()
+        backend.get_logger = Mock(return_value=self.logger)
+        backend.log_update(instance=obj)
+
+        self.logger.log.assert_called_once_with(
+            level=logging.INFO,
+            msg='update on simple model 1 by actor Test actor',
+            extra=ANY)
+
+    def test_delete(self):
+        """Delete is logged correctly."""
+
+        # Get the object to work with
+        obj = self.obj
+
+        backend = LoggerBackend()
+        backend.get_logger = Mock(return_value=self.logger)
+        backend.log_delete(instance=obj)
+
+        self.logger.log.assert_called_once_with(
+            level=logging.INFO,
+            msg='delete on simple model 1 by actor Test actor',
+            extra=ANY)

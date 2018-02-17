@@ -5,6 +5,7 @@ import time
 
 from django.conf import settings
 from django.db.models.signals import pre_save
+from django.utils.encoding import smart_text
 from django.utils.functional import curry
 from django.apps import apps
 from auditlog.models import LogEntry
@@ -18,6 +19,10 @@ except ImportError:
 
 
 threadlocal = threading.local()
+
+
+def get_thread_data():
+    return getattr(threadlocal, 'auditlog', {})
 
 
 class AuditlogMiddleware(MiddlewareMixin):
@@ -35,14 +40,18 @@ class AuditlogMiddleware(MiddlewareMixin):
         threadlocal.auditlog = {
             'signal_duid': (self.__class__, time.time()),
             'remote_addr': request.META.get('REMOTE_ADDR'),
+            'actor_pk': None,
+            'actor_name': None,
         }
 
         # In case of proxy, set 'original' address
         if request.META.get('HTTP_X_FORWARDED_FOR'):
             threadlocal.auditlog['remote_addr'] = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
 
-        # Connect signal for automatic logging
+        # Connect signal and add actor details for automatic logging
         if hasattr(request, 'user') and is_authenticated(request.user):
+            threadlocal.auditlog['actor_pk'] = request.user.pk
+            threadlocal.auditlog['actor_name'] = smart_text(request.user.pk)
             set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
