@@ -5,3 +5,4 @@ tox>=1.7.0
 codecov>=2.0.0
 django-multiselectfield==0.1.8
 psycopg2
+mock
