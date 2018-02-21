@@ -56,7 +56,7 @@ class LoggerBackend(AuditBackend):
             'changes': changes,
         }
 
-    def create_log(self, action, instance, changes, **kwargs):
+    def create_log_entry(self, action, instance, changes, **kwargs):
         """Generates a log entry for the given action and instance"""
         logger = self.get_logger()
         extra = self.get_extra(action, instance, changes)

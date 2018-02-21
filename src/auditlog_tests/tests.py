@@ -2,7 +2,8 @@ import datetime
 import logging
 
 try:
-    from unittest.mock import Mock, create_autospec, ANY
+    from unittest.mock import Mock, create_
+    autospec, ANY
 except ImportError:
     from mock import Mock, create_autospec, ANY
 

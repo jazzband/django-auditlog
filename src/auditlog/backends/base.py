@@ -10,7 +10,7 @@ class AuditBackend(object):
         if created:
             changes = model_instance_diff(None, instance)
 
-            self.create_log(
+            self.create_log_entry(
                 instance=instance,
                 action=LogEntry.Action.CREATE,
                 changes=changes,
@@ -30,7 +30,7 @@ class AuditBackend(object):
 
                 # Log an entry only if there are changes
                 if changes:
-                    self.create_log(
+                    self.create_log_entry(
                         instance=instance,
                         action=LogEntry.Action.UPDATE,
                         changes=changes,
@@ -41,11 +41,11 @@ class AuditBackend(object):
         if instance.pk is not None:
             changes = model_instance_diff(instance, None)
 
-            self.create_log(
+            self.create_log_entry(
                 instance=instance,
                 action=LogEntry.Action.DELETE,
                 changes=changes,
                 **kwargs)
 
-    def create_log(self, action, instance, changes, **kwargs):
+    def create_log_entry(self, action, instance, changes, **kwargs):
         raise NotImplemented('Backend must implement a log create method')
