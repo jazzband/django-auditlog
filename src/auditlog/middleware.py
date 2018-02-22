@@ -51,7 +51,7 @@ class AuditlogMiddleware(MiddlewareMixin):
         # Connect signal and add actor details for automatic logging
         if hasattr(request, 'user') and is_authenticated(request.user):
             threadlocal.auditlog['actor_pk'] = request.user.pk
-            threadlocal.auditlog['actor_name'] = smart_text(request.user.pk)
+            threadlocal.auditlog['actor_name'] = smart_text(request.user)
             set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
