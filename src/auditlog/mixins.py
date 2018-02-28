@@ -68,7 +68,7 @@ class LogEntryAdminMixin(object):
             value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
             msg += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % tuple(value)
         msg += '</table>'
-        mark_safe(msg)
+        msg = mark_safe(msg)
         return msg
     msg.allow_tags = True
     msg.short_description = 'Changes'
