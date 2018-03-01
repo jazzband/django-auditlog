@@ -65,10 +65,7 @@ class LogEntryAdminMixin(object):
         msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
         for i, field in enumerate(sorted(changes), 1):
             value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
-            msg += format_html(
-                '<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>',
-                *value,
-            )
+            msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
 
         msg += '</table>'
         return mark_safe(msg)
