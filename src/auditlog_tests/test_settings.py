@@ -69,3 +69,4 @@ TEMPLATES = [
 ROOT_URLCONF = 'auditlog_tests.urls'
 
 USE_TZ = True
+

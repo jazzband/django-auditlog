@@ -171,6 +171,10 @@ class LogEntry(models.Model):
             (DELETE, _("delete")),
         )
 
+        @classmethod
+        def text(cls, value):
+            return dict(cls.choices).get(value)
+
     content_type = models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
     object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
     object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
