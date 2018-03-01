@@ -9,6 +9,7 @@ try:
     from django.urls.exceptions import NoReverseMatch
 except ImportError:
     from django.core.urlresolvers import NoReverseMatch
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
 MAX = 75
@@ -28,10 +29,9 @@ class LogEntryAdminMixin(object):
                 link = urlresolvers.reverse(viewname, args=[obj.actor.id])
             except NoReverseMatch:
                 return u'%s' % (obj.actor)
-            return u'<a href="%s">%s</a>' % (link, obj.actor)
+            return format_html(u'<a href="{}">{}</a>', link, obj.actor)
 
         return 'system'
-    user_url.allow_tags = True
     user_url.short_description = 'User'
 
     def resource_url(self, obj):
@@ -43,8 +43,7 @@ class LogEntryAdminMixin(object):
         except NoReverseMatch:
             return obj.object_repr
         else:
-            return u'<a href="%s">%s</a>' % (link, obj.object_repr)
-    resource_url.allow_tags = True
+            return format_html(u'<a href="{}">{}</a>', link, obj.object_repr)
     resource_url.short_description = 'Resource'
 
     def msg_short(self, obj):
@@ -66,9 +65,8 @@ class LogEntryAdminMixin(object):
         msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
         for i, field in enumerate(sorted(changes), 1):
             value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
-            msg += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>' % tuple(value)
+            msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
+
         msg += '</table>'
-        msg = mark_safe(msg)
-        return msg
-    msg.allow_tags = True
+        return mark_safe(msg)
     msg.short_description = 'Changes'
