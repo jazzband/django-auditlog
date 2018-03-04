@@ -16,7 +16,7 @@ from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel
+    CharfieldTextfieldModel, PostgresArrayFieldModel, PostgresDecimalFieldModel
 from auditlog import compat
 
 
@@ -596,6 +596,22 @@ class PostgresArrayFieldModelTest(TestCase):
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
                         msg="The human readable text 'Green' is displayed.")
+
+
+class PostgresDecimalFieldModelTest(TestCase):
+
+    def setUp(self):
+        self.obj = PostgresDecimalFieldModel.objects.create(decimal=0.17)
+
+    def test_decimal_save_changes(self):
+        self.assertEqual(self.obj.history.count(), 1)
+        self.obj.decimal = 0.170
+        self.obj.save()
+        self.assertEqual(self.obj.history.count(), 1)
+        self.obj.decimal = 0000.17000
+        self.obj.save()
+        self.assertEqual(self.obj.history.count(), 1)
+
 
 
 class CompatibilityTest(TestCase):
