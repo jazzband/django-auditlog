@@ -16,7 +16,7 @@ from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel
+    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
 from auditlog import compat
 
 
@@ -663,3 +663,33 @@ class AdminPanelTest(TestCase):
         res = self.client.get("/admin/auditlog/logentry/{}/history/".format(log_pk))
         assert res.status_code == 200
 
+
+class NoDeleteHistoryTest(TestCase):
+    def test_delete_related(self):
+        instance = SimpleModel.objects.create(integer=1)
+        assert LogEntry.objects.all().count() == 1
+        instance.integer = 2
+        instance.save()
+        assert LogEntry.objects.all().count() == 2
+
+        instance.delete()
+        entries = LogEntry.objects.order_by('id')
+
+        # The "DELETE" record is always retained
+        assert LogEntry.objects.all().count() == 1
+        assert entries.first().action == LogEntry.Action.DELETE
+
+    def test_no_delete_related(self):
+        instance = NoDeleteHistoryModel.objects.create(integer=1)
+        self.assertEqual(LogEntry.objects.all().count(), 1)
+        instance.integer = 2
+        instance.save()
+        self.assertEqual(LogEntry.objects.all().count(), 2)
+
+        instance.delete()
+        entries = LogEntry.objects.order_by('id')
+        self.assertEqual(entries.count(), 3)
+        self.assertEqual(
+            list(entries.values_list('action', flat=True)),
+            [LogEntry.Action.CREATE, LogEntry.Action.UPDATE, LogEntry.Action.DELETE]
+        )
