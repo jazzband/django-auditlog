@@ -209,6 +209,12 @@ class PostgresArrayFieldModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class NoDeleteHistoryModel(models.Model):
+    integer = models.IntegerField(blank=True, null=True)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -222,3 +228,4 @@ auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
+auditlog.register(NoDeleteHistoryModel)
