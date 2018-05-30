@@ -13,5 +13,14 @@ setup(
         'django-jsonfield>=1.0.0',
         'python-dateutil==2.6.0'
     ],
-    zip_safe=False
+    zip_safe=False,
+    classifiers=[
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'License :: OSI Approved :: MIT License',
+    ],        
 )
