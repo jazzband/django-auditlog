@@ -1,4 +1,5 @@
 import django
+import inspect
 
 def is_authenticated(user):
     """Return whether or not a User is authenticated.
@@ -10,8 +11,8 @@ def is_authenticated(user):
     as `is_authenticated` was introduced as a property in v1.10.s
     """
     if not hasattr(user, 'is_authenticated'):
-       return False
-    if callable(user.is_authenticated):
+        return False
+    if inspect.ismethod(user.is_authenticated):
         # Will be callable if django.version < 2.0, but is only necessary in
         # v1.9 and earlier due to change introduced in v1.10 making
         # `is_authenticated` a property instead of a callable.
