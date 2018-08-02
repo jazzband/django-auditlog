@@ -275,7 +275,10 @@ class LogEntry(models.Model):
                     except ValueError:
                         values_display.append(choices_dict.get(value, 'None'))
                     except:
-                        values_display.append(choices_dict.get(value, 'None'))
+                        if isinstance(value, list):
+                            values_display.append(value)
+                        else:
+                            values_display.append(choices_dict.get(value, 'None'))
             else:
                 try:
                     field_type = field.get_internal_type()
