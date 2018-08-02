@@ -276,7 +276,7 @@ class LogEntry(models.Model):
                         values_display.append(choices_dict.get(value, 'None'))
                     except:
                         if isinstance(value, list):
-                            values_display.append(value)
+                            values_display.append(', '.join(value))
                         else:
                             values_display.append(choices_dict.get(value, 'None'))
             else:
