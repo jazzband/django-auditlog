@@ -8,6 +8,9 @@ group: deprecated-2017Q3
 services:
   - postgresql
 
+addons:
+  postgresql: "9.4"
+
 env:
   - TOX_ENV=py36-django-18
   - TOX_ENV=py35-django-18
@@ -34,3 +37,13 @@ script: tox -e $TOX_ENV
 
 after_success:
   - codecov -e TOX_ENV
+
+deploy:
+  provider: pypi
+  user: $PYPI_USER
+  password:
+    secure: $PYPI_PASSWORD
+  on:
+    repo: jjkester/django-auditlog
+    branch: stable
+    condition: $TOX_ENV = py36-django-20
