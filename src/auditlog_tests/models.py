@@ -66,7 +66,7 @@ class RelatedModel(models.Model):
     A model with a foreign key.
     """
 
-    related = models.ForeignKey('self')
+    related = models.ForeignKey(to='self', on_delete=models.CASCADE)
 
     history = AuditlogHistoryField()
 
@@ -124,7 +124,7 @@ class AdditionalDataIncludedModel(models.Model):
 
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
-    related = models.ForeignKey(SimpleModel)
+    related = models.ForeignKey(to=SimpleModel, on_delete=models.CASCADE)
 
     history = AuditlogHistoryField()
 
@@ -150,6 +150,7 @@ class DateTimeFieldModel(models.Model):
     timestamp = models.DateTimeField()
     date = models.DateField()
     time = models.TimeField()
+    naive_dt = models.DateTimeField(null=True, blank=True)
 
     history = AuditlogHistoryField()
 
@@ -208,6 +209,12 @@ class PostgresArrayFieldModel(models.Model):
     history = AuditlogHistoryField()
 
 
+class NoDeleteHistoryModel(models.Model):
+    integer = models.IntegerField(blank=True, null=True)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -221,3 +228,4 @@ auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
+auditlog.register(NoDeleteHistoryModel)

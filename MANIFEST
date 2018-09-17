@@ -3,6 +3,7 @@ setup.py
 src/auditlog/__init__.py
 src/auditlog/admin.py
 src/auditlog/apps.py
+src/auditlog/compat.py
 src/auditlog/diff.py
 src/auditlog/filters.py
 src/auditlog/middleware.py
@@ -10,6 +11,9 @@ src/auditlog/mixins.py
 src/auditlog/models.py
 src/auditlog/receivers.py
 src/auditlog/registry.py
+src/auditlog/management/__init__.py
+src/auditlog/management/commands/__init__.py
+src/auditlog/management/commands/auditlogflush.py
 src/auditlog/migrations/0001_initial.py
 src/auditlog/migrations/0002_auto_support_long_primary_keys.py
 src/auditlog/migrations/0003_logentry_remote_addr.py
