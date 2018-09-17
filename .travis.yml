@@ -8,6 +8,9 @@ group: deprecated-2017Q3
 services:
   - postgresql
 
+addons:
+  postgresql: "9.4"
+
 env:
   - TOX_ENV=py36-django-18
   - TOX_ENV=py35-django-18
