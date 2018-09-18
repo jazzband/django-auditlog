@@ -40,9 +40,9 @@ after_success:
 
 deploy:
   provider: pypi
-  user: $PYPI_USER
+  user: jjkester
   password:
-    secure: $PYPI_PASSWORD
+    secure: QjzH/Ef0aEFQ7tYmNY5eYsxLmAnC9dt3KPcvNhB0j+P4GvQVHJM1267yVkb6WEDyNBuYwuHUEifShSfHChpfzIDgAMzTOGTfEi5ub8SlzVZfj6e0w8GEmApxXldvtBHQBr4ekveoFU5QReR2F80s89JeYn0T2cq3JCrt1sPOCj0=
   on:
     repo: jjkester/django-auditlog
     branch: stable
