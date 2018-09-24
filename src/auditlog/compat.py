@@ -1,5 +1,10 @@
 import django
-from django.utils.deprecation import CallableFalse, CallableTrue
+
+try:
+    from django.utils.deprecation import CallableFalse, CallableTrue
+except ImportError:
+    CallableFalse = False
+    CallableTrue = True
 
 
 def is_authenticated(user):
