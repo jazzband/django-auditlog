@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, NOT_PROVIDED, DateTimeField
@@ -28,7 +29,7 @@ def track_field(field):
         return False
 
     # 1.8 check
-    elif getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
+    elif django.VERSION < (1, 9) and getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
         return False
 
     return True
