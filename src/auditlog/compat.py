@@ -1,4 +1,6 @@
 import django
+from django.utils.deprecation import CallableFalse, CallableTrue
+
 
 def is_authenticated(user):
     """Return whether or not a User is authenticated.
@@ -10,8 +12,13 @@ def is_authenticated(user):
     as `is_authenticated` was introduced as a property in v1.10.s
     """
     if not hasattr(user, 'is_authenticated'):
-       return False
-    if callable(user.is_authenticated):
+        return False
+    if django.VERSION < (1, 10) or user.is_authenticated not in (CallableFalse, CallableTrue):
+        # Only call it as a callable if necessary (f.x. if version < 1.10 it is
+        # not a property, and in higher versions if it has been overridden as a
+        # method in an app that is not yet fully compliant with the property
+        # approach).
+        #
         # Will be callable if django.version < 2.0, but is only necessary in
         # v1.9 and earlier due to change introduced in v1.10 making
         # `is_authenticated` a property instead of a callable.
