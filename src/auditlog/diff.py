@@ -28,7 +28,7 @@ def track_field(field):
         return False
 
     # 1.8 check
-    elif getattr(field, 'remote_field', None) is not None and field.remote_field.to == LogEntry:
+    elif getattr(field, 'remote_field', None) is not None and field.remote_field == LogEntry:
         return False
 
     return True
