@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from six import moves
+from django.template.defaultfilters import pluralize
 
 from auditlog.models import LogEntry
 
@@ -11,10 +11,10 @@ class Command(BaseCommand):
         answer = None
 
         while answer not in ['', 'y', 'n']:
-            answer = moves.input("Are you sure? [y/N]: ").lower().strip()
+            answer = input('Are you sure? [y/N]: ').lower().strip()
 
         if answer == 'y':
             count = LogEntry.objects.all().count()
             LogEntry.objects.all().delete()
 
-            print("Deleted %d objects." % count)
+            print(f'Deleted {count} object{pluralize(count)}.')

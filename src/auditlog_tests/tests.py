@@ -1,5 +1,6 @@
 import datetime
-import django
+
+from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import User, AnonymousUser
@@ -8,7 +9,6 @@ from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from django.utils import dateformat, formats, timezone
-from dateutil.tz import gettz
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
@@ -616,10 +616,8 @@ class CompatibilityTest(TestCase):
 
         # Test compat.is_authenticated for anonymous users
         self.user = auth.get_user(self.client)
-        if django.VERSION < (1, 10):
-            assert self.user.is_anonymous()
-        else:
-            assert self.user.is_anonymous
+
+        assert self.user.is_anonymous
         assert not compat.is_authenticated(self.user)
 
         # Setup some other user, which is *not* anonymous, and check
@@ -629,10 +627,8 @@ class CompatibilityTest(TestCase):
             email="test.user@mail.com",
             password="auditlog"
         )
-        if django.VERSION < (1, 10):
-            assert not self.user.is_anonymous()
-        else:
-            assert not self.user.is_anonymous
+
+        assert not self.user.is_anonymous
         assert compat.is_authenticated(self.user)
 
 
