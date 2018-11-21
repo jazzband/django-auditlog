@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import binascii
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -77,7 +78,7 @@ def get_field_value(obj, field):
         try:
             field_value = getattr(obj, field.name, None)
             if isinstance(field_value, bytes):
-                field_value = field_value.hex()
+                field_value = binascii.hexlify(field_value)
             value = smart_text(field_value)
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
