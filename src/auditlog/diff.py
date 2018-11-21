@@ -75,7 +75,10 @@ def get_field_value(obj, field):
             value = field.default if field.default is not NOT_PROVIDED else None
     else:
         try:
-            value = smart_text(getattr(obj, field.name, None))
+            field_value = getattr(obj, field.name, None)
+            if isinstance(field_value, bytes):
+                field_value.hex()
+            value = smart_text(field_value)
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
 
