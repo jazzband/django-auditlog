@@ -49,22 +49,24 @@ class LogEntryAdminMixin(object):
     def msg_short(self, obj):
         if obj.action == 2:
             return ''  # delete
-        changes = json.loads(obj.changes)
-        s = '' if len(changes) == 1 else 's'
-        fields = ', '.join(changes.keys())
+
+        s = '' if len(obj.changes) == 1 else 's'
+        fields = ', '.join(obj.changes.keys())
+
         if len(fields) > MAX:
             i = fields.rfind(' ', 0, MAX)
             fields = fields[:i] + ' ..'
-        return '%d change%s: %s' % (len(changes), s, fields)
+
+        return '%d change%s: %s' % (len(obj.changes), s, fields)
     msg_short.short_description = 'Changes'
 
     def msg(self, obj):
         if obj.action == 2:
             return ''  # delete
-        changes = json.loads(obj.changes)
+
         msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
-        for i, field in enumerate(sorted(changes), 1):
-            value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
+        for i, field in enumerate(sorted(obj.changes), 1):
+            value = [i, field] + (['***', '***'] if field == 'password' else obj.changes[field])
             msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
 
         msg += '</table>'
