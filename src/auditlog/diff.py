@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import binascii
+import sys
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -77,7 +78,8 @@ def get_field_value(obj, field):
     else:
         try:
             field_value = getattr(obj, field.name, None)
-            if isinstance(field_value, bytes):
+            # python2 every str is a instance of bytes
+            if isinstance(field_value, bytes) and sys.version_info > (3, 0):
                 field_value = binascii.hexlify(field_value)
             value = smart_text(field_value)
         except ObjectDoesNotExist:
