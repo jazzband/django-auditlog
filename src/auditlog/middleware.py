@@ -1,20 +1,13 @@
-from __future__ import unicode_literals
-
 import threading
 import time
 
+from django.apps import apps
 from django.conf import settings
 from django.db.models.signals import pre_save
+from django.utils.deprecation import MiddlewareMixin
 from django.utils.functional import curry
-from django.apps import apps
 from auditlog.models import LogEntry
 from auditlog.compat import is_authenticated
-
-# Use MiddlewareMixin when present (Django >= 1.10)
-try:
-    from django.utils.deprecation import MiddlewareMixin
-except ImportError:
-    MiddlewareMixin = object
 
 
 threadlocal = threading.local()

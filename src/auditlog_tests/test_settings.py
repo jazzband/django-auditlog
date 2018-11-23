@@ -1,7 +1,6 @@
 """
 Settings file for the Auditlog test suite.
 """
-import os
 import django
 
 SECRET_KEY = 'test'
@@ -17,23 +16,13 @@ INSTALLED_APPS = [
     'multiselectfield',
 ]
 
-middlewares = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'auditlog.middleware.AuditlogMiddleware',
 )
-
-if django.VERSION < (1, 10):
-    MIDDLEWARE_CLASSES = middlewares
-else:
-    MIDDLEWARE = middlewares
-
-if django.VERSION <= (1, 9):
-    POSTGRES_DRIVER = 'django.db.backends.postgresql_psycopg2'
-else:
-    POSTGRES_DRIVER = 'django.db.backends.postgresql'
 
 DATABASE_ROUTERS = ['auditlog_tests.router.PostgresRouter']
 
@@ -43,7 +32,7 @@ DATABASES = {
         'NAME': 'auditlog_tests.db',
     },
     'postgres': {
-        'ENGINE': POSTGRES_DRIVER,
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'auditlog_tests_db',
         'USER': 'postgres',
         'PASSWORD': '',

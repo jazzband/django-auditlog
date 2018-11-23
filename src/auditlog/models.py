@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import json
 import ast
 
@@ -10,9 +8,9 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models, DEFAULT_DB_ALIAS
 from django.db.models import QuerySet, Q
 from django.utils import formats, timezone
-from django.utils.encoding import python_2_unicode_compatible, smart_text
+from django.utils.encoding import smart_text
 from django.utils.six import iteritems, integer_types
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from jsonfield.fields import JSONField
 from dateutil import parser
@@ -140,7 +138,6 @@ class LogEntryManager(models.Manager):
         return pk
 
 
-@python_2_unicode_compatible
 class LogEntry(models.Model):
     """
     Represents an entry in the audit log. The content type is saved along with the textual and numeric (if available)
@@ -227,13 +224,8 @@ class LogEntry(models.Model):
         substrings = []
 
         for field, values in iteritems(self.changes_dict):
-            substring = smart_text('{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}').format(
-                field_name=field,
-                colon=colon,
-                old=values[0],
-                arrow=arrow,
-                new=values[1],
-            )
+            old, new = values
+            substring = smart_text(f'{field!s}{colon!s}{old!s}{arrow!s}{new!s}')
             substrings.append(substring)
 
         return separator.join(substrings)
@@ -350,12 +342,3 @@ class AuditlogHistoryField(GenericRelation):
         # method.  However, because we don't want to delete these related
         # objects, we simply return an empty list.
         return []
-
-
-# South compatibility for AuditlogHistoryField
-try:
-    from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
-    raise DeprecationWarning("South support will be dropped in django-auditlog 0.4.0 or later.")
-except ImportError:
-    pass

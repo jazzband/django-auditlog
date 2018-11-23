@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Model
-from django.utils.six import iteritems
 
 
 class AuditlogModelRegistry(object):
@@ -105,7 +102,7 @@ class AuditlogModelRegistry(object):
         """
         Generate a dispatch_uid.
         """
-        return (self.__class__, model, signal)
+        return self.__class__, model, signal
 
     def get_model_fields(self, model):
         return {
@@ -118,7 +115,10 @@ class AuditlogModelRegistry(object):
 class AuditLogModelRegistry(AuditlogModelRegistry):
     def __init__(self, *args, **kwargs):
         super(AuditLogModelRegistry, self).__init__(*args, **kwargs)
-        raise DeprecationWarning("Use AuditlogModelRegistry instead of AuditLogModelRegistry, AuditLogModelRegistry will be removed in django-auditlog 0.4.0 or later.")
+        raise DeprecationWarning(
+            'Use AuditlogModelRegistry instead of AuditLogModelRegistry, '
+            'AuditLogModelRegistry will be removed in django-auditlog 0.4.0 or later.'
+        )
 
 
 auditlog = AuditlogModelRegistry()
