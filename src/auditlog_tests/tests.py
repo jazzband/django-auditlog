@@ -74,6 +74,24 @@ class SimpleModelTest(TestCase):
         self.setUp()
         self.test_create()
 
+    def test_default_timestamp(self):
+        start = timezone.now()
+        self.test_recreate()
+        end = timezone.now()
+        history = self.obj.history.latest()
+        self.assertTrue(start <= history.timestamp <= end)
+
+    def test_manual_timestamp(self):
+        timestamp = timezone.datetime(1999, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        LogEntry.objects.log_create(
+            instance=self.obj,
+            timestamp=timestamp,
+            changes="foo bar",
+            action=LogEntry.Action.UPDATE
+        )
+        history = self.obj.history.filter(timestamp=timestamp, changes="foo bar")
+        self.assertTrue(history.exists())
+
 
 class AltPrimaryKeyModelTest(SimpleModelTest):
     def setUp(self):
