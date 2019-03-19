@@ -102,6 +102,55 @@ class ProxyModelTest(SimpleModelTest):
         self.obj = ProxyModel.objects.create(text='I am not what you think.')
 
 
+class RelatedModelTest(TestCase):
+    """
+    Test the behaviour of relationships.
+    """
+    def setUp(self):
+        self.obj = RelatedModel.objects.create()
+        self.rel_obj = RelatedModel.objects.create(related=self.obj)
+
+    def test_related(self):
+        # Creation of 'obj' should create single history record.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj).count(), 1)
+        # There is no 'related' object (None) so no history on it.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj.related).count(), 0)
+
+        # Creation of 'rel_obj' should create single history record.
+        self.assertEqual(LogEntry.objects.get_for_object(self.rel_obj).count(), 1)
+        # The 'related' object is 'obj' and should have a single record as well.
+        self.assertEqual(LogEntry.objects.get_for_object(self.rel_obj.related).count(), 1)
+
+        # Set a 'related' object.
+        self.obj.related = self.rel_obj
+        self.obj.save()
+
+        # The 'obj' model now has two history records.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj).count(), 2)
+        # The 'related' object is now 'rel_obj' and has a single history record.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj.related).count(), 1)
+
+        # Wipe out the relationship by changing the '*_id' field.
+        self.obj.related_id = None
+        self.obj.save()
+        self.obj.refresh_from_db()
+
+        # The 'obj' model now has three history records.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj).count(), 3)
+        # The 'related' object is now 'None' so no history records.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj.related).count(), 0)
+
+        # Set the relationship back using the '*_id' field.
+        self.obj.related_id = self.rel_obj.id
+        self.obj.save()
+        self.obj.refresh_from_db()
+
+        # The 'obj' model now has four history records.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj).count(), 4)
+        # The 'related' object is now 'rel_obj' and has a single history record.
+        self.assertEqual(LogEntry.objects.get_for_object(self.obj.related).count(), 1)
+
+
 class ManyRelatedModelTest(TestCase):
     """
     Test the behaviour of a many-to-many relationship.
