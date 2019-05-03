@@ -575,6 +575,7 @@ class CharfieldTextfieldModelTest(TestCase):
 
 
 class PostgresArrayFieldModelTest(TestCase):
+    databases = '__all__'
 
     def setUp(self):
         self.obj = PostgresArrayFieldModel.objects.create(
