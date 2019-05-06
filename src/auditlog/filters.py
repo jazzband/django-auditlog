@@ -7,8 +7,8 @@ class ResourceTypeFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         qs = model_admin.get_queryset(request)
-        types = qs.values_list('content_type_id', 'content_type__model')
-        return list(types.order_by('content_type__model').distinct())
+        types = qs.values_list('content_type_id')
+        return list(types.order_by('content_type_id').distinct())
 
     def queryset(self, request, queryset):
         if self.value() is None:

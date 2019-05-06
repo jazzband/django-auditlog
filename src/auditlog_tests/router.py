@@ -35,4 +35,5 @@ class PostgresRouter(object):
         """
         if model_name and model_name.startswith('postgres'):
             return db == 'postgres'
-        return None
+        else:
+            return db not in ('postgres',)

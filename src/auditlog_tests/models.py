@@ -1,15 +1,16 @@
 import uuid
 
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from auditlog.models import AuditlogHistoryField
+from auditlog.models import AuditLogHistoryMixin
 from auditlog.registry import auditlog
 
 from multiselectfield import MultiSelectField
 
 
 @auditlog.register()
-class SimpleModel(models.Model):
+class SimpleModel(models.Model, AuditLogHistoryMixin):
     """
     A simple model with no special things going on.
     """
@@ -19,14 +20,12 @@ class SimpleModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditlogHistoryField()
 
-
-class AltPrimaryKeyModel(models.Model):
+class AltPrimaryKeyModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a non-standard primary key.
     """
-
+    pk_indexable = False
     key = models.CharField(max_length=100, primary_key=True)
 
     text = models.TextField(blank=True)
@@ -34,14 +33,12 @@ class AltPrimaryKeyModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditlogHistoryField(pk_indexable=False)
 
-
-class UUIDPrimaryKeyModel(models.Model):
+class UUIDPrimaryKeyModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a UUID primary key.
     """
-
+    pk_indexable = False
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     text = models.TextField(blank=True)
@@ -49,10 +46,8 @@ class UUIDPrimaryKeyModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditlogHistoryField(pk_indexable=False)
 
-
-class ProxyModel(SimpleModel):
+class ProxyModel(SimpleModel, AuditLogHistoryMixin):
     """
     A model that is a proxy for another model.
     """
@@ -61,28 +56,24 @@ class ProxyModel(SimpleModel):
         proxy = True
 
 
-class RelatedModel(models.Model):
+class RelatedModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a foreign key.
     """
 
     related = models.ForeignKey(to='self', on_delete=models.CASCADE)
 
-    history = AuditlogHistoryField()
 
-
-class ManyRelatedModel(models.Model):
+class ManyRelatedModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a many to many relation.
     """
 
     related = models.ManyToManyField('self')
 
-    history = AuditlogHistoryField()
-
 
 @auditlog.register(include_fields=['label'])
-class SimpleIncludeModel(models.Model):
+class SimpleIncludeModel(models.Model, AuditLogHistoryMixin):
     """
     A simple model used for register's include_fields kwarg
     """
@@ -90,10 +81,8 @@ class SimpleIncludeModel(models.Model):
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
 
-    history = AuditlogHistoryField()
 
-
-class SimpleExcludeModel(models.Model):
+class SimpleExcludeModel(models.Model, AuditLogHistoryMixin):
     """
     A simple model used for register's exclude_fields kwarg
     """
@@ -101,10 +90,8 @@ class SimpleExcludeModel(models.Model):
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
 
-    history = AuditlogHistoryField()
 
-
-class SimpleMappingModel(models.Model):
+class SimpleMappingModel(models.Model, AuditLogHistoryMixin):
     """
     A simple model used for register's mapping_fields kwarg
     """
@@ -113,10 +100,8 @@ class SimpleMappingModel(models.Model):
     vtxt = models.CharField(verbose_name='Version', max_length=100)
     not_mapped = models.CharField(max_length=100)
 
-    history = AuditlogHistoryField()
 
-
-class AdditionalDataIncludedModel(models.Model):
+class AdditionalDataIncludedModel(models.Model, AuditLogHistoryMixin):
     """
     A model where get_additional_data is defined which allows for logging extra
     information about the model in JSON
@@ -125,8 +110,6 @@ class AdditionalDataIncludedModel(models.Model):
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
     related = models.ForeignKey(to=SimpleModel, on_delete=models.CASCADE)
-
-    history = AuditlogHistoryField()
 
     def get_additional_data(self):
         """
@@ -141,7 +124,7 @@ class AdditionalDataIncludedModel(models.Model):
         return object_details
 
 
-class DateTimeFieldModel(models.Model):
+class DateTimeFieldModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a DateTimeField, used to test DateTimeField
     changes are detected properly.
@@ -152,10 +135,8 @@ class DateTimeFieldModel(models.Model):
     time = models.TimeField()
     naive_dt = models.DateTimeField(null=True, blank=True)
 
-    history = AuditlogHistoryField()
 
-
-class ChoicesFieldModel(models.Model):
+class ChoicesFieldModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a CharField restricted to a set of choices.
     This model is used to test the changes_display_dict method.
@@ -174,10 +155,8 @@ class ChoicesFieldModel(models.Model):
     multiselect = MultiSelectField(max_length=3, choices=STATUS_CHOICES, max_choices=3)
     multiplechoice = models.CharField(max_length=3, choices=STATUS_CHOICES)
 
-    history = AuditlogHistoryField()
 
-
-class CharfieldTextfieldModel(models.Model):
+class CharfieldTextfieldModel(models.Model, AuditLogHistoryMixin):
     """
     A model with a max length CharField and a Textfield.
     This model is used to test the changes_display_dict
@@ -187,10 +166,8 @@ class CharfieldTextfieldModel(models.Model):
     longchar = models.CharField(max_length=255)
     longtextfield = models.TextField()
 
-    history = AuditlogHistoryField()
 
-
-class PostgresArrayFieldModel(models.Model):
+class PostgresArrayFieldModel(models.Model, AuditLogHistoryMixin):
     """
     Test auditlog with Postgres's ArrayField
     """
@@ -206,13 +183,10 @@ class PostgresArrayFieldModel(models.Model):
 
     arrayfield = ArrayField(models.CharField(max_length=1, choices=STATUS_CHOICES), size=3)
 
-    history = AuditlogHistoryField()
 
 
-class NoDeleteHistoryModel(models.Model):
+class NoDeleteHistoryModel(models.Model, AuditLogHistoryMixin):
     integer = models.IntegerField(blank=True, null=True)
-
-    history = AuditlogHistoryField(delete_related=False)
 
 
 auditlog.register(AltPrimaryKeyModel)

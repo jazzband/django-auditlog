@@ -1,6 +1,8 @@
 import json
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+
 try:
     from django.core import urlresolvers
 except ImportError:
@@ -35,7 +37,8 @@ class LogEntryAdminMixin(object):
     user_url.short_description = 'User'
 
     def resource_url(self, obj):
-        app_label, model = obj.content_type.app_label, obj.content_type.model
+        content_type = ContentType.objects.get_for_id(obj.content_type_id)
+        app_label, model = content_type.app_label, content_type.model
         viewname = 'admin:%s_%s_change' % (app_label, model)
         try:
             args = [obj.object_pk] if obj.object_id is None else [obj.object_id]

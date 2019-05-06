@@ -39,7 +39,8 @@ class LogEntryManager(models.Manager):
         pk = self._get_pk_value(instance)
 
         if changes is not None:
-            kwargs.setdefault('content_type', ContentType.objects.get_for_model(instance))
+            content_type_id = ContentType.objects.get_for_model(instance).id
+            kwargs.setdefault('content_type_id', content_type_id)
             kwargs.setdefault('object_pk', pk)
             kwargs.setdefault('object_repr', smart_text(instance))
 
@@ -53,13 +54,12 @@ class LogEntryManager(models.Manager):
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
             if kwargs.get('action', None) is LogEntry.Action.CREATE:
-                if kwargs.get('object_id', None) is not None and self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).exists():
-                    self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).delete()
+                if kwargs.get('object_id', None) is not None and self.filter(content_type_id=kwargs.get('content_type_id'), object_id=kwargs.get('object_id')).exists():
+                    self.filter(content_type_id=kwargs.get('content_type_id'), object_id=kwargs.get('object_id')).delete()
                 else:
-                    self.filter(content_type=kwargs.get('content_type'), object_pk=kwargs.get('object_pk', '')).delete()
-            # save LogEntry to same database instance is using
-            db = instance._state.db
-            return self.create(**kwargs) if db is None or db == '' else self.using(db).create(**kwargs)
+                    self.filter(content_type_id=kwargs.get('content_type_id'), object_pk=kwargs.get('object_pk', '')).delete()
+
+            return self.create(**kwargs)
         return None
 
     def get_for_object(self, instance):
@@ -79,9 +79,9 @@ class LogEntryManager(models.Manager):
         pk = self._get_pk_value(instance)
 
         if isinstance(pk, integer_types):
-            return self.filter(content_type=content_type, object_id=pk)
+            return self.filter(content_type_id=content_type.id, object_id=pk)
         else:
-            return self.filter(content_type=content_type, object_pk=smart_text(pk))
+            return self.filter(content_type_id=content_type.id, object_pk=smart_text(pk))
 
     def get_for_objects(self, queryset):
         """
@@ -99,12 +99,12 @@ class LogEntryManager(models.Manager):
         primary_keys = list(queryset.values_list(queryset.model._meta.pk.name, flat=True))
 
         if isinstance(primary_keys[0], integer_types):
-            return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys)).distinct()
+            return self.filter(content_type_id=content_type.id).filter(Q(object_id__in=primary_keys)).distinct()
         elif isinstance(queryset.model._meta.pk, models.UUIDField):
             primary_keys = [smart_text(pk) for pk in primary_keys]
-            return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
+            return self.filter(content_type_id=content_type.id).filter(Q(object_pk__in=primary_keys)).distinct()
         else:
-            return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
+            return self.filter(content_type_id=content_type.id).filter(Q(object_pk__in=primary_keys)).distinct()
 
     def get_for_model(self, model):
         """
@@ -171,7 +171,7 @@ class LogEntry(models.Model):
             (DELETE, _("delete")),
         )
 
-    content_type = models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
+    content_type_id = models.IntegerField()
     object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
     object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
     object_repr = models.TextField(verbose_name=_("object representation"))
@@ -245,7 +245,7 @@ class LogEntry(models.Model):
         """
         # Get the model and model_fields
         from auditlog.registry import auditlog
-        model = self.content_type.model_class()
+        model = ContentType.objects.get_for_id(self.content_type_id).model_class()
         model_fields = auditlog.get_model_fields(model._meta.model)
         changes_display_dict = {}
         # grab the changes_dict and iterate through
@@ -307,55 +307,16 @@ class LogEntry(models.Model):
         return changes_display_dict
 
 
-class AuditlogHistoryField(GenericRelation):
-    """
-    A subclass of py:class:`django.contrib.contenttypes.fields.GenericRelation` that sets some default variables. This
-    makes it easier to access Auditlog's log entries, for example in templates.
+class AuditLogHistoryMixin:
+    pk_indexable = True
 
-    By default this field will assume that your primary keys are numeric, simply because this is the most common case.
-    However, if you have a non-integer primary key, you can simply pass ``pk_indexable=False`` to the constructor, and
-    Auditlog will fall back to using a non-indexed text based field for this model.
-
-    Using this field will not automatically register the model for automatic logging. This is done so you can be more
-    flexible with how you use this field.
-
-    :param pk_indexable: Whether the primary key for this model is not an :py:class:`int` or :py:class:`long`.
-    :type pk_indexable: bool
-    :param delete_related: By default, including a generic relation into a model will cause all related objects to be
-        cascade-deleted when the parent object is deleted. Passing False to this overrides this behavior, retaining
-        the full auditlog history for the object. Defaults to True, because that's Django's default behavior.
-    :type delete_related: bool
-    """
-
-    def __init__(self, pk_indexable=True, delete_related=True, **kwargs):
-        kwargs['to'] = LogEntry
-
-        if pk_indexable:
-            kwargs['object_id_field'] = 'object_id'
+    @property
+    def history(self):
+        # TODO: Get the correct model via self
+        if self.pk_indexable:
+            pk_query = Q(object_id=self.pk)
         else:
-            kwargs['object_id_field'] = 'object_pk'
+            pk_query = Q(object_pk=self.pk)
 
-        kwargs['content_type_field'] = 'content_type'
-        self.delete_related = delete_related
-        super(AuditlogHistoryField, self).__init__(**kwargs)
-
-    def bulk_related_objects(self, objs, using=DEFAULT_DB_ALIAS):
-        """
-        Return all objects related to ``objs`` via this ``GenericRelation``.
-        """
-        if self.delete_related:
-            return super(AuditlogHistoryField, self).bulk_related_objects(objs, using)
-
-        # When deleting, Collector.collect() finds related objects using this
-        # method.  However, because we don't want to delete these related
-        # objects, we simply return an empty list.
-        return []
-
-
-# South compatibility for AuditlogHistoryField
-try:
-    from south.modelsinspector import add_introspection_rules
-    add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
-    raise DeprecationWarning("South support will be dropped in django-auditlog 0.4.0 or later.")
-except ImportError:
-    pass
+        content_type_id = ContentType.objects.get_for_model(self._meta.model).id
+        return LogEntry.objects.filter(content_type_id=content_type_id).filter(pk_query)

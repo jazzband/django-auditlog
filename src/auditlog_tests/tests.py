@@ -67,12 +67,14 @@ class SimpleModelTest(TestCase):
         obj.delete()
 
         # Check for log entries
-        self.assertTrue(LogEntry.objects.filter(content_type=history.content_type, object_pk=history.object_pk, action=LogEntry.Action.DELETE).count() == 1, msg="There is one log entry for 'DELETE'")
+        self.assertTrue(LogEntry.objects.filter(content_type_id=history.content_type_id, object_pk=history.object_pk, action=LogEntry.Action.DELETE).count() == 1, msg="There is one log entry for 'DELETE'")
 
-    def test_recreate(self):
-        SimpleModel.objects.all().delete()
-        self.setUp()
-        self.test_create()
+    # Note: Content type is not related in multi database version.
+    #   therefore deleting the model doesn't delete the log entry.
+    # def test_recreate(self):
+    #     SimpleModel.objects.all().delete()
+    #     self.setUp()
+    #     self.test_create()
 
 
 class AltPrimaryKeyModelTest(SimpleModelTest):
@@ -677,8 +679,9 @@ class NoDeleteHistoryTest(TestCase):
         entries = LogEntry.objects.order_by('id')
 
         # The "DELETE" record is always retained
-        assert LogEntry.objects.all().count() == 1
-        assert entries.first().action == LogEntry.Action.DELETE
+        # and multidb version doesn't delete the related records.
+        assert LogEntry.objects.all().count() == 3
+        assert entries.last().action == LogEntry.Action.DELETE
 
     def test_no_delete_related(self):
         instance = NoDeleteHistoryModel.objects.create(integer=1)
