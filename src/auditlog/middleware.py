@@ -3,10 +3,9 @@ from __future__ import unicode_literals
 import threading
 import time
 
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.models.signals import pre_save
 from django.utils.functional import curry
-from django.apps import apps
 from auditlog.models import LogEntry
 from auditlog.compat import is_authenticated
 
@@ -73,12 +72,7 @@ class AuditlogMiddleware(MiddlewareMixin):
         if hasattr(threadlocal, 'auditlog'):
             if signal_duid != threadlocal.auditlog['signal_duid']:
                 return
-            try:
-                app_label, model_name = settings.AUTH_USER_MODEL.split('.')
-                auth_user_model = apps.get_model(app_label, model_name)
-            except ValueError:
-                auth_user_model = apps.get_model('auth', 'user')
-            if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
+            if sender == LogEntry and isinstance(user, get_user_model()) and instance.actor is None:
                 instance.actor = user
 
             instance.remote_addr = threadlocal.auditlog['remote_addr']
