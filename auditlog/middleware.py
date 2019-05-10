@@ -2,8 +2,7 @@ import threading
 import time
 from functools import partial
 
-from django.apps import apps
-from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db.models.signals import pre_save
 from django.utils.deprecation import MiddlewareMixin
 
@@ -82,14 +81,9 @@ class AuditlogMiddleware(MiddlewareMixin):
         if hasattr(threadlocal, "auditlog"):
             if signal_duid != threadlocal.auditlog["signal_duid"]:
                 return
-            try:
-                app_label, model_name = settings.AUTH_USER_MODEL.split(".")
-                auth_user_model = apps.get_model(app_label, model_name)
-            except ValueError:
-                auth_user_model = apps.get_model("auth", "user")
             if (
                 sender == LogEntry
-                and isinstance(user, auth_user_model)
+                and isinstance(user, get_user_model())
                 and instance.actor is None
             ):
                 instance.actor = user
