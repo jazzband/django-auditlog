@@ -576,6 +576,8 @@ class CharfieldTextfieldModelTest(TestCase):
 
 class PostgresArrayFieldModelTest(TestCase):
 
+    databases = {'default', 'postgres'}
+
     def setUp(self):
         self.obj = PostgresArrayFieldModel.objects.create(
             arrayfield=[PostgresArrayFieldModel.RED, PostgresArrayFieldModel.GREEN],
