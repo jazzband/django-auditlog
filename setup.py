@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='django-auditlog',
-    version='0.4.6-pre',
+    version='0.5.0',
     packages=['auditlog', 'auditlog.migrations', 'auditlog.management', 'auditlog.management.commands'],
     package_dir={'': 'src'},
     url='https://github.com/jjkester/django-auditlog',
@@ -11,7 +11,7 @@ setup(
     description='Audit log app for Django',
     install_requires=[
         'django-jsonfield>=1.0.0',
-        'python-dateutil==2.6.0'
+        'python-dateutil==2.6.0',
     ],
     zip_safe=False,
     classifiers=[
@@ -22,5 +22,5 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'License :: OSI Approved :: MIT License',
-    ],        
+    ],
 )
