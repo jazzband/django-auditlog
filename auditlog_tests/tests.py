@@ -2,6 +2,7 @@ import datetime
 import json
 
 import django
+import mock
 from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib import auth
@@ -167,72 +168,66 @@ class MiddlewareTest(TestCase):
     """
 
     def setUp(self):
-        self.middleware = AuditlogMiddleware()
+        self.get_response_mock = mock.Mock()
+        self.response_mock = mock.Mock()
+        self.middleware = AuditlogMiddleware(get_response=self.get_response_mock)
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="test", email="test@example.com", password="top_secret"
         )
 
+    def side_effect(self, assertion):
+        def inner(request):
+            assertion()
+            return self.response_mock
+
+        return inner
+
+    def assert_has_listeners(self):
+        self.assertTrue(pre_save.has_listeners(LogEntry))
+
+    def assert_no_listeners(self):
+        self.assertFalse(pre_save.has_listeners(LogEntry))
+
     def test_request_anonymous(self):
         """No actor will be logged when a user is not logged in."""
-        # Create a request
         request = self.factory.get("/")
         request.user = AnonymousUser()
 
-        # Run middleware
-        self.middleware.process_request(request)
+        self.get_response_mock.side_effect = self.side_effect(self.assert_no_listeners)
 
-        # Validate result
-        self.assertFalse(pre_save.has_listeners(LogEntry))
+        response = self.middleware(request)
 
-        # Finalize transaction
-        self.middleware.process_exception(request, None)
+        self.assertIs(response, self.response_mock)
+        self.get_response_mock.assert_called_once_with(request)
+        self.assert_no_listeners()
 
     def test_request(self):
         """The actor will be logged when a user is logged in."""
-        # Create a request
-        request = self.factory.get("/")
-        request.user = self.user
-        # Run middleware
-        self.middleware.process_request(request)
-
-        # Validate result
-        self.assertTrue(pre_save.has_listeners(LogEntry))
-
-        # Finalize transaction
-        self.middleware.process_exception(request, None)
-
-    def test_response(self):
-        """The signal will be disconnected when the request is processed."""
-        # Create a request
         request = self.factory.get("/")
         request.user = self.user
 
-        # Run middleware
-        self.middleware.process_request(request)
-        self.assertTrue(
-            pre_save.has_listeners(LogEntry)
-        )  # The signal should be present before trying to disconnect it.
-        self.middleware.process_response(request, HttpResponse())
+        self.get_response_mock.side_effect = self.side_effect(self.assert_has_listeners)
 
-        # Validate result
-        self.assertFalse(pre_save.has_listeners(LogEntry))
+        response = self.middleware(request)
+
+        self.assertIs(response, self.response_mock)
+        self.get_response_mock.assert_called_once_with(request)
+        self.assert_no_listeners()
 
     def test_exception(self):
         """The signal will be disconnected when an exception is raised."""
-        # Create a request
         request = self.factory.get("/")
         request.user = self.user
 
-        # Run middleware
-        self.middleware.process_request(request)
-        self.assertTrue(
-            pre_save.has_listeners(LogEntry)
-        )  # The signal should be present before trying to disconnect it.
-        self.middleware.process_exception(request, ValidationError("Test"))
+        SomeException = type("SomeException", (Exception,), {})
 
-        # Validate result
-        self.assertFalse(pre_save.has_listeners(LogEntry))
+        self.get_response_mock.side_effect = SomeException
+
+        with self.assertRaises(SomeException):
+            self.middleware(request)
+
+        self.assert_no_listeners()
 
 
 class SimpeIncludeModelTest(TestCase):
