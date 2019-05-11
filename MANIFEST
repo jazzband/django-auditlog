@@ -3,7 +3,6 @@ setup.py
 src/auditlog/__init__.py
 src/auditlog/admin.py
 src/auditlog/apps.py
-src/auditlog/compat.py
 src/auditlog/context.py
 src/auditlog/diff.py
 src/auditlog/filters.py

@@ -1,6 +1,5 @@
 import contextlib
 
-from auditlog.compat import is_authenticated
 from auditlog.context import set_actor
 
 
@@ -27,7 +26,7 @@ class AuditlogMiddleware(object):
         else:
             remote_addr = request.META.get('REMOTE_ADDR')
 
-        if hasattr(request, 'user') and is_authenticated(request.user):
+        if hasattr(request, 'user') and request.user.is_authenticated:
             context = set_actor(actor=request.user, remote_addr=remote_addr)
         else:
             context = nullcontext()
