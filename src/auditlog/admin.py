@@ -13,6 +13,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         (None, {'fields': ['created', 'user_url', 'resource_url']}),
         ('Changes', {'fields': ['action', 'msg']}),
     ]
+    list_select_related = ['actor', 'content_type']
 
 
 admin.site.register(LogEntry, LogEntryAdmin)
