@@ -114,6 +114,10 @@ class AuditlogModelRegistry(object):
             'mapping_fields': self._registry[model]['mapping_fields'],
         }
 
+    def list(self):
+        """Get a list of all registered models."""
+        return list(self._registry.keys())
+
 
 class AuditLogModelRegistry(AuditlogModelRegistry):
     def __init__(self, *args, **kwargs):
