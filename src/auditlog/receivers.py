@@ -13,7 +13,8 @@ def log_create(sender, instance, created, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if created:
-        changes = model_instance_diff(None, instance)
+        # changes = model_instance_diff(None, instance)
+        changes = {}
 
         log_entry = LogEntry.objects.log_create(
             instance,
