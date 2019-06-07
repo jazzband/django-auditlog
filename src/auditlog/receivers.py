@@ -36,7 +36,7 @@ def log_update(sender, instance, **kwargs):
         else:
             new = instance
 
-            changes = model_instance_diff(old, new)
+            changes = model_instance_diff(old, new, update_fields=kwargs.get('update_fields', None))
 
             # Log an entry only if there are changes
             if changes:
