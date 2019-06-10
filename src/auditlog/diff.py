@@ -77,7 +77,7 @@ def get_field_value(obj, field):
         try:
             try:
                 value = field.to_python(getattr(obj, field.name, None))
-            except ValidationError:
+            except (ValidationError, AttributeError):
                 value = smart_text(getattr(obj, field.name, None))
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
