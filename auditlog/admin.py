@@ -13,6 +13,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         "changes",
         "actor__first_name",
         "actor__last_name",
+        "actor__username",
     ]
     list_filter = ["action", ResourceTypeFilter]
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
