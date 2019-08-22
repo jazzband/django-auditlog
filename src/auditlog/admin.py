@@ -1,7 +1,17 @@
 from django.contrib import admin
+from django.core.paginator import Paginator
+
 from .models import LogEntry
 from .mixins import LogEntryAdminMixin
 from .filters import ResourceTypeFilter
+
+
+class NoCountPaginator(Paginator):
+    PAGE_COUNT = 10000  # a large number
+
+    @property
+    def count(self):
+        return self.per_page * self.PAGE_COUNT
 
 
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
@@ -14,6 +24,8 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         ('Changes', {'fields': ['action', 'msg']}),
     ]
     list_select_related = ['actor', 'content_type']
+    show_full_result_count = False
+    paginator = NoCountPaginator
 
 
 admin.site.register(LogEntry, LogEntryAdmin)
