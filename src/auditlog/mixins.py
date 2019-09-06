@@ -18,7 +18,13 @@ MAX = 75
 class LogEntryAdminMixin(object):
 
     def created(self, obj):
-        return obj.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        viewname = 'admin:auditlog_logentry_change'
+        created_time = obj.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        try:
+            link = urlresolvers.reverse(viewname, args=[obj.id])
+        except NoReverseMatch:
+            return u'%s' % (obj.id)
+        return format_html(u'<a href="{}">{}</a>', link, created_time)
     created.short_description = 'Created'
 
     def user_url(self, obj):
