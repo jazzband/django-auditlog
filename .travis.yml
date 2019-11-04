@@ -9,23 +9,6 @@ services:
 addons:
   postgresql: "10"
 
-env:
-  - TOX_ENV=py36-django-18
-  - TOX_ENV=py35-django-18
-  - TOX_ENV=py34-django-18
-  - TOX_ENV=py27-django-18
-  - TOX_ENV=py36-django-110
-  - TOX_ENV=py35-django-110
-  - TOX_ENV=py34-django-110
-  - TOX_ENV=py27-django-110
-  - TOX_ENV=py36-django-111
-  - TOX_ENV=py35-django-111
-  - TOX_ENV=py34-django-111
-  - TOX_ENV=py27-django-111
-  - TOX_ENV=py36-django-20
-  - TOX_ENV=py35-django-20
-  - TOX_ENV=py34-django-20
-
 matrix:
   include:
     - python: 2.7
