@@ -584,7 +584,7 @@ class PostgresArrayFieldModelTest(TestCase):
 
     @property
     def latest_array_change(self):
-        return self.obj.history.using("postgres").latest().changes_display_dict["arrayfield"][1]
+        return self.obj.history.latest().changes_display_dict["arrayfield"][1]
 
     def test_changes_display_dict_arrayfield(self):
         self.assertTrue(self.latest_array_change == "Red, Green",

@@ -35,14 +35,8 @@ if django.VERSION <= (1, 9):
 else:
     POSTGRES_DRIVER = 'django.db.backends.postgresql'
 
-DATABASE_ROUTERS = ['auditlog_tests.router.PostgresRouter']
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'auditlog_tests.db',
-    },
-    'postgres': {
         'ENGINE': POSTGRES_DRIVER,
         'NAME': 'auditlog_tests_db',
         'USER': 'postgres',
