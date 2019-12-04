@@ -10,8 +10,8 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models, DEFAULT_DB_ALIAS
 from django.db.models import QuerySet, Q
 from django.utils import formats, timezone
-from django.utils.encoding import python_2_unicode_compatible, smart_text
-from django.utils.six import iteritems, integer_types
+from django.utils.encoding import smart_text
+from six import iteritems, integer_types, python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 
 from jsonfield.fields import JSONField
@@ -259,7 +259,8 @@ class LogEntry(models.Model):
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
             choices_dict = None
-            if hasattr(field, 'choices') and len(field.choices) > 0:
+            choices_attr = getattr(field, 'choices', None)
+            if choices_attr is not None  and len(field.choices) > 0:
                 choices_dict = dict(field.choices)
             if hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
                 choices_dict = dict(field.base_field.choices)
