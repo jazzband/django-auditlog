@@ -6,7 +6,7 @@ import time
 from django.conf import settings
 from django.db.models.signals import pre_save
 try:
-    from functools import partialmethod
+    from functools import partial
 except ImportError:
     from django.utils.functional import curry as partialmethod
 from django.apps import apps
