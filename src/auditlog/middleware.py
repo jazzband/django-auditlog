@@ -46,7 +46,7 @@ class AuditlogMiddleware(MiddlewareMixin):
 
         # Connect signal for automatic logging
         if hasattr(request, 'user') and is_authenticated(request.user):
-            set_actor = partialmethod(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
+            set_actor = partial(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
     def process_response(self, request, response):
