@@ -16,7 +16,7 @@ from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
+    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel, AdditionalDataIncludedWithKwargsModel
 from auditlog import compat
 
 
@@ -265,6 +265,27 @@ class AdditionalDataModelTest(TestCase):
         self.assertTrue(extra_data['related_model_id'] == related_model.id,
                         msg="Related model's id is logged")
 
+    def test_model_with_additional_data_and_kwargs(self):
+        related_model = SimpleModel.objects.create(text='Log my reference')
+        obj_with_additional_data = AdditionalDataIncludedWithKwargsModel(
+            label='Additional data to log entries', related=related_model)
+        obj_with_additional_data.save()
+        msg = f"There is 1 log entry {obj_with_additional_data.history.all()}"
+        self.assertTrue(obj_with_additional_data.history.count() == 1,
+                        msg=msg)
+        log_entry = obj_with_additional_data.history.get()
+        self.assertIsNotNone(log_entry.additional_data)
+        extra_data = log_entry.additional_data
+        self.assertTrue(extra_data['action'] == 0,
+                        msg="Related model's create action is logged in additional data")
+        obj_with_additional_data.label = "update test"
+        obj_with_additional_data.save()
+        self.assertTrue(obj_with_additional_data.history.count() == 2,
+                        msg="There are 2 log entries")
+        log_entry = obj_with_additional_data.history.first()
+        extra_data = log_entry.additional_data
+        self.assertTrue(extra_data['action'] == 1,
+                        msg="Related model's update action is logged in additional data")
 
 class DateTimeFieldModelTest(TestCase):
     """Tests if DateTimeField changes are recognised correctly"""
