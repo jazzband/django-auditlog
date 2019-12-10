@@ -270,9 +270,8 @@ class AdditionalDataModelTest(TestCase):
         obj_with_additional_data = AdditionalDataIncludedWithKwargsModel(
             label='Additional data to log entries', related=related_model)
         obj_with_additional_data.save()
-        msg = f"There is 1 log entry {obj_with_additional_data.history.all()}"
         self.assertTrue(obj_with_additional_data.history.count() == 1,
-                        msg=msg)
+                        msg="There is 1 log entry")
         log_entry = obj_with_additional_data.history.get()
         self.assertIsNotNone(log_entry.additional_data)
         extra_data = log_entry.additional_data
