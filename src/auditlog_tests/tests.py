@@ -271,7 +271,7 @@ class AdditionalDataModelTest(TestCase):
             label='Additional data to log entries', related=related_model)
         obj_with_additional_data.save()
         self.assertTrue(obj_with_additional_data.history.count() == 1,
-                        msg="There is 1 log entry")
+                        msg="There is 1 log  entry")
         log_entry = obj_with_additional_data.history.get()
         self.assertIsNotNone(log_entry.additional_data)
         extra_data = log_entry.additional_data
