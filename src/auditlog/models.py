@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import json
 import ast
-import inspect
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -18,7 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from jsonfield.fields import JSONField
 from dateutil import parser
 from dateutil.tz import gettz
-
+from inspect import getargspec
 
 class LogEntryManager(models.Manager):
     """
@@ -49,7 +48,7 @@ class LogEntryManager(models.Manager):
 
             get_additional_data = getattr(instance, 'get_additional_data', None)
             if callable(get_additional_data):
-                if inspect.getfullargspec(get_additional_data).varkw:
+                if getargspec(get_additional_data).keywords:
                     kwargs.setdefault('additional_data', get_additional_data(**kwargs))
                 else:
                     kwargs.setdefault('additional_data', get_additional_data())
