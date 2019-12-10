@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import ast
+import inspect
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
@@ -48,7 +49,10 @@ class LogEntryManager(models.Manager):
 
             get_additional_data = getattr(instance, 'get_additional_data', None)
             if callable(get_additional_data):
-                kwargs.setdefault('additional_data', get_additional_data())
+                if inspect.getfullargspec(get_additional_data).varkw:
+                    kwargs.setdefault('additional_data', get_additional_data(**kwargs))
+                else:
+                    kwargs.setdefault('additional_data', get_additional_data())
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
