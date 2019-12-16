@@ -17,7 +17,7 @@ from django.utils.translation import ugettext_lazy as _
 from jsonfield.fields import JSONField
 from dateutil import parser
 from dateutil.tz import gettz
-
+from inspect import getargspec
 
 class LogEntryManager(models.Manager):
     """
@@ -48,7 +48,10 @@ class LogEntryManager(models.Manager):
 
             get_additional_data = getattr(instance, 'get_additional_data', None)
             if callable(get_additional_data):
-                kwargs.setdefault('additional_data', get_additional_data())
+                if getargspec(get_additional_data).keywords:
+                    kwargs.setdefault('additional_data', get_additional_data(**kwargs))
+                else:
+                    kwargs.setdefault('additional_data', get_additional_data())
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
