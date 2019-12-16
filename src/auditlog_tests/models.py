@@ -66,7 +66,9 @@ class RelatedModel(models.Model):
     A model with a foreign key.
     """
 
-    related = models.ForeignKey(to='self', on_delete=models.CASCADE)
+    related = models.ForeignKey(
+        to='self', on_delete=models.CASCADE,
+        null=True, blank=True)
 
     history = AuditlogHistoryField()
 

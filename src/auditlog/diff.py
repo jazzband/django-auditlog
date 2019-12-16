@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Model, NOT_PROVIDED, DateTimeField
+from django.db.models import Model, NOT_PROVIDED, DateTimeField, ForeignKey
 from django.utils import timezone
 from django.utils.encoding import smart_text
 
@@ -133,6 +133,14 @@ def model_instance_diff(old, new):
     for field in fields:
         old_value = get_field_value(old, field)
         new_value = get_field_value(new, field)
+
+        # Handle cases where a models ForeignKey field is saved using the
+        # '*_id' field and not the ForeignKey field itself. In this situation,
+        # the fields will appear to be identical when comparing the objects,
+        # but different when comparing the '*_id' fields.
+        if isinstance(field, ForeignKey) and old_value == new_value:
+            old_value = smart_text(getattr(old, field.attname, None))
+            new_value = smart_text(getattr(new, field.attname, None))
 
         if old_value != new_value:
             diff[field.name] = (smart_text(old_value), smart_text(new_value))
