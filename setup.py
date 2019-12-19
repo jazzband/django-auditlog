@@ -2,21 +2,19 @@ from distutils.core import setup
 
 setup(
     name='django-auditlog',
-    version='0.4.7',
+    version='1.0.0',
     packages=['auditlog', 'auditlog.migrations', 'auditlog.management', 'auditlog.management.commands'],
     package_dir={'': 'src'},
-    url='https://github.com/jjkester/django-auditlog',
+    url='https://github.com/darwin-homes/django-auditlog',
     license='MIT',
-    author='Jan-Jelle Kester',
+    author='Darwin Homes',
     description='Audit log app for Django',
     install_requires=[
         'django-jsonfield>=1.0.0',
-        'python-dateutil==2.6.0'
+        'python-dateutil==2.7.5'
     ],
     zip_safe=False,
     classifiers=[
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
