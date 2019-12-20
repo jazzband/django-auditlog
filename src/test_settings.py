@@ -12,9 +12,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.admin',
-    'auditlog',
-    'auditlog_tests',
-    'multiselectfield',
+    'auditlog.apps.AuditlogConfig',
+    'auditlog_tests'
 ]
 
 middlewares = (

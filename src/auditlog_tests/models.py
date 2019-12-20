@@ -5,8 +5,6 @@ from django.db import models
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 
-from multiselectfield import MultiSelectField
-
 
 @auditlog.register()
 class SimpleModel(models.Model):
@@ -141,6 +139,30 @@ class AdditionalDataIncludedModel(models.Model):
         return object_details
 
 
+class AdditionalDataIncludedWithKwargsModel(models.Model):
+    """
+    A model where get_additional_data is defined which allows for logging extra
+    information about the model in JSON
+    """
+
+    label = models.CharField(max_length=100)
+    text = models.TextField(blank=True)
+    related = models.ForeignKey(to=SimpleModel, on_delete=models.CASCADE)
+
+    history = AuditlogHistoryField()
+
+    def get_additional_data(self, **kwargs):
+        """
+        Returns JSON that captures a snapshot of additional details of the
+        model instance. This method, if defined, is accessed by auditlog
+        manager and added to each logentry instance on creation.
+        """
+        object_details = {
+            'action': kwargs.get('action')
+        }
+        return object_details
+
+
 class DateTimeFieldModel(models.Model):
     """
     A model with a DateTimeField, used to test DateTimeField
@@ -171,7 +193,6 @@ class ChoicesFieldModel(models.Model):
     )
 
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
-    multiselect = MultiSelectField(max_length=3, choices=STATUS_CHOICES, max_choices=3)
     multiplechoice = models.CharField(max_length=255, choices=STATUS_CHOICES)
 
     history = AuditlogHistoryField()
@@ -214,7 +235,7 @@ class NoDeleteHistoryModel(models.Model):
 
     history = AuditlogHistoryField(delete_related=False)
 
-
+auditlog.register
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -229,3 +250,4 @@ auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
+auditlog.register(AdditionalDataIncludedWithKwargsModel)

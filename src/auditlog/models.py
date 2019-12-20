@@ -10,14 +10,13 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models, DEFAULT_DB_ALIAS
 from django.db.models import QuerySet, Q
 from django.utils import formats, timezone
-from django.utils.encoding import python_2_unicode_compatible, smart_text
-from django.utils.six import iteritems, integer_types
+from django.utils.encoding import smart_text
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.postgres.fields import JSONField
 
-from jsonfield.fields import JSONField
 from dateutil import parser
 from dateutil.tz import gettz
-
+import inspect
 
 class LogEntryManager(models.Manager):
     """
@@ -43,12 +42,15 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault('object_pk', pk)
             kwargs.setdefault('object_repr', smart_text(instance))
 
-            if isinstance(pk, integer_types):
+            if isinstance(pk, int):
                 kwargs.setdefault('object_id', pk)
 
             get_additional_data = getattr(instance, 'get_additional_data', None)
             if callable(get_additional_data):
-                kwargs.setdefault('additional_data', get_additional_data())
+                if inspect.getfullargspec(get_additional_data).varkw:
+                    kwargs.setdefault('additional_data', get_additional_data(**kwargs))
+                else:
+                    kwargs.setdefault('additional_data', get_additional_data())
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
@@ -78,7 +80,7 @@ class LogEntryManager(models.Manager):
         content_type = ContentType.objects.get_for_model(instance.__class__)
         pk = self._get_pk_value(instance)
 
-        if isinstance(pk, integer_types):
+        if isinstance(pk, int):
             return self.filter(content_type=content_type, object_id=pk)
         else:
             return self.filter(content_type=content_type, object_pk=smart_text(pk))
@@ -98,7 +100,7 @@ class LogEntryManager(models.Manager):
         content_type = ContentType.objects.get_for_model(queryset.model)
         primary_keys = list(queryset.values_list(queryset.model._meta.pk.name, flat=True))
 
-        if isinstance(primary_keys[0], integer_types):
+        if isinstance(primary_keys[0], int):
             return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys)).distinct()
         elif isinstance(queryset.model._meta.pk, models.UUIDField):
             primary_keys = [smart_text(pk) for pk in primary_keys]
@@ -140,7 +142,6 @@ class LogEntryManager(models.Manager):
         return pk
 
 
-@python_2_unicode_compatible
 class LogEntry(models.Model):
     """
     Represents an entry in the audit log. The content type is saved along with the textual and numeric (if available)
@@ -226,7 +227,7 @@ class LogEntry(models.Model):
         """
         substrings = []
 
-        for field, values in iteritems(self.changes_dict):
+        for field, values in self.changes_dict.items():
             substring = smart_text('{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}').format(
                 field_name=field,
                 colon=colon,
@@ -249,7 +250,7 @@ class LogEntry(models.Model):
         model_fields = auditlog.get_model_fields(model._meta.model)
         changes_display_dict = {}
         # grab the changes_dict and iterate through
-        for field_name, values in iteritems(self.changes_dict):
+        for field_name, values in self.changes_dict.items():
             # try to get the field attribute on the model
             try:
                 field = model._meta.get_field(field_name)
@@ -259,7 +260,7 @@ class LogEntry(models.Model):
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
             choices_dict = None
-            if hasattr(field, 'choices') and len(field.choices) > 0:
+            if hasattr(field, 'choices') and field.choices and len(field.choices) > 0:
                 choices_dict = dict(field.choices)
             if hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
                 choices_dict = dict(field.base_field.choices)

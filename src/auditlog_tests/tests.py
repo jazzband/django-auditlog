@@ -16,7 +16,7 @@ from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
+    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel, AdditionalDataIncludedWithKwargsModel
 from auditlog import compat
 
 
@@ -265,6 +265,27 @@ class AdditionalDataModelTest(TestCase):
         self.assertTrue(extra_data['related_model_id'] == related_model.id,
                         msg="Related model's id is logged")
 
+    def test_model_with_additional_data_and_kwargs(self):
+        related_model = SimpleModel.objects.create(text='Log my reference')
+        obj_with_additional_data = AdditionalDataIncludedWithKwargsModel(
+            label='Additional data to log entries', related=related_model)
+        obj_with_additional_data.save()
+        self.assertTrue(obj_with_additional_data.history.count() == 1,
+                        msg="There is 1 log  entry")
+        log_entry = obj_with_additional_data.history.get()
+        self.assertIsNotNone(log_entry.additional_data)
+        extra_data = log_entry.additional_data
+        self.assertTrue(extra_data['action'] == 0,
+                        msg="Related model's create action is logged in additional data")
+        obj_with_additional_data.label = "update test"
+        obj_with_additional_data.save()
+        self.assertTrue(obj_with_additional_data.history.count() == 2,
+                        msg="There are 2 log entries")
+        log_entry = obj_with_additional_data.history.first()
+        extra_data = log_entry.additional_data
+        self.assertTrue(extra_data['action'] == 1,
+                        msg="Related model's update action is logged in additional data")
+
 
 class DateTimeFieldModelTest(TestCase):
     """Tests if DateTimeField changes are recognised correctly"""
@@ -506,7 +527,6 @@ class ChoicesFieldModelTest(TestCase):
     def setUp(self):
         self.obj = ChoicesFieldModel.objects.create(
             status=ChoicesFieldModel.RED,
-            multiselect=[ChoicesFieldModel.RED, ChoicesFieldModel.GREEN],
             multiplechoice=[ChoicesFieldModel.RED, ChoicesFieldModel.YELLOW, ChoicesFieldModel.GREEN],
         )
 
@@ -517,22 +537,6 @@ class ChoicesFieldModelTest(TestCase):
         self.obj.status = ChoicesFieldModel.GREEN
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["status"][1] == "Green", msg="The human readable text 'Green' is displayed.")
-
-    def test_changes_display_dict_multiselect(self):
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Red, Green",
-                        msg="The human readable text for the two choices, 'Red, Green' is displayed.")
-        self.obj.multiselect = ChoicesFieldModel.GREEN
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
-                        msg="The human readable text 'Green' is displayed.")
-        self.obj.multiselect = None
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "None",
-                        msg="The human readable text 'None' is displayed.")
-        self.obj.multiselect = ChoicesFieldModel.GREEN
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
-                        msg="The human readable text 'Green' is displayed.")
 
     def test_changes_display_dict_multiplechoice(self):
         self.assertTrue(self.obj.history.latest().changes_display_dict["multiplechoice"][1] == "Red, Yellow, Green",

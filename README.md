@@ -6,6 +6,7 @@ django-auditlog
 
 **Please remember that this app is still in development.**
 **Test this app before deploying it in production environments.**
+**We forked this repo in order to run with python 3.7, as well as make changes which improve our timeline code.**
 
 ```django-auditlog``` (Auditlog) is a reusable app for Django that makes logging object changes a breeze. Auditlog tries to use as much as Python and Django’s built in functionality to keep the list of dependencies as short as possible. Also, Auditlog aims to be fast and simple to use.
 
@@ -16,26 +17,42 @@ The core idea of Auditlog is similar to the log from Django’s admin. Unlike th
 Documentation
 -------------
 
-The documentation for ```django-auditlog``` can be found on http://django-auditlog.readthedocs.org. The source files are available in the ```docs``` folder.
+The documentation for the original```django-auditlog``` can be found on http://django-auditlog.readthedocs.org. The source files are available in the ```docs``` folder.
 
 License
 -------
 
 Auditlog is licensed under the MIT license (see the ```LICENSE``` file for details).
 
-Contribute
-----------
 
-If you have great ideas for Auditlog, or if you like to improve something, feel free to fork this repository and/or create a pull request. I'm open for suggestions. If you like to discuss something with me (about Auditlog), please open an issue.
-
-Releases
+Darwin 
 --------
 
-1. Make sure all tests on `master` are green.
-2. Create a new branch `vX.Y.Z` from master for that specific release.
-3. Bump versions in `setup.py` and `docs/source/conf.py` (docs have 2 places where the versions need to be changed!)
-4. Pull request `vX.Y.Z` -> `stable`. Merging policy is very strict. This triggers a new release.
-5. Pull request `stable` -> `master`. Now everything is back in sync.
+#### Pull latest code
+* Clone repository: `git clone https://github.com/darwin-homes/django-auditlog.git`
 
-Opening a pull request from `master` directly to `stable` is discouraged as `master` may be updated while the PR is open, thus changing the contents of the release.
+#### Homebrew
+* Install Homebrew: https://brew.sh/
 
+#### Python
+* Install Python 3.7 (with Homebrew on macOS): `brew install python`
+
+#### VirtualEnv
+* Create a virtual env: `python3 -m venv venv`
+* Activate virtual env: `source venv/bin/activate`
+
+#### Install project dependencies
+* Python dependencies: `pip install -r requirements.txt`
+* Python dependencies: `pip install -r requirements-test.txt`
+
+#### Setup database
+* Install PostgreSQL: (Recommended) Follow steps in https://postgresapp.com/
+* May have to use `createdb auditlog_tests_db`
+* Seed the database: `invoke reset-env`
+
+#### Migrations
+* Do not forget to generate new migrations files after modifying models: `python src/manage.py makemigrations`
+* Run migrations: `python src/manage.py migrate`
+
+### Run Tests
+* Run tests: `python src/runtests.py`
