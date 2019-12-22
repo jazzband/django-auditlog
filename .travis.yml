@@ -62,3 +62,4 @@ deploy:
     repo: jjkester/django-auditlog
     branch: stable
     condition: $TOXENV = py36-django-20
+  edge: true
