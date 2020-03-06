@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import ast
-
+from django.contrib.contenttypes import fields
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -14,7 +14,7 @@ from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
-from jsonfield.fields import JSONField
+from django.contrib.postgres.fields import JSONField
 from dateutil import parser
 from dateutil.tz import gettz
 
@@ -171,6 +171,7 @@ class LogEntry(models.Model):
             (DELETE, _("delete")),
         )
 
+    content_object = fields.GenericForeignKey('content_type', 'object_id')
     content_type = models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE, related_name='+', verbose_name=_("content type"))
     object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
     object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
@@ -179,6 +180,7 @@ class LogEntry(models.Model):
     changes = models.TextField(blank=True, verbose_name=_("change message"))
     actor = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True, related_name='+', verbose_name=_("actor"))
     remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
+    path_info = models.TextField(_("path info"), null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
     additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
 
