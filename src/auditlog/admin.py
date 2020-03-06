@@ -8,9 +8,9 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     list_display = ['created', 'resource_url', 'action', 'msg_short', 'user_url']
     search_fields = ['timestamp', 'object_repr', 'changes', 'actor__first_name', 'actor__last_name']
     list_filter = ['action', ResourceTypeFilter]
-    readonly_fields = ['created', 'resource_url', 'action', 'user_url', 'msg']
+    readonly_fields = ['created', 'resource_url', 'action', 'user_url', 'msg', 'path_info']
     fieldsets = [
-        (None, {'fields': ['created', 'user_url', 'resource_url']}),
+        (None, {'fields': ['created', 'user_url', 'resource_url', 'path_info']}),
         ('Changes', {'fields': ['action', 'msg']}),
     ]
 

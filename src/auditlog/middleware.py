@@ -35,6 +35,7 @@ class AuditlogMiddleware(MiddlewareMixin):
         threadlocal.auditlog = {
             'signal_duid': (self.__class__, time.time()),
             'remote_addr': request.META.get('REMOTE_ADDR'),
+            'path_info': request.META.get('PATH_INFO', None)
         }
 
         # In case of proxy, set 'original' address
@@ -82,3 +83,4 @@ class AuditlogMiddleware(MiddlewareMixin):
                 instance.actor = user
 
             instance.remote_addr = threadlocal.auditlog['remote_addr']
+            instance.path_info = threadlocal.auditlog['path_info']
