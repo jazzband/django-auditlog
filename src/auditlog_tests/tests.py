@@ -569,28 +569,31 @@ class CharfieldTextfieldModelTest(TestCase):
 
 
 class PostgresArrayFieldModelTest(TestCase):
-
-    databases = {'default', 'postgres'}
+    databases = '__all__'
 
     def setUp(self):
         self.obj = PostgresArrayFieldModel.objects.create(
             arrayfield=[PostgresArrayFieldModel.RED, PostgresArrayFieldModel.GREEN],
         )
 
+    @property
+    def latest_array_change(self):
+        return self.obj.history.latest().changes_display_dict["arrayfield"][1]
+
     def test_changes_display_dict_arrayfield(self):
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Red, Green",
+        self.assertTrue(self.latest_array_change == "Red, Green",
                         msg="The human readable text for the two choices, 'Red, Green' is displayed.")
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
+        self.assertTrue(self.latest_array_change == "Green",
                         msg="The human readable text 'Green' is displayed.")
         self.obj.arrayfield = []
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "",
+        self.assertTrue(self.latest_array_change == "",
                         msg="The human readable text '' is displayed.")
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
+        self.assertTrue(self.latest_array_change == "Green",
                         msg="The human readable text 'Green' is displayed.")
 
 
