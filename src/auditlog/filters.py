@@ -1,7 +1,9 @@
 from django.contrib.admin import SimpleListFilter
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import JSONField
+from django.db import connection
 from django.db.models import Value
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Cast
 
 from auditlog.registry import auditlog
 
@@ -27,3 +29,38 @@ class ResourceTypeFilter(SimpleListFilter):
         if self.value() is None:
             return queryset
         return queryset.filter(content_type_id=self.value())
+
+
+class FieldFilter(SimpleListFilter):
+    title = 'Field'
+    parameter_name = 'field'
+    parent = ResourceTypeFilter
+
+    def __init__(self, request, *args, **kwargs):
+        self.target_model = self._get_target_model(request)
+        super().__init__(request, *args, **kwargs)
+
+    def _get_target_model(self, request):
+        # the parameters consumed by previous filters aren't passed to subsequent filters,
+        # so we have to look into the request parameters explicitly
+        content_type_id = request.GET.get(self.parent.parameter_name)
+        if not content_type_id:
+            return None
+
+        return ContentType.objects.get(id=content_type_id).model_class()
+
+    def lookups(self, request, model_admin):
+        if connection.vendor != 'postgresql':
+            # filtering inside JSON is PostgreSQL-specific for now
+            return []
+        if not self.target_model:
+            return []
+        return [(field.name, field.name) for field in self.target_model._meta.fields]
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return (
+            queryset.annotate(changes_json=Cast("changes", JSONField()))
+            .filter(**{'changes_json__{}__isnull'.format(self.value()): False})
+        )
