@@ -11,6 +11,7 @@ except ImportError:
     from django.core.urlresolvers import NoReverseMatch
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.timezone import localtime
 
 MAX = 75
 
@@ -18,7 +19,7 @@ MAX = 75
 class LogEntryAdminMixin(object):
 
     def created(self, obj):
-        return obj.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        return localtime(obj.timestamp).strftime('%Y-%m-%d %H:%M:%S')
     created.short_description = 'Created'
 
     def user_url(self, obj):
