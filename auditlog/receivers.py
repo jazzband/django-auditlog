@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import json
 
 from auditlog.diff import model_instance_diff

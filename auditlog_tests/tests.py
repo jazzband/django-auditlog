@@ -506,7 +506,6 @@ class ChoicesFieldModelTest(TestCase):
     def setUp(self):
         self.obj = ChoicesFieldModel.objects.create(
             status=ChoicesFieldModel.RED,
-            multiselect=[ChoicesFieldModel.RED, ChoicesFieldModel.GREEN],
             multiplechoice=[ChoicesFieldModel.RED, ChoicesFieldModel.YELLOW, ChoicesFieldModel.GREEN],
         )
 
@@ -517,22 +516,6 @@ class ChoicesFieldModelTest(TestCase):
         self.obj.status = ChoicesFieldModel.GREEN
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["status"][1] == "Green", msg="The human readable text 'Green' is displayed.")
-
-    def test_changes_display_dict_multiselect(self):
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Red, Green",
-                        msg="The human readable text for the two choices, 'Red, Green' is displayed.")
-        self.obj.multiselect = ChoicesFieldModel.GREEN
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
-                        msg="The human readable text 'Green' is displayed.")
-        self.obj.multiselect = None
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "None",
-                        msg="The human readable text 'None' is displayed.")
-        self.obj.multiselect = ChoicesFieldModel.GREEN
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
-                        msg="The human readable text 'Green' is displayed.")
 
     def test_changes_display_dict_multiplechoice(self):
         self.assertTrue(self.obj.history.latest().changes_display_dict["multiplechoice"][1] == "Red, Yellow, Green",

@@ -11,40 +11,23 @@ addons:
 
 matrix:
   include:
-    - python: 2.7
-      env: TOXENV=py27-django-111
-
-    - python: 3.4
-      env: TOXENV=py34-django-111
-    - python: 3.4
-      env: TOXENV=py34-django-20
-
-    - python: 3.5
-      env: TOXENV=py35-django-111
-    - python: 3.5
-      env: TOXENV=py35-django-20
-    - python: 3.5
-      env: TOXENV=py35-django-21
     - python: 3.5
       env: TOXENV=py35-django-22
 
     - python: 3.6
-      env: TOXENV=py36-django-111
-    - python: 3.6
-      env: TOXENV=py36-django-20
-    - python: 3.6
-      env: TOXENV=py36-django-21
-    - python: 3.6
       env: TOXENV=py36-django-22
+    - python: 3.6
+      env: TOXENV=py36-django-30
 
     - python: 3.7
-      env: TOXENV=py37-django-111
-    - python: 3.7
-      env: TOXENV=py37-django-20
-    - python: 3.7
-      env: TOXENV=py37-django-21
-    - python: 3.7
       env: TOXENV=py37-django-22
+    - python: 3.7
+      env: TOXENV=py37-django-30
+
+    - python: 3.8
+      env: TOXENV=py38-django-22
+    - python: 3.8
+      env: TOXENV=py38-django-30
 
   fast_finish: true
 
@@ -61,5 +44,5 @@ deploy:
   on:
     repo: jjkester/django-auditlog
     branch: stable
-    condition: $TOXENV = py36-django-20
+    condition: $TOXENV = py38-django-30
   edge: true

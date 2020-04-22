@@ -1,8 +1,5 @@
-from __future__ import unicode_literals
-
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.db.models import Model
-from django.utils.six import iteritems
 
 
 class AuditlogModelRegistry(object):
