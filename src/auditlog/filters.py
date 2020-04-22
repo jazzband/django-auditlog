@@ -1,4 +1,6 @@
+from django.apps import apps
 from django.contrib.admin import SimpleListFilter
+from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField
 from django.db import connection
@@ -64,3 +66,15 @@ class FieldFilter(SimpleListFilter):
             queryset.annotate(changes_json=Cast("changes", JSONField()))
             .filter(**{'changes_json__{}__isnull'.format(self.value()): False})
         )
+
+
+def get_timestamp_filter():
+    """Returns rangefilter filter class if able or a simple list filter as a fallback."""
+    if apps.is_installed("rangefilter"):
+        try:
+            from rangefilter.filter import DateTimeRangeFilter
+            return DateTimeRangeFilter
+        except ImportError:
+            pass
+
+    return DateFieldListFilter
