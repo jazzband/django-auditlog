@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-from six import moves
 
 from auditlog.models import LogEntry
 
@@ -11,7 +10,7 @@ class Command(BaseCommand):
         answer = None
 
         while answer not in ['', 'y', 'n']:
-            answer = moves.input("Are you sure? [y/N]: ").lower().strip()
+            answer = input("Are you sure? [y/N]: ").lower().strip()
 
         if answer == 'y':
             count = LogEntry.objects.all().count()
