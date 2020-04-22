@@ -1,7 +1,6 @@
 """
 Settings file for the Auditlog test suite.
 """
-import os
 import django
 
 SECRET_KEY = 'test'
