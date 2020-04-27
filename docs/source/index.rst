@@ -22,6 +22,7 @@ Contents
    installation
    usage
    internals
+   troubleshooting
 
 
 Contribute to Auditlog
