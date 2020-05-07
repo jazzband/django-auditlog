@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Model, NOT_PROVIDED, DateTimeField
 from django.utils import timezone
 from django.utils.encoding import smart_text
@@ -66,7 +66,7 @@ def get_field_value(obj, field):
     """
     if isinstance(field, DateTimeField):
         # DateTimeFields are timezone-aware, so we need to convert the field
-        # to its naive form before we can accuratly compare them for changes.
+        # to its naive form before we can accurately compare them for changes.
         try:
             value = field.to_python(getattr(obj, field.name, None))
             if value is not None and settings.USE_TZ and not timezone.is_naive(value):
@@ -75,14 +75,17 @@ def get_field_value(obj, field):
             value = field.default if field.default is not NOT_PROVIDED else None
     else:
         try:
-            value = smart_text(getattr(obj, field.name, None))
+            try:
+                value = field.to_python(getattr(obj, field.name, None))
+            except (ValidationError, AttributeError):
+                value = smart_text(getattr(obj, field.name, None))
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
 
     return value
 
 
-def model_instance_diff(old, new):
+def model_instance_diff(old, new, update_fields=None):
     """
     Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
     created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
@@ -91,6 +94,8 @@ def model_instance_diff(old, new):
     :type old: Model
     :param new: The new state of the model instance.
     :type new: Model
+    :param update_fields: The optional list of fields which are going to update their values.
+    :type update_fields: list
     :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
              as value.
     :rtype: dict
@@ -128,6 +133,10 @@ def model_instance_diff(old, new):
         if model_fields['exclude_fields']:
             filtered_fields = [field for field in filtered_fields
                                if field.name not in model_fields['exclude_fields']]
+        fields = filtered_fields
+
+    if update_fields is not None:
+        filtered_fields = [field for field in fields if field.name in update_fields]
         fields = filtered_fields
 
     for field in fields:
