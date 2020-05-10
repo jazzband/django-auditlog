@@ -47,8 +47,6 @@ class LogEntryAdminMixin(object):
     resource_url.short_description = 'Resource'
 
     def msg_short(self, obj):
-        if obj.action == 2:
-            return ''  # delete
         changes = json.loads(obj.changes)
         s = '' if len(changes) == 1 else 's'
         fields = ', '.join(changes.keys())
@@ -56,17 +54,42 @@ class LogEntryAdminMixin(object):
             i = fields.rfind(' ', 0, MAX)
             fields = fields[:i] + ' ..'
         return '%d change%s: %s' % (len(changes), s, fields)
+
     msg_short.short_description = 'Changes'
 
     def msg(self, obj):
-        if obj.action == 2:
-            return ''  # delete
         changes = json.loads(obj.changes)
-        msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
-        for i, field in enumerate(sorted(changes), 1):
-            value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
-            msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
 
-        msg += '</table>'
+        field_changes = list()
+        m2m_changes = list()
+
+        for change in changes:
+            if isinstance(changes[change][1], list):
+                m2m_changes.append(change)
+            else:
+                field_changes.append(change)
+
+        msg = ''
+
+        # Render field changes
+        if len(field_changes) > 0 and obj.action != 2:
+            msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
+            for i, field in enumerate(sorted(field_changes), 1):
+                value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
+                msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
+            msg += '</table>'
+
+        if len(m2m_changes) > 0:
+            msg += '<table><tr><th>#</th><th>Relationship</th><th>Action</th><th>Changed</th></tr>'
+            for i, field in enumerate(sorted(m2m_changes), 1):
+                change_html = ''
+                for changed_data in changes[field][1]:
+                    change_html += format_html('{}</br>', changed_data)
+
+                msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td>', i, field, changes[field][0])
+                msg += '<td>{}</td></tr>'.format(change_html)
+
+            msg += '</table>'
+
         return mark_safe(msg)
     msg.short_description = 'Changes'
