@@ -3,10 +3,11 @@ import uuid
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from auditlog.models import AuditlogHistoryField
-from auditlog.registry import auditlog
+from auditlog.registry import auditlog, AuditlogModelRegistry
 
 from multiselectfield import MultiSelectField
 
+m2m_only_auditlog = AuditlogModelRegistry(create=False, update=False, delete=False)
 
 @auditlog.register()
 class SimpleModel(models.Model):
@@ -77,6 +78,24 @@ class ManyRelatedModel(models.Model):
     """
 
     related = models.ManyToManyField('self')
+
+    history = AuditlogHistoryField()
+
+
+class FirstManyRelatedModel(models.Model):
+    """
+    A model with a many to many relation to another model similar.
+    """
+
+    related = models.ManyToManyField('OtherManyRelatedModel', related_name='related')
+
+    history = AuditlogHistoryField()
+
+
+class OtherManyRelatedModel(models.Model):
+    """
+    A model that 'receives' the other side of the many to many relation from 'FirstManyRelatedModel'.
+    """
 
     history = AuditlogHistoryField()
 
@@ -221,6 +240,7 @@ auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.related.through)
+m2m_only_auditlog.register(FirstManyRelatedModel, include_fields=['pk', 'history'], m2m_fields={'related': []})
 auditlog.register(SimpleExcludeModel, exclude_fields=['text'])
 auditlog.register(SimpleMappingModel, mapping_fields={'sku': 'Product No.'})
 auditlog.register(AdditionalDataIncludedModel)
@@ -229,3 +249,4 @@ auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
+

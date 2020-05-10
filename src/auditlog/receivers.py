@@ -61,3 +61,36 @@ def log_delete(sender, instance, **kwargs):
             action=LogEntry.Action.DELETE,
             changes=json.dumps(changes),
         )
+
+
+def log_m2m_changes(signal, action, **kwargs):
+    """
+    m2m changes signal, used to log all changes to m2m relationships, used with m2m_changed.connect
+
+    """
+    m2m_signals = kwargs['sender']._map_signals
+    if action in m2m_signals:
+        if action == 'post_clear':
+            changed_queryset = kwargs['model'].objects.all()
+        else:
+            changed_queryset = kwargs['model'].objects.filter(pk__in=kwargs['pk_set'])
+
+        if changed_queryset is not None:
+            if action == 'post_add':
+                LogEntry.objects.log_m2m_changes(
+                    changed_queryset,
+                    kwargs['instance'],
+                    LogEntry.Action.ADDED,
+                )
+            elif action == 'post_remove':
+                LogEntry.objects.log_m2m_changes(
+                    changed_queryset,
+                    kwargs['instance'],
+                    LogEntry.Action.DELETE,
+                )
+            elif action == 'post_clear':
+                LogEntry.objects.log_m2m_changes(
+                    changed_queryset,
+                    kwargs['instance'],
+                    LogEntry.Action.DELETE,
+                )
