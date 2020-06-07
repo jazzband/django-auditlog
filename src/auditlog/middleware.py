@@ -8,7 +8,7 @@ from django.db.models.signals import pre_save
 try:
     from functools import partial
 except ImportError:
-    from django.utils.functional import curry as partialmethod
+    from django.utils.functional import curry as partial
 from django.apps import apps
 from auditlog.models import LogEntry
 from auditlog.compat import is_authenticated
@@ -46,7 +46,7 @@ class AuditlogMiddleware(MiddlewareMixin):
 
         # Connect signal for automatic logging
         if hasattr(request, 'user') and is_authenticated(request.user):
-            set_actor = curry(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
+            set_actor = partial(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
     def process_response(self, request, response):
