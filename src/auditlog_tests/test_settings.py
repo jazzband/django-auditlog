@@ -38,7 +38,7 @@ else:
 DATABASES = {
     'default': {
         'ENGINE': POSTGRES_DRIVER,
-        'NAME': 'auditlog_tests_db',
+        'NAME': 'auditlog' + os.environ.get("TOX_PARALLEL_ENV", ""),
         'USER': 'postgres',
         'PASSWORD': '',
         'HOST': '127.0.0.1',
