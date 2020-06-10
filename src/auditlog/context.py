@@ -1,10 +1,10 @@
 import contextlib
+from functools import partial
 import time
 import threading
 
 from django.contrib.auth import get_user_model
 from django.db.models.signals import pre_save
-from django.utils.functional import curry
 
 from auditlog.models import LogEntry
 
@@ -21,7 +21,7 @@ def set_actor(actor, remote_addr=None):
     }
 
     # Connect signal for automatic logging
-    set_actor = curry(_set_actor, user=actor, signal_duid=threadlocal.auditlog['signal_duid'])
+    set_actor = partial(_set_actor, user=actor, signal_duid=threadlocal.auditlog['signal_duid'])
     pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
     try:
