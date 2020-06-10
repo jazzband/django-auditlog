@@ -1,0 +1,4 @@
+-r requirements-test.txt
+
+tox>=1.7.0
+codecov>=2.0.0
