@@ -927,7 +927,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 17)
+        self.assertEqual(len(self.test_auditlog.get_models()), 18)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -1276,7 +1276,39 @@ class JSONModelTest(TestCase):
 
 
 class ModelInstanceDiffTest(TestCase):
-    def test_when_field_doesnt_exit(self):
+    def test_diff_models_with_related_fields(self):
+        """No error is raised when comparing models with related fields."""
+
+        # This tests that track_field() does indeed ignore related fields.
+
+        # a model without reverse relations
+        simple1 = SimpleModel()
+        simple1.save()
+
+        # a model with reverse relations
+        simple2 = SimpleModel()
+        simple2.save()
+        related = RelatedModel(related=simple2, one_to_one=simple2)
+        related.save()
+
+        # Demonstrate that simple1 can have DoesNotExist on reverse
+        # OneToOne relation.
+        with self.assertRaises(
+            SimpleModel.reverse_one_to_one.RelatedObjectDoesNotExist
+        ):
+            simple1.reverse_one_to_one  # equals None
+
+        # accessing relatedmodel_set won't trigger DoesNotExist.
+        self.assertEqual(simple1.relatedmodel_set.count(), 0)
+
+        # simple2 DOES have these relations
+        self.assertEqual(simple2.reverse_one_to_one, related)
+        self.assertEqual(simple2.relatedmodel_set.count(), 1)
+
+        model_instance_diff(simple2, simple1)
+        model_instance_diff(simple1, simple2)
+
+    def test_when_field_doesnt_exist(self):
         """No error is raised and the default is returned."""
         first = SimpleModel(boolean=True)
         second = SimpleModel()
