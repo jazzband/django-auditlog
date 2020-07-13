@@ -8,7 +8,7 @@ from django.db.models.signals import pre_save
 try:
     from functools import partial
 except ImportError:
-    from django.utils.functional import curry as partialmethod
+    from django.utils.functional import curry as partial
 from django.apps import apps
 from auditlog.models import LogEntry
 from auditlog.compat import is_authenticated
