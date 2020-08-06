@@ -1,6 +1,7 @@
 from django.contrib.admin import SimpleListFilter
 
 
+
 class ResourceTypeFilter(SimpleListFilter):
     title = 'Resource Type'
     parameter_name = 'resource_type'
