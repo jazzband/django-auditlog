@@ -23,7 +23,7 @@ class LogEntryAdminMixin(object):
             app_label, model = settings.AUTH_USER_MODEL.split('.')
             viewname = 'admin:%s_%s_change' % (app_label, model.lower())
             try:
-                link = urlresolvers.reverse(viewname, args=[obj.actor.id])
+                link = urlresolvers.reverse(viewname, args=[obj.actor.pk])
             except NoReverseMatch:
                 return u'%s' % (obj.actor)
             return format_html(u'<a href="{}">{}</a>', link, obj.actor)
