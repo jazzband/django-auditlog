@@ -7,7 +7,6 @@ from django.conf import settings
 from django.db.models.signals import pre_save
 from django.utils.deprecation import MiddlewareMixin
 
-from auditlog.compat import is_authenticated
 from auditlog.models import LogEntry
 
 threadlocal = threading.local()
@@ -35,7 +34,7 @@ class AuditlogMiddleware(MiddlewareMixin):
             threadlocal.auditlog['remote_addr'] = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
 
         # Connect signal for automatic logging
-        if hasattr(request, 'user') and is_authenticated(request.user):
+        if hasattr(request, 'user') and getattr(request.user, 'is_authenticated', False):
             set_actor = partial(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
