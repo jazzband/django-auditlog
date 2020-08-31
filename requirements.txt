@@ -1,4 +1,5 @@
 # Library requirements
+Django
 django-jsonfield
 python-dateutil
 

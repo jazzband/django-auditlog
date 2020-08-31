@@ -3,6 +3,8 @@ Settings file for the Auditlog test suite.
 """
 import os
 
+DEBUG = True
+
 SECRET_KEY = 'test'
 
 INSTALLED_APPS = [
@@ -11,6 +13,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.admin',
+    'django.contrib.staticfiles',
     'auditlog',
     'auditlog_tests',
 ]
@@ -41,12 +44,15 @@ TEMPLATES = [
         'DIRS': [],
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ]
         },
     },
 ]
+
+STATIC_URL = '/static/'
 
 ROOT_URLCONF = 'auditlog_tests.urls'
 
