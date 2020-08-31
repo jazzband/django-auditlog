@@ -25,10 +25,6 @@ def track_field(field):
     if getattr(field, 'remote_field', None) is not None and field.remote_field.model == LogEntry:
         return False
 
-    # 1.8 check
-    elif getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
-        return False
-
     return True
 
 
@@ -44,12 +40,7 @@ def get_fields_in_model(instance):
     """
     assert isinstance(instance, Model)
 
-    # Check if the Django 1.8 _meta API is available
-    use_api = hasattr(instance._meta, 'get_fields') and callable(instance._meta.get_fields)
-
-    if use_api:
-        return [f for f in instance._meta.get_fields() if track_field(f)]
-    return instance._meta.fields
+    return [f for f in instance._meta.get_fields() if track_field(f)]
 
 
 def get_field_value(obj, field):
