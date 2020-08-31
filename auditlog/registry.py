@@ -1,12 +1,19 @@
-from django.db.models.signals import pre_save, post_save, post_delete
+from typing import Dict, Callable, Optional, List, Tuple
+
 from django.db.models import Model
+from django.db.models.base import ModelBase
+from django.db.models.signals import pre_save, post_save, post_delete, ModelSignal
+
+DispatchUID = Tuple[int, str, int]
 
 
 class AuditlogModelRegistry(object):
     """
     A registry that keeps track of the models that use Auditlog to track changes.
     """
-    def __init__(self, create=True, update=True, delete=True, custom=None):
+
+    def __init__(self, create: bool = True, update: bool = True, delete: bool = True,
+                 custom: Optional[Dict[ModelSignal, Callable]] = None):
         from auditlog.receivers import log_create, log_update, log_delete
 
         self._registry = {}
@@ -22,17 +29,25 @@ class AuditlogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model=None, include_fields=[], exclude_fields=[], mapping_fields={}):
+    def register(self, model: ModelBase = None, include_fields: Optional[List[str]] = None,
+                 exclude_fields: Optional[List[str]] = None, mapping_fields: Optional[Dict[str, str]] = None):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
         :param model: The model to register.
-        :type model: Model
         :param include_fields: The fields to include. Implicitly excludes all other fields.
-        :type include_fields: list
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
-        :type exclude_fields: list
+        :param mapping_fields: Mapping from field names to strings in diff.
+
         """
+
+        if include_fields is None:
+            include_fields = []
+        if exclude_fields is None:
+            exclude_fields = []
+        if mapping_fields is None:
+            mapping_fields = {}
+
         def registrar(cls):
             """Register models for a given class."""
             if not issubclass(cls, Model):
@@ -58,23 +73,21 @@ class AuditlogModelRegistry(object):
             # Otherwise, just register the model.
             registrar(model)
 
-    def contains(self, model):
+    def contains(self, model: ModelBase) -> bool:
         """
         Check if a model is registered with auditlog.
 
         :param model: The model to check.
-        :type model: Model
         :return: Whether the model has been registered.
         :rtype: bool
         """
         return model in self._registry
 
-    def unregister(self, model):
+    def unregister(self, model: ModelBase) -> None:
         """
         Unregister a model with auditlog. This will not affect the database.
 
         :param model: The model to unregister.
-        :type model: Model
         """
         try:
             del self._registry[model]
@@ -82,6 +95,16 @@ class AuditlogModelRegistry(object):
             pass
         else:
             self._disconnect_signals(model)
+
+    def get_models(self) -> List[ModelBase]:
+        return list(self._registry.keys())
+
+    def get_model_fields(self, model: ModelBase):
+        return {
+            'include_fields': list(self._registry[model]['include_fields']),
+            'exclude_fields': list(self._registry[model]['exclude_fields']),
+            'mapping_fields': dict(self._registry[model]['mapping_fields']),
+        }
 
     def _connect_signals(self, model):
         """
@@ -98,24 +121,11 @@ class AuditlogModelRegistry(object):
         for signal, receiver in self._signals.items():
             signal.disconnect(sender=model, dispatch_uid=self._dispatch_uid(signal, model))
 
-    def _dispatch_uid(self, signal, model):
+    def _dispatch_uid(self, signal, model) -> DispatchUID:
         """
         Generate a dispatch_uid.
         """
-        return (self.__class__, model, signal)
-
-    def get_model_fields(self, model):
-        return {
-            'include_fields': self._registry[model]['include_fields'],
-            'exclude_fields': self._registry[model]['exclude_fields'],
-            'mapping_fields': self._registry[model]['mapping_fields'],
-        }
-
-
-class AuditLogModelRegistry(AuditlogModelRegistry):
-    def __init__(self, *args, **kwargs):
-        super(AuditLogModelRegistry, self).__init__(*args, **kwargs)
-        raise DeprecationWarning("Use AuditlogModelRegistry instead of AuditLogModelRegistry, AuditLogModelRegistry will be removed in django-auditlog 0.4.0 or later.")
+        return self.__hash__(), model.__qualname__, signal.__hash__()
 
 
 auditlog = AuditlogModelRegistry()
