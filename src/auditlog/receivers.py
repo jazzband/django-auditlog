@@ -5,6 +5,11 @@ import json
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
 
+try:
+    import opentracing
+except ImportError:
+    opentracing = None
+
 
 def log_create(sender, instance, created, **kwargs):
     """
@@ -13,13 +18,24 @@ def log_create(sender, instance, created, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if created:
-        changes = model_instance_diff(None, instance)
+        if opentracing:
+            tracing_span = opentracing.global_tracer().start_active_span(
+                'django-auditlog.create.{}'.format(sender._meta.label)
+            )
+        else:
+            tracing_span = None
 
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.CREATE,
-            changes=json.dumps(changes),
-        )
+        try:
+            changes = model_instance_diff(None, instance)
+
+            log_entry = LogEntry.objects.log_create(
+                instance,
+                action=LogEntry.Action.CREATE,
+                changes=json.dumps(changes),
+            )
+        finally:
+            if tracing_span:
+                tracing_span.close()
 
 
 def log_update(sender, instance, **kwargs):
@@ -29,6 +45,13 @@ def log_update(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
+        if opentracing:
+            tracing_span = opentracing.global_tracer().start_active_span(
+                'django-auditlog.update.{}'.format(sender._meta.label),
+            )
+        else:
+            tracing_span = None
+
         try:
             old = sender.objects.get(pk=instance.pk)
         except sender.DoesNotExist:
@@ -45,6 +68,9 @@ def log_update(sender, instance, **kwargs):
                     action=LogEntry.Action.UPDATE,
                     changes=json.dumps(changes),
                 )
+        finally:
+            if tracing_span:
+                tracing_span.close()
 
 
 def log_delete(sender, instance, **kwargs):
@@ -54,10 +80,21 @@ def log_delete(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
-        changes = model_instance_diff(instance, None)
+        if opentracing:
+            tracing_span = opentracing.global_tracer().start_active_span(
+                'django-auditlog.delete.{}'.format(sender._meta.label),
+            )
+        else:
+            tracing_span = None
 
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.DELETE,
-            changes=json.dumps(changes),
-        )
+        try:
+            changes = model_instance_diff(instance, None)
+
+            log_entry = LogEntry.objects.log_create(
+                instance,
+                action=LogEntry.Action.DELETE,
+                changes=json.dumps(changes),
+            )
+        finally:
+            if tracing_span:
+                tracing_span.close()
