@@ -1,10 +1,20 @@
 from __future__ import unicode_literals
 
+from collections import namedtuple
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Model, NOT_PROVIDED, DateTimeField
+from django.db.models import DateTimeField, Model, NOT_PROVIDED
 from django.utils import timezone
 from django.utils.encoding import smart_text
+
+ImplicitField = namedtuple("Field", "name")
+"""
+We use this to imitate a :class:`~django.db.models.Field` object, to make a diff of implicit fields
+not explicitly defined. For example, if you had a relationship called
+``my_rel``, you may want to only diff ``my_rel_id``, so you don't
+have to pull every relation. This can have a significant performance impact.
+"""
 
 
 def track_field(field):
@@ -118,16 +128,36 @@ def model_instance_diff(old, new):
         model_fields = None
 
     # Check if fields must be filtered
-    if model_fields and (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
+    if (
+        model_fields
+        and (
+            model_fields['include_fields']
+            or model_fields['exclude_fields']
+            or model_fields['db_fields']
+        )
+        and fields
+    ):
         filtered_fields = []
         if model_fields['include_fields']:
-            filtered_fields = [field for field in fields
-                               if field.name in model_fields['include_fields']]
+            filtered_fields = {field for field in fields
+                               if field.name in model_fields['include_fields']}
         else:
             filtered_fields = fields
-        if model_fields['exclude_fields']:
-            filtered_fields = [field for field in filtered_fields
-                               if field.name not in model_fields['exclude_fields']]
+        if model_fields['db_fields']:
+            db_fields = {field for field in fields
+                               if field.name in model_fields['db_fields']}
+            for implicit_field in db_fields:
+                filtered_fields.add(
+                    ImplicitField(implicit_field.column)
+                )
+        if model_fields['exclude_fields'] or model_fields['db_fields']:
+            # Remove fields, including the field names from `db_fields`
+            exclude_lookup = set(model_fields['exclude_fields'] + model_fields['db_fields'])
+            filtered_fields = {
+                field for field in filtered_fields
+                if field.name not in exclude_lookup
+            }
+
         fields = filtered_fields
 
     for field in fields:

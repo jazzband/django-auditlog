@@ -25,17 +25,44 @@ class AuditlogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model=None, include_fields=[], exclude_fields=[], mapping_fields={}):
+    def register(self,
+                 model=None,
+                 include_fields=None,
+                 exclude_fields=None,
+                 mapping_fields=None,
+                 db_fields=None,
+                 ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
         :param model: The model to register.
         :type model: Model
         :param include_fields: The fields to include. Implicitly excludes all other fields.
-        :type include_fields: list
+        :type include_fields: list[str]
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
-        :type exclude_fields: list
+        :type exclude_fields: list[str]
+        :param mapping_fields: A mapping from field name to friendly name, for display purposes
+        :type mapping_fields: dict[str,str]
+        :param db_fields: Use the DB column name, and do not follow relations.
+            For example, if ``"relation"`` is in ``db_fields``, the field ``"relation_id"`` (without
+            custom configuration) is included, and ``"relation"`` is excluded.
+            If the default column names are not being used, the defined names are used.
+            Avoids performance hit of pulling in every relation.
+            If you ONLY want to keep track of the implicit field,
+            be sure to put the explicit field (i.e. ``relation``) in to ``exclude_fields``
+        :type db_fields: list[str]
         """
+
+        # Avoid using mutable values as method defaults
+        if db_fields is None:
+            db_fields = []
+        if mapping_fields is None:
+            mapping_fields = {}
+        if exclude_fields is None:
+            exclude_fields = []
+        if include_fields is None:
+            include_fields = []
+
         def registrar(cls):
             """Register models for a given class."""
             if not issubclass(cls, Model):
@@ -45,6 +72,7 @@ class AuditlogModelRegistry(object):
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
                 'mapping_fields': mapping_fields,
+                'db_fields': db_fields,
             }
             self._connect_signals(cls)
 
@@ -112,6 +140,7 @@ class AuditlogModelRegistry(object):
             'include_fields': self._registry[model]['include_fields'],
             'exclude_fields': self._registry[model]['exclude_fields'],
             'mapping_fields': self._registry[model]['mapping_fields'],
+            'db_fields': self._registry[model]['db_fields'],
         }
 
 
