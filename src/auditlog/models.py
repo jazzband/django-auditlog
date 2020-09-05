@@ -1,25 +1,22 @@
 from __future__ import unicode_literals
 
-import json
 import ast
+import json
 
-from six import python_2_unicode_compatible
-from six import iteritems, integer_types
-
+from dateutil import parser
+from dateutil.tz import gettz
+from six import integer_types, iteritems, python_2_unicode_compatible
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
-from django.db import models, DEFAULT_DB_ALIAS
-from django.db.models import QuerySet, Q
+from django.db import DEFAULT_DB_ALIAS, models
+from django.db.models import Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_text
 from django.utils.translation import ugettext_lazy as _
-
 from jsonfield.fields import JSONField
-from dateutil import parser
-from dateutil.tz import gettz
 
 
 class LogEntryManager(models.Manager):
