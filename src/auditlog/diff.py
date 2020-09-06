@@ -78,7 +78,8 @@ def get_field_value(obj, field):
         # DecimalFields can be stored with multiple zeroes after decimal but 
         # might only have one zero after save() method, so we need to remove 
         # all extra zeroes for an accurate comparison.
-        value = smart_text(getattr(obj, field.name, None)).rstrip('0').rstrip('.')
+        value_before_clean = smart_text(getattr(obj, field.name, None))
+        value = value_before_clean.rstrip('0').rstrip('.') if '.' in value_before_clean else value_before_clean
     else:
         try:
             value = smart_text(getattr(obj, field.name, None))
