@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Model, NOT_PROVIDED, DateTimeField
+from django.db.models import Model, NOT_PROVIDED, DateTimeField, DecimalField
 from django.utils import timezone
 from django.utils.encoding import smart_text
 
@@ -73,6 +73,12 @@ def get_field_value(obj, field):
                 value = timezone.make_naive(value, timezone=timezone.utc)
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
+    elif isinstance(field, DecimalField):
+        # Fix for Issue #260
+        # DecimalFields can be stored with multiple zeroes after decimal but 
+        # might only have one zero after save() method, so we need to remove 
+        # all extra zeroes for an accurate comparison.
+        value = smart_text(getattr(obj, field.name, None)).rstrip('0').rstrip('.')
     else:
         try:
             value = smart_text(getattr(obj, field.name, None))
