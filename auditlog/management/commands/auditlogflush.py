@@ -13,13 +13,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         answer = options['yes']
 
-        while answer is None:
-            print("This action will clear all log entries from the database.")
+        if answer is None:
+            self.stdout.write("This action will clear all log entries from the database.")
             response = input("Are you sure you want to continue? [y/N]: ").lower().strip()
-            answer = True if response == 'y' else False if response == 'n' else None
+            answer = response == 'y'
 
         if answer:
             count, _ = LogEntry.objects.all().delete()
-            print("Deleted %d objects." % count)
+            self.stdout.write("Deleted %d objects." % count)
         else:
-            print("Aborted.")
+            self.stdout.write("Aborted.")
