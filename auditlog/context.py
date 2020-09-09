@@ -45,9 +45,9 @@ def set_actor(actor, remote_addr=None):
 
 
 def _set_actor(user, sender, instance, signal_duid, **kwargs):
-    """Signal receiver with an extra 'user' kwarg.
+    """Signal receiver with extra 'user' and 'signal_duid' kwargs.
 
-    This function becomes a valid signal receiver when it is curried with the actor.
+    This function becomes a valid signal receiver when it is curried with the actor and a dispatch id.
     """
     try:
         auditlog = threadlocal.auditlog
