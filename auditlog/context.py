@@ -40,6 +40,7 @@ def set_actor(actor, remote_addr=None):
             pass
         else:
             pre_save.disconnect(sender=LogEntry, dispatch_uid=auditlog["signal_duid"])
+            del threadlocal.auditlog
 
 
 def _set_actor(user, sender, instance, signal_duid, **kwargs):
