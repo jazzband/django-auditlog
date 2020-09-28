@@ -12,7 +12,6 @@ from django.db.models import QuerySet, Q, Field
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import ugettext_lazy as _
-from jsonfield.fields import JSONField
 
 
 class LogEntryManager(models.Manager):
@@ -179,8 +178,9 @@ class LogEntry(models.Model):
                               related_name='+', verbose_name=_("actor"))
     remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
-    additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
-
+    additional_data_json = models.TextField(blank=True,
+                                            null=True,
+                                            verbose_name=_("additional data"))
     objects = LogEntryManager()
 
     class Meta:
@@ -304,6 +304,19 @@ class LogEntry(models.Model):
             verbose_name = model_fields['mapping_fields'].get(field.name, getattr(field, 'verbose_name', field.name))
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
+
+    @property
+    def additional_data(self):
+        data = None
+        try:
+            data = json.loads(self.additional_data_json)
+        except:
+            pass
+        return data
+
+    @additional_data.setter
+    def additional_data(self, var):
+        self.additional_data_json = json.dumps(var)
 
 
 class AuditlogHistoryField(GenericRelation):

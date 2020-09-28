@@ -80,3 +80,6 @@ venv.bak/
 
 ### JetBrains
 .idea/
+
+### VSCode
+.vscode
