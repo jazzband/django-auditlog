@@ -34,9 +34,8 @@ class AuditlogMiddleware(MiddlewareMixin):
             threadlocal.auditlog['remote_addr'] = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
 
         # Connect signal for automatic logging
-        if hasattr(request, 'user') and getattr(request.user, 'is_authenticated', False):
-            set_actor = partial(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
-            pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
+        set_actor = partial(self.set_actor, request=request, signal_duid=threadlocal.auditlog['signal_duid'])
+        pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
     def process_response(self, request, response):
         """
@@ -57,20 +56,22 @@ class AuditlogMiddleware(MiddlewareMixin):
         return None
 
     @staticmethod
-    def set_actor(user, sender, instance, signal_duid, **kwargs):
+    def set_actor(request, sender, instance, signal_duid, **kwargs):
         """
-        Signal receiver with an extra, required 'user' kwarg. This method becomes a real (valid) signal receiver when
+        Signal receiver with an extra, required 'request' kwarg. This method becomes a real (valid) signal receiver when
         it is curried with the actor.
         """
-        if hasattr(threadlocal, 'auditlog'):
-            if signal_duid != threadlocal.auditlog['signal_duid']:
-                return
-            try:
-                app_label, model_name = settings.AUTH_USER_MODEL.split('.')
-                auth_user_model = apps.get_model(app_label, model_name)
-            except ValueError:
-                auth_user_model = apps.get_model('auth', 'user')
-            if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
-                instance.actor = user
+        if hasattr(request, 'user') and getattr(request.user, 'is_authenticated', False):
+            user = request.user
+            if hasattr(threadlocal, 'auditlog'):
+                if signal_duid != threadlocal.auditlog['signal_duid']:
+                    return
+                try:
+                    app_label, model_name = settings.AUTH_USER_MODEL.split('.')
+                    auth_user_model = apps.get_model(app_label, model_name)
+                except ValueError:
+                    auth_user_model = apps.get_model('auth', 'user')
+                if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
+                    instance.actor = user
 
-            instance.remote_addr = threadlocal.auditlog['remote_addr']
+                instance.remote_addr = threadlocal.auditlog['remote_addr']
