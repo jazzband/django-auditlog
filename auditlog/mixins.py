@@ -62,10 +62,11 @@ class LogEntryAdminMixin(object):
         if obj.action == LogEntry.Action.DELETE:
             return ''  # delete
         changes = json.loads(obj.changes)
-        msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
+        msg = '<table class="grp-table"><thead><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr></thead>'
         for i, field in enumerate(sorted(changes), 1):
-            value = [i, field] + (['***', '***'] if field == 'password' else changes[field])
-            msg += format_html('<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
+            class_ = [f"grp-row grp-row-{'event' if i % 2 else 'odd'}"]
+            value = class_ + [i, field] + (['***', '***'] if field == 'password' else changes[field])
+            msg += format_html('<tr class="{}"><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
 
         msg += '</table>'
         return mark_safe(msg)
