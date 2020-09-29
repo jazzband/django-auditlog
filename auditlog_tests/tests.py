@@ -1,4 +1,6 @@
 import datetime
+import json
+
 import django
 from django.conf import settings
 from django.contrib import auth
@@ -124,23 +126,8 @@ class MiddlewareTest(TestCase):
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username='test', email='test@example.com', password='top_secret')
 
-    def test_request_anonymous(self):
-        """No actor will be logged when a user is not logged in."""
-        # Create a request
-        request = self.factory.get('/')
-        request.user = AnonymousUser()
-
-        # Run middleware
-        self.middleware.process_request(request)
-
-        # Validate result
-        self.assertFalse(pre_save.has_listeners(LogEntry))
-
-        # Finalize transaction
-        self.middleware.process_exception(request, None)
-
     def test_request(self):
-        """The actor will be logged when a user is logged in."""
+        """The actor will be logged."""
         # Create a request
         request = self.factory.get('/')
         request.user = self.user
@@ -258,7 +245,7 @@ class AdditionalDataModelTest(TestCase):
                         msg="There is 1 log entry")
         log_entry = obj_with_additional_data.history.get()
         self.assertIsNotNone(log_entry.additional_data)
-        extra_data = log_entry.additional_data
+        extra_data = json.loads(log_entry.additional_data)
         self.assertTrue(extra_data['related_model_text'] == related_model.text,
                         msg="Related model's text is logged")
         self.assertTrue(extra_data['related_model_id'] == related_model.id,
