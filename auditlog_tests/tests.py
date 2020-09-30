@@ -1,23 +1,20 @@
 import datetime
-import json
 
-import django
+from dateutil.tz import gettz
 from django.conf import settings
-from django.contrib import auth
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
 from django.utils import dateformat, formats, timezone
-from dateutil.tz import gettz
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
-    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
-    ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
+    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, ManyRelatedModel, \
+    AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
     CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
 
 
@@ -55,7 +52,7 @@ class SimpleModelTest(TestCase):
 
         history = obj.history.get(action=LogEntry.Action.UPDATE)
 
-        self.assertJSONEqual(history.changes, '{"boolean": ["False", "True"]}', msg="The change is correctly logged")
+        self.assertEqual(history.changes, {"boolean": ["False", "True"]}, msg="The change is correctly logged")
 
     def test_delete(self):
         """Deletion is logged correctly."""
@@ -213,9 +210,9 @@ class SimpleMappingModelTest(TestCase):
     def test_register_mapping_fields(self):
         smm = SimpleMappingModel(sku='ASD301301A6', vtxt='2.1.5', not_mapped='Not mapped')
         smm.save()
-        self.assertTrue(smm.history.latest().changes_dict['sku'][1] == 'ASD301301A6',
+        self.assertTrue(smm.history.latest().changes['sku'][1] == 'ASD301301A6',
                         msg="The diff function retains 'sku' and can be retrieved.")
-        self.assertTrue(smm.history.latest().changes_dict['not_mapped'][1] == 'Not mapped',
+        self.assertTrue(smm.history.latest().changes['not_mapped'][1] == 'Not mapped',
                         msg="The diff function does not map 'not_mapped' and can be retrieved.")
         self.assertTrue(smm.history.latest().changes_display_dict['Product No.'][1] == 'ASD301301A6',
                         msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.")
@@ -245,7 +242,7 @@ class AdditionalDataModelTest(TestCase):
                         msg="There is 1 log entry")
         log_entry = obj_with_additional_data.history.get()
         self.assertIsNotNone(log_entry.additional_data)
-        extra_data = json.loads(log_entry.additional_data)
+        extra_data = log_entry.additional_data
         self.assertTrue(extra_data['related_model_text'] == related_model.text,
                         msg="Related model's text is logged")
         self.assertTrue(extra_data['related_model_id'] == related_model.id,

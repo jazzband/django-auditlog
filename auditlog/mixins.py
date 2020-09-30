@@ -1,5 +1,3 @@
-import json
-
 from django import urls as urlresolvers
 from django.conf import settings
 from django.urls.exceptions import NoReverseMatch
@@ -48,7 +46,7 @@ class LogEntryAdminMixin(object):
     def msg_short(self, obj):
         if obj.action == LogEntry.Action.DELETE:
             return ''  # delete
-        changes = json.loads(obj.changes)
+        changes = obj.changes
         s = '' if len(changes) == 1 else 's'
         fields = ', '.join(changes.keys())
         if len(fields) > MAX:
@@ -59,9 +57,9 @@ class LogEntryAdminMixin(object):
     msg_short.short_description = 'Changes'
 
     def msg(self, obj):
-        if obj.action == LogEntry.Action.DELETE:
+        if obj.action == LogEntry.Action.DELETE or not obj.changes:
             return ''  # delete
-        changes = json.loads(obj.changes)
+        changes = obj.changes
         msg = '<table class="grp-table"><thead><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr></thead>'
         for i, field in enumerate(sorted(changes), 1):
             class_ = [f"grp-row grp-row-{'event' if i % 2 else 'odd'}"]
