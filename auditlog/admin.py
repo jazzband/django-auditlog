@@ -14,5 +14,10 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         ('Changes', {'fields': ['action', 'msg']}),
     ]
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related('content_type', 'actor')
+        return queryset
+
 
 admin.site.register(LogEntry, LogEntryAdmin)
