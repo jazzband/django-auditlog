@@ -1,13 +1,10 @@
 import datetime
 import json
 
-import django
 from dateutil.tz import gettz
 from django.apps import apps
 from django.conf import settings
-from django.contrib import auth
 from django.contrib.auth.models import AnonymousUser, User
-from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
