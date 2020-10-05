@@ -5,11 +5,8 @@ import django
 import mock
 from dateutil.tz import gettz
 from django.conf import settings
-from django.contrib import auth
 from django.contrib.auth.models import AnonymousUser, User
-from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
-from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
 
