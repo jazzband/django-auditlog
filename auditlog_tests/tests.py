@@ -1,15 +1,19 @@
 import datetime
+import itertools
 import json
 
 import django
 import mock
 from dateutil.tz import gettz
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
 
+from auditlog.context import set_actor
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
@@ -34,7 +38,11 @@ from auditlog_tests.models import (
 
 class SimpleModelTest(TestCase):
     def setUp(self):
-        self.obj = SimpleModel.objects.create(text="I am not difficult.")
+        self.obj = self.make_object()
+        super().setUp()
+
+    def make_object(self):
+        return SimpleModel.objects.create(text="I am not difficult.")
 
     def test_create(self):
         """Creation is logged correctly."""
@@ -45,7 +53,9 @@ class SimpleModelTest(TestCase):
         self.assertEqual(obj.history.count(), 1, msg="There is one log entry")
 
         history = obj.history.get()
+        self.check_create_log_entry(obj, history)
 
+    def check_create_log_entry(self, obj, history):
         self.assertEqual(
             history.action, LogEntry.Action.CREATE, msg="Action is 'CREATE'"
         )
@@ -57,8 +67,7 @@ class SimpleModelTest(TestCase):
         obj = self.obj
 
         # Change something
-        obj.boolean = True
-        obj.save()
+        self.update(obj)
 
         # Check for log entries
         self.assertEqual(
@@ -68,7 +77,13 @@ class SimpleModelTest(TestCase):
         )
 
         history = obj.history.get(action=LogEntry.Action.UPDATE)
+        self.check_update_log_entry(obj, history)
 
+    def update(self, obj):
+        obj.boolean = True
+        obj.save()
+
+    def check_update_log_entry(self, obj, history):
         self.assertJSONEqual(
             history.changes,
             '{"boolean": ["False", "True"]}',
@@ -79,39 +94,104 @@ class SimpleModelTest(TestCase):
         """Deletion is logged correctly."""
         # Get the object to work with
         obj = self.obj
-
-        history = obj.history.latest()
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        pk = obj.pk
 
         # Delete the object
-        obj.delete()
+        self.delete(obj)
 
         # Check for log entries
-        self.assertEqual(
-            LogEntry.objects.filter(
-                content_type=history.content_type,
-                object_pk=history.object_pk,
-                action=LogEntry.Action.DELETE,
-            ).count(),
-            1,
-            msg="There is one log entry for 'DELETE'",
-        )
+        qs = LogEntry.objects.filter(content_type=content_type, object_pk=pk)
+        self.assertEqual(qs.count(), 1, msg="There is one log entry for 'DELETE'")
+
+        history = qs.get()
+        self.check_delete_log_entry(obj, history)
+
+    def delete(self, obj):
+        obj.delete()
+
+    def check_delete_log_entry(self, obj, history):
+        pass
 
     def test_recreate(self):
-        SimpleModel.objects.all().delete()
+        self.obj.delete()
         self.setUp()
         self.test_create()
 
 
-class AltPrimaryKeyModelTest(SimpleModelTest):
+class NoActorMixin:
+    def check_create_log_entry(self, obj, log_entry):
+        super().check_create_log_entry(obj, log_entry)
+        self.assertIsNone(log_entry.actor)
+
+    def check_update_log_entry(self, obj, log_entry):
+        super().check_update_log_entry(obj, log_entry)
+        self.assertIsNone(log_entry.actor)
+
+    def check_delete_log_entry(self, obj, log_entry):
+        super().check_delete_log_entry(obj, log_entry)
+        self.assertIsNone(log_entry.actor)
+
+
+class WithActorMixin:
+    sequence = itertools.count()
+
     def setUp(self):
-        self.obj = AltPrimaryKeyModel.objects.create(
+        username = "actor_{}".format(next(self.sequence))
+        self.user = get_user_model().objects.create(
+            username=username,
+            email="{}@example.com".format(username),
+            password="secret",
+        )
+        super().setUp()
+
+    def tearDown(self):
+        self.user.delete()
+        super().tearDown()
+
+    def make_object(self):
+        with set_actor(self.user):
+            return super().make_object()
+
+    def check_create_log_entry(self, obj, log_entry):
+        super().check_create_log_entry(obj, log_entry)
+        self.assertEqual(log_entry.actor, self.user)
+
+    def update(self, obj):
+        with set_actor(self.user):
+            return super().update(obj)
+
+    def check_update_log_entry(self, obj, log_entry):
+        super().check_update_log_entry(obj, log_entry)
+        self.assertEqual(log_entry.actor, self.user)
+
+    def delete(self, obj):
+        with set_actor(self.user):
+            return super().delete(obj)
+
+    def check_delete_log_entry(self, obj, log_entry):
+        super().check_delete_log_entry(obj, log_entry)
+        self.assertEqual(log_entry.actor, self.user)
+
+
+class AltPrimaryKeyModelBase(SimpleModelTest):
+    def make_object(self):
+        return AltPrimaryKeyModel.objects.create(
             key=str(datetime.datetime.now()), text="I am strange."
         )
 
 
-class UUIDPrimaryKeyModelModelTest(SimpleModelTest):
-    def setUp(self):
-        self.obj = UUIDPrimaryKeyModel.objects.create(text="I am strange.")
+class AltPrimaryKeyModelTest(NoActorMixin, AltPrimaryKeyModelBase):
+    pass
+
+
+class AltPrimaryKeyModelWithActorTest(WithActorMixin, AltPrimaryKeyModelBase):
+    pass
+
+
+class UUIDPrimaryKeyModelModelBase(SimpleModelTest):
+    def make_object(self):
+        return UUIDPrimaryKeyModel.objects.create(text="I am strange.")
 
     def test_get_for_object(self):
         self.obj.boolean = True
@@ -129,9 +209,27 @@ class UUIDPrimaryKeyModelModelTest(SimpleModelTest):
         )
 
 
-class ProxyModelTest(SimpleModelTest):
-    def setUp(self):
-        self.obj = ProxyModel.objects.create(text="I am not what you think.")
+class UUIDPrimaryKeyModelModelTest(NoActorMixin, UUIDPrimaryKeyModelModelBase):
+    pass
+
+
+class UUIDPrimaryKeyModelModelWithActorTest(
+    WithActorMixin, UUIDPrimaryKeyModelModelBase
+):
+    pass
+
+
+class ProxyModelBase(SimpleModelTest):
+    def make_object(self):
+        return ProxyModel.objects.create(text="I am not what you think.")
+
+
+class ProxyModelTest(NoActorMixin, ProxyModelBase):
+    pass
+
+
+class ProxyModelWithActorTest(WithActorMixin, ProxyModelBase):
+    pass
 
 
 class ManyRelatedModelTest(TestCase):
