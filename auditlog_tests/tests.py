@@ -48,17 +48,12 @@ class SimpleModelTest(TestCase):
         # Check for log entries
         self.assertEqual(obj.history.count(), 1, msg="There is one log entry")
 
-        try:
-            history = obj.history.get()
-        except obj.history.DoesNotExist:
-            self.assertTrue(False, "Log entry exists")
-        else:
-            self.assertEqual(
-                history.action, LogEntry.Action.CREATE, msg="Action is 'CREATE'"
-            )
-            self.assertEqual(
-                history.object_repr, str(obj), msg="Representation is equal"
-            )
+        history = obj.history.get()
+
+        self.assertEqual(
+            history.action, LogEntry.Action.CREATE, msg="Action is 'CREATE'"
+        )
+        self.assertEqual(history.object_repr, str(obj), msg="Representation is equal")
 
     def test_update(self):
         """Updates are logged correctly."""
