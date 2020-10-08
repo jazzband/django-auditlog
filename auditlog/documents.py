@@ -1,5 +1,5 @@
-from elasticsearch_dsl import Document, connections, Keyword, Ip, Date, Nested, InnerDoc, Text
 from elasticsearch.helpers import bulk
+from elasticsearch_dsl import Document, connections, Keyword, Date, Nested, InnerDoc, Text
 
 # Define a default Elasticsearch client
 connections.create_connection(hosts=['localhost'])
@@ -25,19 +25,22 @@ class LogEntry(Document):
     content_type_model = Keyword(required=True)
 
     object_id = Keyword(required=True)
+    object_pk = Keyword()
     object_repr = Keyword(required=True)
 
     actor_id = Keyword()
     actor_email = Keyword()
+    actor_first_name = Keyword()
+    actor_last_name = Keyword()
 
-    remote_addr = Ip()
+    remote_addr = Text()
 
     timestamp = Date()
 
     changes = Nested(Change)
 
     class Index:
-        name = 'logs'
+        name = 'logs-dealflow'
 
     @staticmethod
     def bulk(client, documents):

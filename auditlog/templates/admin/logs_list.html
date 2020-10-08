@@ -1,0 +1,48 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+{% block bodyclass %}grp-change-list{% endblock %}
+{% block content-class %}{% endblock %}
+{% block breadcrumbs %}
+    <ul class="grp-horizontal-list">
+            <li><a href="{% url 'admin:index' %}">{% trans "Home" %}</a></li>
+            <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+            <li>{{ opts.verbose_name_plural|capfirst }}</li>
+    </ul>
+{% endblock %}
+
+{% block content %}
+
+{% if results %}
+    <div class="grp-module grp-changelist-results">
+        <table id="result_list" cellspacing="0" class="grp-table grp-sortable">
+            <thead>
+                <tr>
+                    {% for header in result_headers %}
+                        <th scope="col" {{ header.class_attrib }}>
+                            {% if header.sortable %}
+                                {% if header.sort_priority > 0 %}
+                                    <div class="grp-sortoptions">
+                                        <a href="{{ header.url_toggle }}" class="grp-toggle {% if header.ascending %}grp-ascending{% else %}grp-descending{% endif %}" title="{% trans "Toggle sorting" %}"></a>
+                                        {% if num_sorted_fields > 1 %}<span class="grp-sortpriority" title="{% blocktrans with priority_number=header.sort_priority %}Sorting priority: {{ priority_number }}{% endblocktrans %}">{{ header.sort_priority }}</span>{% endif %}
+                                        <a class="grp-sortremove" href="{{ header.url_remove }}" title="{% trans "Remove from sorting" %}"></a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                            <div class="grp-text">{% if header.sortable %}<a href="{{ header.url_primary }}">{{ header.text|capfirst }}</a>{% else %}<span>{{ header.text|capfirst }}</span>{% endif %}</div>
+                        </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                    {% if result.form.non_field_errors %}
+                        <tr class="grp-errors"><td colspan="{{ result|length }}">{{ result.form.non_field_errors }}</td></tr>
+                    {% endif %}
+                    <tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">{% for item in result %}{{ item }}{% endfor %}</tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% endblock %}

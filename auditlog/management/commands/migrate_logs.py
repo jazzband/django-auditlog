@@ -24,6 +24,8 @@ class Command(BaseCommand):
             if entry_db.actor:
                 entry.actor_id = str(entry_db.actor.pk)
                 entry.actor_email = entry_db.actor.email
+                entry.actor_first_name = entry_db.actor.first_name
+                entry.actor_last_name = entry_db.actor.last_name
             if entry_db.remote_addr:
                 entry.remote_addr = entry_db.remote_addr
             if entry_db.changes:

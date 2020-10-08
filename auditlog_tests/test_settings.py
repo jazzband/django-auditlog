@@ -10,6 +10,7 @@ SECRET_KEY = 'test'
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'grappelli',
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.admin',
