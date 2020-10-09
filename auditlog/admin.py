@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import path
 
+from filters import ActorInputFilter
 from .documents import LogEntry
 from .utils.admin import get_headers, results, CustomChangeList, CustomPaginator
 
@@ -15,7 +16,8 @@ class DummyLogModel(models.Model):
 
 
 class DummyModelAdmin(admin.ModelAdmin):
-    list_fields = ['timestamp', 'action', 'actor_email']
+    list_fields = ['timestamp', 'action', 'object_repr', 'actor']
+    filters = [ActorInputFilter, 'object_repr']
 
     paginator = CustomPaginator
 
@@ -29,13 +31,11 @@ class DummyModelAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         s = LogEntry.search()
         s = s.sort('-timestamp')
-        # s = s[1:1000]
         return s
 
     def list_view(self, request):
-        cl = CustomChangeList(self, request)
-        queryset = self.get_queryset(request)
-        cl.get_results(queryset)
+        cl = CustomChangeList(self, request, list_filter=self.filters)
+        cl.get_results()
 
         context = {
             'title': 'Log entries', 'opts': self.model._meta,

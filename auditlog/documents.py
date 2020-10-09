@@ -29,9 +29,10 @@ class LogEntry(Document):
     object_repr = Keyword(required=True)
 
     actor_id = Keyword()
+    actor_pk = Keyword()
     actor_email = Keyword()
-    actor_first_name = Keyword()
-    actor_last_name = Keyword()
+    actor_first_name = Text()
+    actor_last_name = Text()
 
     remote_addr = Text()
 
@@ -41,6 +42,14 @@ class LogEntry(Document):
 
     class Index:
         name = 'logs-dealflow'
+
+    @property
+    def actor(self):
+        if self.actor_email:
+            if self.actor_first_name and self.actor_last_name:
+                return f'{self.actor_first_name} {self.actor_last_name} ({self.actor_email})'
+            return self.actor_email
+        return None
 
     @staticmethod
     def bulk(client, documents):
