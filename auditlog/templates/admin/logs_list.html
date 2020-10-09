@@ -1,5 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n admin_urls static admin_modify %}
+{% load i18n grp_tags admin_urls static admin_list %}
 {% block bodyclass %}grp-change-list{% endblock %}
 {% block content-class %}{% endblock %}
 {% block breadcrumbs %}
@@ -9,8 +9,55 @@
             <li>{{ opts.verbose_name_plural|capfirst }}</li>
     </ul>
 {% endblock %}
-
 {% block content %}
+
+<div class="grp-module">
+        <div class="grp-row">
+            <div class="l-2cr-fluid {% if cl.has_filters and cl.search_fields %}l-d-12{% else %}{% if cl.has_filters or cl.search_fields %}l-d-6{% endif %}{% endif %}">
+                {% if cl.has_filters or cl.search_fields %}
+                    {% block aside %}
+                        <aside class="c-1">
+                            <header style="display:none"><h1>{% if cl.search_fields %}Search{% if cl.has_filters %} &amp; {% endif %}{% endif %}{% if cl.has_filters %}Filters{% endif %}</h1></header>
+                            <!-- SEARCH -->
+                            {% if cl.search_fields %}
+                                {% block search %}
+                                    <div id="search" class="g-d-6 g-d-f">
+                                        {% search_form cl %}
+                                    </div>
+                                {% endblock %}
+                            {% endif %}
+                            <!-- FILTERS -->
+                            {% if cl.has_filters %}
+                                {% block filters %}
+                                    <div id="grp-filters" class="g-d-6 g-d-l">
+                                        <div class="grp-filter">
+                                            <div class="grp-pulldown-container">
+                                                <a href="javascript://" class="grp-button grp-pulldown-handler">{% trans 'Filter' %}</a>
+                                                <div class="grp-pulldown-content" style="display: none;">
+                                                    {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endblock %}
+                            {% endif %}
+                        </aside>
+                    {% endblock %}
+                {% endif %}
+                {% block pagination_top %}
+                    <div class="c-2">
+                        <!-- PAGINATION TOP -->
+                        {% pagination cl %}
+                    </div>
+                {% endblock %}
+
+            </div>
+        </div>
+        <!-- DATE HIERARCHY -->
+        {% block date_hierarchy %}
+            {% if cl.date_hierarchy %}{% date_hierarchy cl %}{% endif %}
+        {% endblock %}
+    </div>
 
 {% if results %}
     <div class="grp-module grp-changelist-results">
@@ -43,6 +90,14 @@
             </tbody>
         </table>
     </div>
+{% endif %}
+<!-- PAGINATION BOTTOM -->
+{% if not cl.result_count == 0 %}
+    {% block pagination_bottom %}
+        <div class="grp-module">
+            <div class="grp-row">{% pagination cl %}</div>
+        </div>
+    {% endblock %}
 {% endif %}
 
 {% endblock %}

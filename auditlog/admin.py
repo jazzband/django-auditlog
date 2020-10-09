@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import path
 
 from .documents import LogEntry
-from .utils.admin import get_headers, results
+from .utils.admin import get_headers, results, CustomChangeList, CustomPaginator
 
 
 class DummyLogModel(models.Model):
@@ -17,6 +17,8 @@ class DummyLogModel(models.Model):
 class DummyModelAdmin(admin.ModelAdmin):
     list_fields = ['timestamp', 'action', 'actor_email']
 
+    paginator = CustomPaginator
+
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
         return [
@@ -27,16 +29,20 @@ class DummyModelAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         s = LogEntry.search()
         s = s.sort('-timestamp')
-        s = s[1:100]
-        return s.execute()
+        # s = s[1:1000]
+        return s
 
     def list_view(self, request):
+        cl = CustomChangeList(self, request)
+        queryset = self.get_queryset(request)
+        cl.get_results(queryset)
+
         context = {
             'title': 'Log entries', 'opts': self.model._meta,
-            # 'cl': cl,
+            'cl': cl,
             'result_headers': get_headers(self.list_fields),
             'num_sorted_fields': 0,
-            'results': list(results(self.get_queryset(request), self.list_fields, self.model._meta)),
+            'results': list(results(cl.result_list, self.list_fields, self.model._meta)),
         }
 
         return render(request, 'admin/logs_list.html', context=context)
