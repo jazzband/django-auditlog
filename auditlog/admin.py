@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import path
 
-from filters import ActorInputFilter
+from filters import ActorInputFilter, DateTimeFilter
 from .documents import LogEntry
 from .utils.admin import get_headers, results, CustomChangeList, CustomPaginator
 
@@ -17,7 +17,7 @@ class DummyLogModel(models.Model):
 
 class DummyModelAdmin(admin.ModelAdmin):
     list_fields = ['timestamp', 'action', 'object_repr', 'actor']
-    filters = [ActorInputFilter, 'object_repr']
+    filters = [ActorInputFilter, 'object_repr', ('timestamp', DateTimeFilter)]
 
     paginator = CustomPaginator
 

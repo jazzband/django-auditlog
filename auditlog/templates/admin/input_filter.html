@@ -1,4 +1,5 @@
 {% load i18n %}
+
 <div class="grp-module">
     <div class="grp-row">
         {% with choices.0 as all_choice %}
@@ -7,15 +8,18 @@
                 {% for k, v in all_choice.query_parts %}
                     <input type="hidden" name="{{ k }}" value="{{ v }}"/>
                 {% endfor %}
-                <label>{{ title }}</label>
+                <label>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</label>
+                {% if spec.form %}
+                {{ spec.form.as_p }}
+                {% else %}
                 <input type="text"
                        value="{{ spec.value|default_if_none:'' }}"
                        name="{{ spec.parameter_name }}"/>
-
+                {% endif %}
+                <input type="submit" class="grp-button" value="Search"/>
                 {% if not all_choice.selected %}
                     <strong><a href="{{ all_choice.query_string }}">x {% trans 'Remove' %}</a></strong>
                 {% endif %}
-
             </form>
         {% endwith %}
     </div>

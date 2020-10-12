@@ -97,13 +97,14 @@ class CustomChangeList:
                     # SimpleInputFilter class that has been registered for the
                     # type of the given field.
                     field_list_filter_class = SimpleInputFilter
+                    field = list_filter
 
                 spec = field_list_filter_class(
                     self.request,
                     lookup_params,
                     self.model_admin.model,
                     self.model_admin,
-                    list_filter
+                    field
                 )
             if spec and spec.has_output():
                 filter_specs.append(spec)
