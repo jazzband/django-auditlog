@@ -55,3 +55,15 @@ class LogEntry(Document):
     def bulk(client, documents):
         actions = (i.to_dict(True) for i in documents)
         return bulk(client, actions)
+
+    def __str__(self):
+        if self.action == self.Action.CREATE:
+            fstring = "Created {repr:s}"
+        elif self.action == self.Action.UPDATE:
+            fstring = "Updated {repr:s}"
+        elif self.action == self.Action.DELETE:
+            fstring = "Deleted {repr:s}"
+        else:
+            fstring = "Logged {repr:s}"
+
+        return fstring.format(repr=self.object_repr)

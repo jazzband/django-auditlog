@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.html import format_html
 
-from filters import SimpleInputFilter
+from auditlog.filters import SimpleInputFilter
 
 
 def get_headers(fields):
