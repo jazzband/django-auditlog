@@ -2,6 +2,7 @@ import json
 
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
+from auditlog.signals import LogAction, post_log, pre_log
 
 
 def log_create(sender, instance, created, **kwargs):
@@ -11,13 +12,32 @@ def log_create(sender, instance, created, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if created:
-        changes = model_instance_diff(None, instance)
-
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.CREATE,
-            changes=json.dumps(changes),
+        pre_log_results = pre_log.send(
+            sender,
+            instance=instance,
+            action=LogAction.CREATE,
         )
+        error = None
+        try:
+            changes = model_instance_diff(None, instance)
+
+            LogEntry.objects.log_create(
+                instance,
+                action=LogEntry.Action.CREATE,
+                changes=json.dumps(changes),
+            )
+        except Exception as e:
+            error = e
+        finally:
+            post_log.send(
+                sender,
+                instance=instance,
+                action=LogAction.CREATE,
+                error=error,
+                pre_log_results=pre_log_results,
+            )
+            if error:
+                raise error
 
 
 def log_update(sender, instance, **kwargs):
@@ -27,22 +47,42 @@ def log_update(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
+        pre_log_results = pre_log.send(
+            sender,
+            instance=instance,
+            action=LogAction.UPDATE,
+        )
+
+        error = None
         try:
             old = sender.objects.get(pk=instance.pk)
         except sender.DoesNotExist:
             pass
         else:
-            new = instance
+            try:
+                new = instance
 
-            changes = model_instance_diff(old, new)
+                changes = model_instance_diff(old, new)
 
-            # Log an entry only if there are changes
-            if changes:
-                log_entry = LogEntry.objects.log_create(
-                    instance,
-                    action=LogEntry.Action.UPDATE,
-                    changes=json.dumps(changes),
-                )
+                # Log an entry only if there are changes
+                if changes:
+                    LogEntry.objects.log_create(
+                        instance,
+                        action=LogEntry.Action.UPDATE,
+                        changes=json.dumps(changes),
+                    )
+            except Exception as e:
+                error = e
+        finally:
+            post_log.send(
+                sender,
+                instance=instance,
+                action=LogAction.UPDATE,
+                error=error,
+                pre_log_results=pre_log_results,
+            )
+            if error:
+                raise error
 
 
 def log_delete(sender, instance, **kwargs):
@@ -52,10 +92,31 @@ def log_delete(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
-        changes = model_instance_diff(instance, None)
-
-        log_entry = LogEntry.objects.log_create(
-            instance,
-            action=LogEntry.Action.DELETE,
-            changes=json.dumps(changes),
+        pre_log_results = pre_log.send(
+            sender,
+            instance=instance,
+            action=LogAction.DELETE,
         )
+
+        error = None
+        try:
+            changes = model_instance_diff(instance, None)
+
+            LogEntry.objects.log_create(
+                instance,
+                action=LogEntry.Action.DELETE,
+                changes=json.dumps(changes),
+            )
+        except Exception as e:
+            error = e
+        finally:
+            post_log.send(
+                sender,
+                instance=instance,
+                action=LogAction.UPDATE,
+                error=error,
+                pre_log_results=pre_log_results,
+            )
+            if error:
+                raise error
+

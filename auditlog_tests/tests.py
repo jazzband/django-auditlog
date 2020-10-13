@@ -642,3 +642,7 @@ class NoDeleteHistoryTest(TestCase):
             list(entries.values_list('action', flat=True)),
             [LogEntry.Action.CREATE, LogEntry.Action.UPDATE, LogEntry.Action.DELETE]
         )
+
+
+# class CustomSignalTest(TestCase):
+
