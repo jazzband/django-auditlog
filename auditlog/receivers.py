@@ -113,7 +113,7 @@ def log_delete(sender, instance, **kwargs):
             post_log.send(
                 sender,
                 instance=instance,
-                action=LogAction.UPDATE,
+                action=LogAction.DELETE,
                 error=error,
                 pre_log_results=pre_log_results,
             )
