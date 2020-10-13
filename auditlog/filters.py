@@ -87,10 +87,12 @@ class DateTimeFilter(SimpleInputFilter):
         if self.form.is_valid():
             validated_data = dict(self.form.cleaned_data.items())
             if validated_data:
-                return queryset.filter(
-                    'range', **{self.parameter_name: self._make_query_filter(validated_data)}
-                )
-        return queryset
+                query_params = self._make_query_filter(validated_data)
+                if query_params:
+                    return queryset.filter(
+                        'range', **{self.parameter_name: query_params}
+                    )
+        return None
 
     def _get_form_fields(self):
         return OrderedDict(
@@ -189,7 +191,7 @@ class ChangesFilter(SimpleInputFilter):
                         path='changes',
                         query=reduce(lambda a, b: a & b, query_params)
                     )
-        return queryset
+        return None
 
     def _make_query_filter(self, validated_data):
         changes_field = validated_data.get(self.lookup_kwarg_field, None)

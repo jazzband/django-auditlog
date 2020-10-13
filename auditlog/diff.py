@@ -92,7 +92,7 @@ def model_instance_diff(old, new):
     if not (new is None or isinstance(new, Model)):
         raise TypeError("The supplied new instance is not a valid model instance.")
 
-    diff = {}
+    diff = []
 
     if old is not None and new is not None:
         fields = set(old._meta.fields + new._meta.fields)
@@ -109,7 +109,6 @@ def model_instance_diff(old, new):
 
     # Check if fields must be filtered
     if model_fields and (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
-        filtered_fields = []
         if model_fields['include_fields']:
             filtered_fields = [field for field in fields
                                if field.name in model_fields['include_fields']]
@@ -125,7 +124,11 @@ def model_instance_diff(old, new):
         new_value = get_field_value(new, field)
 
         if old_value != new_value:
-            diff[field.name] = (smart_str(old_value), smart_str(new_value))
+            diff.append({
+                'field': field.name,
+                'old': old_value,
+                'new': new_value
+            })
 
     if len(diff) == 0:
         diff = None

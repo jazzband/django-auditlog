@@ -12,17 +12,15 @@ class LogEntryAdminMixin(object):
     def created(self, obj):
         return obj.timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
-    created.short_description = 'Created'
-
     def user(self, obj):
-        if obj.actor_pk:
+        if obj.actor_id:
             app_label, model = settings.AUTH_USER_MODEL.split('.')
             viewname = 'admin:%s_%s_change' % (app_label, model.lower())
             try:
-                link = urlresolvers.reverse(viewname, args=[obj.actor_pk])
+                link = urlresolvers.reverse(viewname, args=[obj.actor_id])
             except NoReverseMatch:
                 return u'%s' % (obj.actor)
-            return format_html(u'<a href="{}">{}</a>', link, obj.actor_pk)
+            return format_html(u'<a href="{}">{}</a>', link, obj.actor_email)
 
         return 'system'
 

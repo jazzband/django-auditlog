@@ -31,7 +31,7 @@ def items_for_result(result, fields, opts):
             first = False
             url = reverse(
                 'admin:%s_%s_change' % (opts.app_label, opts.model_name),
-                args=(result.id,),
+                args=(result.meta.id,),
                 # current_app=self.model_admin.admin_site.name
             )
             link_or_text = format_html(
@@ -129,18 +129,6 @@ class CustomChangeList:
             if new_qs is not None:
                 qs = new_qs
 
-        # # Set ordering.
-        # ordering = self.get_ordering(request, qs)
-        # qs = qs.order_by(*ordering)
-        #
-        # # Apply search results
-        # qs, search_use_distinct = self.model_admin.get_search_results(request, qs, self.query)
-
-        # # Set query string for clearing all filters.
-        # self.clear_all_filters_qs = self.get_query_string(
-        #     new_params=remaining_lookup_params,
-        #     remove=self.get_filters_params(),
-        # )
         return qs
 
     def get_results(self):

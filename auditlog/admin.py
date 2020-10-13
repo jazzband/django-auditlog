@@ -12,7 +12,7 @@ from .mixins import LogEntryAdminMixin
 from .utils.admin import get_headers, results, CustomChangeList, CustomPaginator
 
 
-class DummyLogModel(models.Model):
+class LogModel(models.Model):
     class Meta:
         verbose_name_plural = 'Log Entries'
         app_label = 'auditlog'
@@ -83,4 +83,4 @@ class DummyModelAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         return fields
 
 
-admin.site.register(DummyLogModel, DummyModelAdmin)
+admin.site.register(LogModel, DummyModelAdmin)

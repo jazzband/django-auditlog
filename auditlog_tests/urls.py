@@ -10,4 +10,5 @@ else:
 
 urlpatterns = [
     url(r'^admin/', admin_urls),
+    url(r'^grappelli/', include('grappelli.urls')),
 ]
