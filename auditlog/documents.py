@@ -5,6 +5,9 @@ from elasticsearch_dsl import Document, connections, Keyword, Date, Nested, Inne
 connections.create_connection(hosts=['localhost'])
 
 
+MAX = 75
+
+
 class Change(InnerDoc):
     field = Keyword(required=True)
     old = Text()
@@ -18,6 +21,12 @@ class LogEntry(Document):
         UPDATE = 'update'
         DELETE = 'delete'
 
+        choices = (
+            (CREATE, CREATE),
+            (UPDATE, UPDATE),
+            (DELETE, DELETE)
+        )
+
     action = Keyword(required=True)
 
     content_type_id = Keyword(required=True)
@@ -26,7 +35,7 @@ class LogEntry(Document):
 
     object_id = Keyword(required=True)
     object_pk = Keyword()
-    object_repr = Keyword(required=True)
+    object_repr = Text(required=True)
 
     actor_id = Keyword()
     actor_pk = Keyword()
@@ -50,6 +59,18 @@ class LogEntry(Document):
                 return f'{self.actor_first_name} {self.actor_last_name} ({self.actor_email})'
             return self.actor_email
         return None
+
+    @property
+    def changed_fields(self):
+        if self.action == LogEntry.Action.DELETE:
+            return ''  # delete
+        changes = self.changes
+        s = '' if len(changes) == 1 else 's'
+        fields = ', '.join(change['field'] for change in changes)
+        if len(fields) > MAX:
+            i = fields.rfind(' ', 0, MAX)
+            fields = fields[:i] + ' ..'
+        return '%d change%s: %s' % (len(changes), s, fields)
 
     @staticmethod
     def bulk(client, documents):

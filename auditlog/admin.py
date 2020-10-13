@@ -5,7 +5,8 @@ from django.http import Http404
 from django.shortcuts import render
 from django.urls import path
 
-from auditlog.filters import ActorInputFilter, DateTimeFilter
+from auditlog.filters import ActorInputFilter, DateTimeFilter, ChangesFilter, ActionChoiceFilter, \
+    ContentTypeChoiceFilter
 from .documents import LogEntry
 from .mixins import LogEntryAdminMixin
 from .utils.admin import get_headers, results, CustomChangeList, CustomPaginator
@@ -18,8 +19,9 @@ class DummyLogModel(models.Model):
 
 
 class DummyModelAdmin(admin.ModelAdmin, LogEntryAdminMixin):
-    list_fields = ['timestamp', 'action', 'content_type_model', 'object_repr', 'actor']
-    filters = [ActorInputFilter, 'object_repr', ('timestamp', DateTimeFilter)]
+    list_fields = ['timestamp', 'action', 'content_type_model', 'object_repr', 'actor', 'changed_fields']
+    filters = [ActorInputFilter, 'object_repr', ActionChoiceFilter, ('timestamp', DateTimeFilter),
+               ChangesFilter, ContentTypeChoiceFilter]
     detail_fields = {
         'Details': ('created', 'user', 'resource'),
         'Changes': ('action', 'changes')

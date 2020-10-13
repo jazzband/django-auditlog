@@ -6,8 +6,6 @@ from django.utils.safestring import mark_safe
 
 from auditlog.models import LogEntry
 
-MAX = 75
-
 
 class LogEntryAdminMixin(object):
 
@@ -16,22 +14,20 @@ class LogEntryAdminMixin(object):
 
     created.short_description = 'Created'
 
-    def user_url(self, obj):
-        if obj.actor:
+    def user(self, obj):
+        if obj.actor_pk:
             app_label, model = settings.AUTH_USER_MODEL.split('.')
             viewname = 'admin:%s_%s_change' % (app_label, model.lower())
             try:
-                link = urlresolvers.reverse(viewname, args=[obj.actor.pk])
+                link = urlresolvers.reverse(viewname, args=[obj.actor_pk])
             except NoReverseMatch:
                 return u'%s' % (obj.actor)
-            return format_html(u'<a href="{}">{}</a>', link, obj.actor)
+            return format_html(u'<a href="{}">{}</a>', link, obj.actor_pk)
 
         return 'system'
 
-    user_url.short_description = 'User'
-
-    def resource_url(self, obj):
-        app_label, model = obj.content_type.app_label, obj.content_type.model
+    def resource(self, obj):
+        app_label, model = obj.content_type_app_label, obj.content_type_model
         viewname = 'admin:%s_%s_change' % (app_label, model)
         try:
             args = [obj.object_pk] if obj.object_id is None else [obj.object_id]
@@ -41,32 +37,16 @@ class LogEntryAdminMixin(object):
         else:
             return format_html(u'<a href="{}">{}</a>', link, obj.object_repr)
 
-    resource_url.short_description = 'Resource'
-
-    def msg_short(self, obj):
-        if obj.action == LogEntry.Action.DELETE:
-            return ''  # delete
-        changes = obj.changes
-        s = '' if len(changes) == 1 else 's'
-        fields = ', '.join(changes.keys())
-        if len(fields) > MAX:
-            i = fields.rfind(' ', 0, MAX)
-            fields = fields[:i] + ' ..'
-        return '%d change%s: %s' % (len(changes), s, fields)
-
-    msg_short.short_description = 'Changes'
-
-    def msg(self, obj):
+    def changes(self, obj):
         if obj.action == LogEntry.Action.DELETE or not obj.changes:
             return ''  # delete
         changes = obj.changes
         msg = '<table class="grp-table"><thead><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr></thead>'
-        for i, field in enumerate(sorted(changes), 1):
+        for i, change in enumerate(changes):
             class_ = [f"grp-row grp-row-{'event' if i % 2 else 'odd'}"]
-            value = class_ + [i, field] + (['***', '***'] if field == 'password' else changes[field])
+            value = class_ + [i, change.field] + (['***', '***'] if change.field == 'password'
+                                                  else [change.old, change.new])
             msg += format_html('<tr class="{}"><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>', *value)
 
         msg += '</table>'
         return mark_safe(msg)
-
-    msg.short_description = 'Changes'

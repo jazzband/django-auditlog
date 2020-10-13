@@ -21,7 +21,8 @@ setup(
     install_requires=[
         'django-jsonfield>=1.0.0',
         'python-dateutil>=2.6.0',
-        'elasticsearch-dsl==7.3.0'
+        'elasticsearch-dsl==7.3.0',
+        'django-admin-rangefilter'
     ],
     zip_safe=False,
     classifiers=[
