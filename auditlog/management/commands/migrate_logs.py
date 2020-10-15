@@ -17,7 +17,8 @@ class Command(BaseCommand):
                 content_type_id=entry_db.content_type.pk,
                 content_type_app_label=entry_db.content_type.app_label,
                 content_type_model=entry_db.content_type.model,
-                object_id=entry_db.object_pk,
+                object_id=entry_db.object_id,
+                object_pk=entry_db.object_pk,
                 object_repr=entry_db.object_repr,
                 timestamp=entry_db.timestamp
             )

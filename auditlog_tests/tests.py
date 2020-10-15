@@ -1,25 +1,20 @@
 import datetime
 from unittest import mock
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock
 
-from dateutil.tz import gettz
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db.models.signals import pre_save
 from django.http import HttpResponse
 from django.test import TestCase, RequestFactory
-from django.utils import dateformat, formats, timezone
-from elasticsearch_dsl.connections import add_connection, connections
+from django.utils import timezone
 
-from auditlog.middleware import AuditlogMiddleware
 from auditlog.documents import LogEntry, log_created
+from auditlog.middleware import AuditlogMiddleware
 from auditlog.receivers import log_create, log_update, log_delete
 from auditlog.registry import auditlog
 from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, ManyRelatedModel, \
-    AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
+    DateTimeFieldModel, NoDeleteHistoryModel
 
 
 class BaseTest:

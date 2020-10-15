@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.dispatch import Signal
@@ -57,7 +58,7 @@ class LogEntry(Document):
     changes = Nested(Change)
 
     class Index:
-        name = 'logs-test'
+        name = settings.AUDITLOG_INDEX_NAME
 
     @property
     def actor(self):
