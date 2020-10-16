@@ -1,22 +1,22 @@
 import datetime
-import django
+from unittest.mock import patch
+
+import time
+from dateutil.tz import gettz
 from django.conf import settings
-from django.contrib import auth
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
-from dateutil.tz import gettz
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
-from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
-    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
-    ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
+from auditlog_tests.models import AdditionalDataIncludedModel, AltPrimaryKeyModel, CharfieldTextfieldModel, \
+    ChoicesFieldModel, DateTimeFieldModel, ManyRelatedModel, NoDeleteHistoryModel, PostgresArrayFieldModel, ProxyModel, \
+    SimpleExcludeModel, SimpleIncludeModel, SimpleMappingModel, SimpleModel, UUIDPrimaryKeyModel
 
 
 class SimpleModelTest(TestCase):
@@ -124,21 +124,6 @@ class MiddlewareTest(TestCase):
         self.factory = RequestFactory()
         self.user = User.objects.create_user(username='test', email='test@example.com', password='top_secret')
 
-    def test_request_anonymous(self):
-        """No actor will be logged when a user is not logged in."""
-        # Create a request
-        request = self.factory.get('/')
-        request.user = AnonymousUser()
-
-        # Run middleware
-        self.middleware.process_request(request)
-
-        # Validate result
-        self.assertFalse(pre_save.has_listeners(LogEntry))
-
-        # Finalize transaction
-        self.middleware.process_exception(request, None)
-
     def test_request(self):
         """The actor will be logged when a user is logged in."""
         # Create a request
@@ -149,6 +134,28 @@ class MiddlewareTest(TestCase):
 
         # Validate result
         self.assertTrue(pre_save.has_listeners(LogEntry))
+
+        # Finalize transaction
+        self.middleware.process_exception(request, None)
+
+    def test_request_anonymous(self):
+        """No actor will be logged when a user is not logged in, but a remote address will be logged"""
+        # Create a request
+        test_remote_addr = "123.213.145.99"
+        request = self.factory.get('/', HTTP_X_FORWARDED_FOR=test_remote_addr)
+        request.user = AnonymousUser()
+
+        # Run middleware
+        self.middleware.process_request(request)
+
+        # Validate result
+        self.assertTrue(pre_save.has_listeners(LogEntry))
+
+        obj = SimpleModel.objects.create(text='I am not difficult.')
+
+        history = obj.history.get()
+        self.assertEqual(history.remote_addr, test_remote_addr, msg="Remote address is {}".format(test_remote_addr))
+        self.assertIsNotNone(history.actor, msg="Actor is `None` for anonymous user")
 
         # Finalize transaction
         self.middleware.process_exception(request, None)
@@ -180,6 +187,36 @@ class MiddlewareTest(TestCase):
 
         # Validate result
         self.assertFalse(pre_save.has_listeners(LogEntry))
+
+    @patch("auditlog.middleware.time", spec=time)
+    def test_set_actor_authd_user_after_middleware(self, time_mock):
+        """
+        Test that actor is set on LogEntry instance, even if the user was not authenticated when running
+        the middleware
+        """
+        test_remote_addr = "123.213.145.99"
+        request = self.factory.get('/', HTTP_X_FORWARDED_FOR=test_remote_addr)
+        request.user = AnonymousUser()
+
+        # Freeze time so we can know `duid`
+        frozen_time = time.time()
+        time_mock.time.return_value = frozen_time
+
+        # Run middleware
+        self.middleware.process_request(request)
+
+        # Call `set_actor` directly with a different user. Some frameworks like
+        # Django Rest Framework do some crazy things to be able to change the user, as it's
+        # a lazy field
+        instance = LogEntry()
+        AuditlogMiddleware.set_actor(self.user, LogEntry, instance, (self.middleware.__class__, frozen_time))
+
+        # Validate result
+        self.assertEqual(instance.actor, self.user, "User set as actor")
+        self.assertEqual(instance.remote_addr, test_remote_addr, "Remote address set from request")
+
+        # Finalize transaction
+        self.middleware.process_response(request, None)
 
 
 class SimpeIncludeModelTest(TestCase):
