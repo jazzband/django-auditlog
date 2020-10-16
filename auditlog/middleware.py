@@ -34,7 +34,7 @@ class AuditlogMiddleware(MiddlewareMixin):
             threadlocal.auditlog['remote_addr'] = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
 
         # Connect signal for automatic logging
-        if hasattr(request, 'user') and getattr(request.user, 'is_authenticated', False):
+        if hasattr(request, 'user'):
             set_actor = partial(self.set_actor, user=request.user, signal_duid=threadlocal.auditlog['signal_duid'])
             pre_save.connect(set_actor, sender=LogEntry, dispatch_uid=threadlocal.auditlog['signal_duid'], weak=False)
 
@@ -70,7 +70,12 @@ class AuditlogMiddleware(MiddlewareMixin):
                 auth_user_model = apps.get_model(app_label, model_name)
             except ValueError:
                 auth_user_model = apps.get_model('auth', 'user')
-            if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
+            if (
+                sender == LogEntry
+                and getattr(user, 'is_authenticated', False)
+                and isinstance(user, auth_user_model)
+                and instance.actor is None
+            ):
                 instance.actor = user
 
             instance.remote_addr = threadlocal.auditlog['remote_addr']
