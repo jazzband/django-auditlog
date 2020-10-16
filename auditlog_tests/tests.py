@@ -155,7 +155,7 @@ class MiddlewareTest(TestCase):
 
         history = obj.history.get()
         self.assertEqual(history.remote_addr, test_remote_addr, msg="Remote address is {}".format(test_remote_addr))
-        self.assertIsNotNone(history.actor, msg="Actor is `None` for anonymous user")
+        self.assertIsNone(history.actor, msg="Actor is `None` for anonymous user")
 
         # Finalize transaction
         self.middleware.process_exception(request, None)
