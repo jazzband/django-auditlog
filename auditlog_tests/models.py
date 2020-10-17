@@ -212,6 +212,11 @@ class NoDeleteHistoryModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class FKOnlyFieldTestModel(models.Model):
+    text = models.CharField(max_length=50)
+    related_model = models.ForeignKey(SimpleModel, on_delete=models.CASCADE)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -226,3 +231,7 @@ auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
+auditlog.register(FKOnlyFieldTestModel,
+                  fk_only_fields=['related_model'],
+                  mapping_fields={'related_model': 'related_model_pk'},
+                  )

@@ -1,8 +1,19 @@
+from collections import namedtuple
+from typing import Optional
+
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Model, NOT_PROVIDED, DateTimeField
+from django.db.models import DateTimeField, Model, NOT_PROVIDED
 from django.utils import timezone
 from django.utils.encoding import smart_text
+
+ImplicitField = namedtuple("Field", "name")
+"""
+We use this to imitate a :class:`~django.db.models.Field` object, to make a diff of implicit fields
+not explicitly defined. For example, if you had a relationship called
+``my_rel``, you may want to only diff ``my_rel_id``, so you don't
+have to pull every relation. This can have a significant performance impact.
+"""
 
 
 def track_field(field):
@@ -72,15 +83,13 @@ def get_field_value(obj, field):
     return value
 
 
-def model_instance_diff(old, new):
+def model_instance_diff(old: Optional[Model], new: Optional[Model]):
     """
     Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
     created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
 
     :param old: The old state of the model instance.
-    :type old: Model
     :param new: The new state of the model instance.
-    :type new: Model
     :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
              as value.
     :rtype: dict
@@ -95,7 +104,7 @@ def model_instance_diff(old, new):
     diff = {}
 
     if old is not None and new is not None:
-        fields = set(old._meta.fields + new._meta.fields)
+        fields = set(get_fields_in_model(old) + get_fields_in_model(new))
         model_fields = auditlog.get_model_fields(new._meta.model)
     elif old is not None:
         fields = set(get_fields_in_model(old))
@@ -109,7 +118,6 @@ def model_instance_diff(old, new):
 
     # Check if fields must be filtered
     if model_fields and (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
-        filtered_fields = []
         if model_fields['include_fields']:
             filtered_fields = [field for field in fields
                                if field.name in model_fields['include_fields']]
@@ -120,11 +128,17 @@ def model_instance_diff(old, new):
                                if field.name not in model_fields['exclude_fields']]
         fields = filtered_fields
 
+    fk_only_fields = set(model_fields['fk_only_fields'])
     for field in fields:
-        old_value = get_field_value(old, field)
-        new_value = get_field_value(new, field)
+        if field.name in fk_only_fields:
+            my_field = ImplicitField(field.column)
+        else:
+            my_field = field
+        old_value = get_field_value(old, my_field)
+        new_value = get_field_value(new, my_field)
 
         if old_value != new_value:
+            # Use original field name, even for `fk_only_fields`
             diff[field.name] = (smart_text(old_value), smart_text(new_value))
 
     if len(diff) == 0:

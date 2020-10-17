@@ -30,7 +30,8 @@ class AuditlogModelRegistry(object):
             self._signals.update(custom)
 
     def register(self, model: ModelBase = None, include_fields: Optional[List[str]] = None,
-                 exclude_fields: Optional[List[str]] = None, mapping_fields: Optional[Dict[str, str]] = None):
+                 exclude_fields: Optional[List[str]] = None, mapping_fields: Optional[Dict[str, str]] = None,
+                 fk_only_fields: Optional[List[str]] = None):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
@@ -38,7 +39,7 @@ class AuditlogModelRegistry(object):
         :param include_fields: The fields to include. Implicitly excludes all other fields.
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
         :param mapping_fields: Mapping from field names to strings in diff.
-
+        :param fk_only_fields: Only record the FK value for these relational fields.
         """
 
         if include_fields is None:
@@ -47,6 +48,8 @@ class AuditlogModelRegistry(object):
             exclude_fields = []
         if mapping_fields is None:
             mapping_fields = {}
+        if fk_only_fields is None:
+            fk_only_fields = []
 
         def registrar(cls):
             """Register models for a given class."""
@@ -57,6 +60,7 @@ class AuditlogModelRegistry(object):
                 'include_fields': include_fields,
                 'exclude_fields': exclude_fields,
                 'mapping_fields': mapping_fields,
+                'fk_only_fields': fk_only_fields,
             }
             self._connect_signals(cls)
 
@@ -104,6 +108,7 @@ class AuditlogModelRegistry(object):
             'include_fields': list(self._registry[model]['include_fields']),
             'exclude_fields': list(self._registry[model]['exclude_fields']),
             'mapping_fields': dict(self._registry[model]['mapping_fields']),
+            'fk_only_fields': list(self._registry[model]['fk_only_fields']),
         }
 
     def _connect_signals(self, model):
