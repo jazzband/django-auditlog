@@ -32,7 +32,8 @@ It is recommended to place the register code (``auditlog.register(MyModel)``) at
 This ensures that every time your model is imported it will also be registered to log changes. Auditlog makes sure that
 each model is only registered once, otherwise duplicate log entries would occur.
 
-**Excluding fields**
+Excluding fields
+````````````````
 
 Fields that are excluded will not trigger saving a new log entry and will not show up in the recorded changes.
 
@@ -50,7 +51,33 @@ For example, to exclude the field ``last_updated``, use::
 
     Excluding fields
 
-**Mapping fields**
+Foreign Key Only Fields
+```````````````````````
+
+If your models have many relations, performance may be slow if following all relations to build the changes
+between actions for logging. Primary key only fields will only have their primary key logged in changes,
+instead of the entire related model. To designate fields as primary key only fields, pass as list of strings
+as ``fk_only_fields`` to the ``register()`` call.
+
+.. code-block:: python
+
+    class MyModel(modelsModel):
+        sku = models.CharField(max_length=20)
+        version = models.CharField(max_length=5)
+        product = models.CharField(max_length=50, verbose_name='Product Name')
+        other_model = models.ForeignKey("MyOtherModel", related_name="+", on_delete=models.PROTECT)
+
+    auditlog.register(MyModel, fk_only_fields=["other_model"])
+
+There is no validation done on ``register()``. If the field is not included in the :class:`LogEntry`'s
+diff, including it in ``fk_only_fields`` has no effect.
+
+.. versionadded:: 1.0
+
+    Primary key only fields
+
+Mapping fields
+``````````````
 
 If you have field names on your models that aren't intuitive or user friendly you can include a dictionary of field mappings
 during the `register()` call.

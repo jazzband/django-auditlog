@@ -1,22 +1,22 @@
 import datetime
-import django
+
+from dateutil.tz import gettz
 from django.conf import settings
-from django.contrib import auth
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
-from dateutil.tz import gettz
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
-from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKeyModel, \
-    ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
-    ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
-    CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
+from auditlog_tests.models import AdditionalDataIncludedModel, AltPrimaryKeyModel, CharfieldTextfieldModel, \
+    ChoicesFieldModel, DateTimeFieldModel, FKOnlyFieldTestModel, ManyRelatedModel, NoDeleteHistoryModel, \
+    PostgresArrayFieldModel, ProxyModel, SimpleExcludeModel, SimpleIncludeModel, SimpleMappingModel, SimpleModel, \
+    UUIDPrimaryKeyModel
 
 
 class SimpleModelTest(TestCase):
@@ -642,3 +642,36 @@ class NoDeleteHistoryTest(TestCase):
             list(entries.values_list('action', flat=True)),
             [LogEntry.Action.CREATE, LogEntry.Action.UPDATE, LogEntry.Action.DELETE]
         )
+
+
+class ForeignKeyOnlyFieldTest(TestCase):
+    def test_fk_only_field(self):
+        first_related_model = SimpleModel.objects.create(text="world")
+        second_related_model = SimpleModel.objects.create(text="goodbye")
+        instance = FKOnlyFieldTestModel.objects.create(
+            text="hello",
+            related_model=first_related_model,
+        )
+        instance.related_model = second_related_model
+        instance.save()
+        instance.delete()
+
+        fk_only_log_entries = LogEntry.objects.filter(
+            content_type=ContentType.objects.get(app_label="auditlog_tests", model="fkonlyfieldtestmodel")
+        ).order_by("pk")
+
+        assert len(fk_only_log_entries) == 3
+        created_log = fk_only_log_entries[0]
+        updated_log = fk_only_log_entries[1]
+        deleted_log = fk_only_log_entries[2]
+
+        expected_create_change = [str(None), str(first_related_model.pk)]
+        expected_update_change = [str(first_related_model.pk), str(second_related_model.pk)]
+        expected_delete_change = [str(second_related_model.pk), str(None)]
+
+        self.assertEquals(created_log.changes_dict["related_model"], expected_create_change)
+        self.assertEquals(created_log.changes_display_dict["related_model_pk"], expected_create_change)
+        self.assertEquals(updated_log.changes_dict["related_model"], expected_update_change)
+        self.assertEquals(updated_log.changes_display_dict["related_model_pk"], expected_update_change)
+        self.assertEquals(deleted_log.changes_dict["related_model"], expected_delete_change)
+        self.assertEquals(deleted_log.changes_display_dict["related_model_pk"], expected_delete_change)
