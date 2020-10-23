@@ -25,6 +25,22 @@ Signal receivers
 .. automodule:: auditlog.receivers
     :members:
 
+Custom Signals
+--------------
+Django Auditlog provides two custom signals that will hook in before
+and after any Auditlog record is written from a ``create``, ``update``,
+or ``delete`` action on an audited model.
+
+.. autoclass:: auditlog.signals.LogAction
+    :members:
+    :undoc-members:
+    :member-order: bysource
+
+.. automodule:: auditlog.signals
+    :members:
+    :exclude-members: LogAction
+    :member-order: bysource
+
 Calculating changes
 -------------------
 
