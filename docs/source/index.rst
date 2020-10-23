@@ -36,5 +36,5 @@ Contribute to Auditlog
 If you discovered a bug or want to improve the code, please submit an issue and/or pull request via GitHub.
 Before submitting a new issue, please make sure there is no issue submitted that involves the same problem.
 
-| GitHub repository: https://github.com/jjkester/django-auditlog
-| Issues: https://github.com/jjkester/django-auditlog/issues
+| GitHub repository: https://github.com/jazzband/django-auditlog
+| Issues: https://github.com/jazzband/django-auditlog/issues

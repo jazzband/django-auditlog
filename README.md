@@ -1,7 +1,8 @@
 django-auditlog
 ===============
 
-[![Build Status](https://travis-ci.org/jjkester/django-auditlog.svg?branch=master)](https://travis-ci.org/jjkester/django-auditlog)
+[![Jazzband](https://jazzband.co/static/img/badge.svg)](https://jazzband.co/)
+[![Build Status](https://travis-ci.org/jazzband/django-auditlog.svg?branch=master)](https://travis-ci.org/jazzband/django-auditlog)
 [![Docs](https://readthedocs.org/projects/django-auditlog/badge/?version=latest)](http://django-auditlog.readthedocs.org/en/latest/?badge=latest)
 
 **Please remember that this app is still in development.**
