@@ -12,7 +12,7 @@ setup(
     name='django-auditlog',
     version=auditlog.__version__,
     packages=['auditlog', 'auditlog.migrations', 'auditlog.management', 'auditlog.management.commands'],
-    url='https://github.com/jjkester/django-auditlog',
+    url='https://github.com/jazzband/django-auditlog',
     license='MIT',
     author='Jan-Jelle Kester',
     description='Audit log app for Django',
@@ -24,8 +24,6 @@ setup(
     ],
     zip_safe=False,
     classifiers=[
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',

@@ -42,7 +42,7 @@ deploy:
   provider: pypi
   # PyPI credentials supplied with environment variables from repository settings
   on:
-    repo: jjkester/django-auditlog
+    repo: jazzband/django-auditlog
     branch: stable
     condition: $TOXENV = py38-django-30
   edge: true
