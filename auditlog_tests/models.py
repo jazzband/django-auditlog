@@ -85,7 +85,7 @@ class SimpleIncludeModel(models.Model):
     A simple model used for register's include_fields kwarg
     """
 
-    label = models.CharField(max_length=100)
+    label = models.CharField(null=True, max_length=100)
     text = models.TextField(blank=True)
 
     history = AuditlogHistoryField()
