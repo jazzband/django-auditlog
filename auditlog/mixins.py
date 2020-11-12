@@ -1,17 +1,13 @@
 import json
 
+from django import urls as urlresolvers
 from django.conf import settings
-try:
-    from django.core import urlresolvers
-except ImportError:
-    from django import urls as urlresolvers
-try:
-    from django.urls.exceptions import NoReverseMatch
-except ImportError:
-    from django.core.urlresolvers import NoReverseMatch
+from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.timezone import localtime
+
+from auditlog.models import LogEntry
 
 MAX = 75
 
@@ -20,6 +16,7 @@ class LogEntryAdminMixin(object):
 
     def created(self, obj):
         return localtime(obj.timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
     created.short_description = 'Created'
 
     def user_url(self, obj):
@@ -33,6 +30,7 @@ class LogEntryAdminMixin(object):
             return format_html(u'<a href="{}">{}</a>', link, obj.actor)
 
         return 'system'
+
     user_url.short_description = 'User'
 
     def resource_url(self, obj):
@@ -45,10 +43,11 @@ class LogEntryAdminMixin(object):
             return obj.object_repr
         else:
             return format_html(u'<a href="{}">{}</a>', link, obj.object_repr)
+
     resource_url.short_description = 'Resource'
 
     def msg_short(self, obj):
-        if obj.action == 2:
+        if obj.action == LogEntry.Action.DELETE:
             return ''  # delete
         changes = json.loads(obj.changes)
         s = '' if len(changes) == 1 else 's'
@@ -57,10 +56,11 @@ class LogEntryAdminMixin(object):
             i = fields.rfind(' ', 0, MAX)
             fields = fields[:i] + ' ..'
         return '%d change%s: %s' % (len(changes), s, fields)
+
     msg_short.short_description = 'Changes'
 
     def msg(self, obj):
-        if obj.action == 2:
+        if obj.action == LogEntry.Action.DELETE:
             return ''  # delete
         changes = json.loads(obj.changes)
         msg = '<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>'
@@ -70,4 +70,5 @@ class LogEntryAdminMixin(object):
 
         msg += '</table>'
         return mark_safe(msg)
+
     msg.short_description = 'Changes'
