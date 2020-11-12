@@ -257,7 +257,7 @@ class LogEntry(models.Model):
             choices_dict = None
             if getattr(field, 'choices', []):
                 choices_dict = dict(field.choices)
-            if hasattr(field, 'base_field') and getattr(field.base_field, 'choices', False):
+            if getattr(getattr(field, 'base_field', None), 'choices', []):
                 choices_dict = dict(field.base_field.choices)
 
             if choices_dict:
