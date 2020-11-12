@@ -191,8 +191,8 @@ Management commands
 
 Auditlog provides the ``auditlogflush`` management command to clear all log entries from the database.
 
-The command asks for confirmation, it is not possible to execute the command without giving any form of (simulated) user
-input.
+By default, the command asks for confirmation. It is possible to run the command with the `-y` or `--yes` flag to skip
+confirmation and immediately delete all entries.
 
 .. warning::
 
