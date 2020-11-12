@@ -27,11 +27,11 @@ MIDDLEWARE = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'auditlog' + os.environ.get("TOX_PARALLEL_ENV", ""),
-        'USER': 'postgres',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': os.getenv('TEST_DB_NAME', 'auditlog' + os.environ.get("TOX_PARALLEL_ENV", "")),
+        'USER': os.getenv('TEST_DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('TEST_DB_PASS', ''),
+        'HOST': os.getenv('TEST_DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('TEST_DB_PORT', '5432'),
     }
 }
 
