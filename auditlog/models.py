@@ -1,6 +1,8 @@
-import json
 import ast
+import json
 
+from dateutil import parser
+from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
@@ -10,10 +12,7 @@ from django.db.models import QuerySet, Q
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
-
 from jsonfield.fields import JSONField
-from dateutil import parser
-from dateutil.tz import gettz
 
 
 class LogEntryManager(models.Manager):
@@ -210,7 +209,7 @@ class LogEntry(models.Model):
             return {}
 
     @property
-    def changes_str(self, colon=': ', arrow=smart_str(' \u2192 '), separator='; '):
+    def changes_str(self, colon=': ', arrow=' \u2192 ', separator='; '):
         """
         Return the changes recorded in this log entry as a string. The formatting of the string can be customized by
         setting alternate values for colon, arrow and separator. If the formatting is still not satisfying, please use
@@ -224,7 +223,7 @@ class LogEntry(models.Model):
         substrings = []
 
         for field, values in self.changes_dict.items():
-            substring = smart_str('{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}').format(
+            substring = '{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}'.format(
                 field_name=field,
                 colon=colon,
                 old=values[0],
@@ -352,6 +351,7 @@ class AuditlogHistoryField(GenericRelation):
 # South compatibility for AuditlogHistoryField
 try:
     from south.modelsinspector import add_introspection_rules
+
     add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
     raise DeprecationWarning("South support will be dropped in django-auditlog 0.4.0 or later.")
 except ImportError:
