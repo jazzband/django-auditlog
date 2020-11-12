@@ -48,7 +48,7 @@ matrix:
 
   fast_finish: true
 
-install: pip install -r requirements-travis.txt
+install: pip install -r requirements.txt
 
 script: tox
 

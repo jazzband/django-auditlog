@@ -1,4 +1,0 @@
-coverage>=4.3.4
-django-multiselectfield>=0.1.12
-psycopg2-binary
-mock

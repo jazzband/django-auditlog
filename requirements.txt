@@ -1,0 +1,15 @@
+# Build requirements
+setuptools
+wheel
+
+# Docs requirements
+sphinx
+sphinx_rtd_theme
+
+# Test requirements
+coverage>=4.3.4
+tox>=1.7.0
+codecov>=2.0.0
+django-multiselectfield>=0.1.12
+mock
+psycopg2-binary
