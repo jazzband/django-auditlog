@@ -10,6 +10,22 @@ from django.db.models.functions import Concat, Cast
 from auditlog.registry import auditlog
 
 
+class ShortActorFilter(SimpleListFilter):
+    title = 'Actor'
+    parameter_name = 'actor'
+
+    def lookups(self, request, model_admin):
+        return [("null", "System"), ("not_null", "Users")]
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value is None:
+            return queryset
+        if value == "null":
+            return queryset.filter(actor__isnull=True)
+        return queryset.filter(actor__isnull=False)
+
+
 class ResourceTypeFilter(SimpleListFilter):
     title = 'Resource Type'
     parameter_name = 'resource_type'
