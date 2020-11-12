@@ -116,10 +116,4 @@ class AuditlogModelRegistry(object):
         return list(self._registry.keys())
 
 
-class AuditLogModelRegistry(AuditlogModelRegistry):
-    def __init__(self, *args, **kwargs):
-        super(AuditLogModelRegistry, self).__init__(*args, **kwargs)
-        raise DeprecationWarning("Use AuditlogModelRegistry instead of AuditLogModelRegistry, AuditLogModelRegistry will be removed in django-auditlog 0.4.0 or later.")
-
-
 auditlog = AuditlogModelRegistry()
