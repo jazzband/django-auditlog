@@ -73,7 +73,7 @@ class FieldFilter(SimpleListFilter):
             return []
         if not self.target_model:
             return []
-        return [(field.name, field.name) for field in self.target_model._meta.fields]
+        return sorted((field.name, field.name) for field in self.target_model._meta.fields)
 
     def queryset(self, request, queryset):
         if self.value() is None:
