@@ -259,6 +259,7 @@ class AdditionalDataModelTest(TestCase):
         log_entry = obj_with_additional_data.history.get()
         self.assertIsNotNone(log_entry.additional_data)
         extra_data = log_entry.additional_data
+        print(type(extra_data), extra_data)
         self.assertTrue(extra_data['related_model_text'] == related_model.text,
                         msg="Related model's text is logged")
         self.assertTrue(extra_data['related_model_id'] == related_model.id,

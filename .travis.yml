@@ -1,48 +1,38 @@
-# Config file for automatic testing at travis-ci.org
-
 dist: xenial
 sudo: required
 language: python
 services:
-  - postgresql
-
+- postgresql
 addons:
-  postgresql: "10"
-
-matrix:
+  postgresql: '10'
+cache:
+  pip: true
+python:
+  - 3.5
+  - 3.6
+  - 3.7
+  - 3.8
+jobs:
   include:
-    - python: 3.5
-      env: TOXENV=py35-django-22
-
-    - python: 3.6
-      env: TOXENV=py36-django-22
-    - python: 3.6
-      env: TOXENV=py36-django-30
-
-    - python: 3.7
-      env: TOXENV=py37-django-22
-    - python: 3.7
-      env: TOXENV=py37-django-30
-
-    - python: 3.8
-      env: TOXENV=py38-django-22
-    - python: 3.8
-      env: TOXENV=py38-django-30
-
+  - stage: deploy
+    if: tag IS present
+    python: 3.8
+    script: skip
+    deploy:
+      provider: pypi
+      user: jazzband
+      server: https://jazzband.co/projects/django-auditlog/upload
+      distributions: sdist bdist_wheel
+      password:
+        secure: AD22a73v//OXpP8WgFscTQHQxpNE5Rup9+NhoxNRNYXszc+g9Z9yNO5cokPHD0HUL7pma/V31xK1tavFO7jHfvidcnx8mNwezoW7lQctNErxhtuAUN59654IaTPmTOU6vvdslmtNT1W/M/LDsp5hWyzaCbTNbl5Ag4+spUpSCq8=
+      skip_existing: true
+      on:
+        tags: true
+        repo: jazzband/django-auditlog
   fast_finish: true
-
-install: pip install -r requirements.txt
-
-script: tox
-
+install:
+  - travis_retry pip install -U pip
+  - travis_retry pip install tox-travis codecov
+script: tox -v
 after_success:
-  - codecov -e TOX_ENV
-
-deploy:
-  provider: pypi
-  # PyPI credentials supplied with environment variables from repository settings
-  on:
-    repo: jazzband/django-auditlog
-    branch: stable
-    condition: $TOXENV = py38-django-30
-  edge: true
+- codecov

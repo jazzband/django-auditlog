@@ -1,0 +1,4 @@
+# Docs requirements
+sphinx
+sphinx_rtd_theme
+psycopg2-binary
