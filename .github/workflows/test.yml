@@ -14,12 +14,11 @@ jobs:
       postgres:
         image: postgres:10
         env:
-          POSTGRES_HOST: postgres
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: postgres
         ports:
-        - 5432:5432
+        - 5432/tcp
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -57,10 +56,11 @@ jobs:
       run: |
         tox -v
       env:
-        # use postgres for the host here because we have specified a container for the job.
-        # If we were running the job on the VM this would be localhost
-        POSTGRES_HOST: postgres
-        POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+        TEST_DB_HOST: localhost
+        TEST_DB_USER: postgres
+        TEST_DB_PASS: postgres
+        TEST_DB_NAME: postgres
+        TEST_DB_PORT: ${{ job.services.postgres.ports[5432] }}
 
     - name: Upload coverage
       uses: codecov/codecov-action@v1
