@@ -259,7 +259,7 @@ class AdditionalDataModelTest(TestCase):
                         msg="There is 1 log entry")
         log_entry = obj_with_additional_data.history.get()
         # FIXME: Work-around for the fact that additional_data isn't working
-        # on Djang 3.1 correct (see https://github.com/jazzband/django-auditlog/issues/266)
+        # on Django 3.1 correctly (see https://github.com/jazzband/django-auditlog/issues/266)
         if django.VERSION >= (3, 1):
             extra_data = json.loads(log_entry.additional_data)
         else:
