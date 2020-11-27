@@ -258,7 +258,7 @@ class LogEntry(models.Model):
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
             choices_dict = None
-            if getattr(field, 'choices') and len(field.choices) > 0:
+            if getattr(field, 'choices', None) and len(field.choices) > 0:
                 choices_dict = dict(field.choices)
             if hasattr(field, 'base_field') and isinstance(field.base_field, Field) and getattr(field.base_field, 'choices') and len(field.base_field.choices) > 0:
                 choices_dict = dict(field.base_field.choices)
