@@ -1,8 +1,8 @@
 from django.contrib import admin
 
-from .filters import ResourceTypeFilter
-from .mixins import LogEntryAdminMixin
-from .models import LogEntry
+from auditlog.filters import ResourceTypeFilter
+from auditlog.mixins import LogEntryAdminMixin
+from auditlog.models import LogEntry
 
 
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
