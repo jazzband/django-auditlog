@@ -7,8 +7,8 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
-from django.db import models, DEFAULT_DB_ALIAS
-from django.db.models import QuerySet, Q, Field
+from django.db import DEFAULT_DB_ALIAS, models
+from django.db.models import Field, Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import ugettext_lazy as _
