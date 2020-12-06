@@ -12,8 +12,13 @@ class AuditlogModelRegistry(object):
     A registry that keeps track of the models that use Auditlog to track changes.
     """
 
-    def __init__(self, create: bool = True, update: bool = True, delete: bool = True,
-                 custom: Optional[Dict[ModelSignal, Callable]] = None):
+    def __init__(
+        self,
+        create: bool = True,
+        update: bool = True,
+        delete: bool = True,
+        custom: Optional[Dict[ModelSignal, Callable]] = None,
+    ):
         from auditlog.receivers import log_create, log_update, log_delete
 
         self._registry = {}
@@ -29,8 +34,13 @@ class AuditlogModelRegistry(object):
         if custom is not None:
             self._signals.update(custom)
 
-    def register(self, model: ModelBase = None, include_fields: Optional[List[str]] = None,
-                 exclude_fields: Optional[List[str]] = None, mapping_fields: Optional[Dict[str, str]] = None):
+    def register(
+        self,
+        model: ModelBase = None,
+        include_fields: Optional[List[str]] = None,
+        exclude_fields: Optional[List[str]] = None,
+        mapping_fields: Optional[Dict[str, str]] = None,
+    ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
 
@@ -54,9 +64,9 @@ class AuditlogModelRegistry(object):
                 raise TypeError("Supplied model is not a valid model.")
 
             self._registry[cls] = {
-                'include_fields': include_fields,
-                'exclude_fields': exclude_fields,
-                'mapping_fields': mapping_fields,
+                "include_fields": include_fields,
+                "exclude_fields": exclude_fields,
+                "mapping_fields": mapping_fields,
             }
             self._connect_signals(cls)
 
@@ -101,9 +111,9 @@ class AuditlogModelRegistry(object):
 
     def get_model_fields(self, model: ModelBase):
         return {
-            'include_fields': list(self._registry[model]['include_fields']),
-            'exclude_fields': list(self._registry[model]['exclude_fields']),
-            'mapping_fields': dict(self._registry[model]['mapping_fields']),
+            "include_fields": list(self._registry[model]["include_fields"]),
+            "exclude_fields": list(self._registry[model]["exclude_fields"]),
+            "mapping_fields": dict(self._registry[model]["mapping_fields"]),
         }
 
     def _connect_signals(self, model):
@@ -112,14 +122,18 @@ class AuditlogModelRegistry(object):
         """
         for signal in self._signals:
             receiver = self._signals[signal]
-            signal.connect(receiver, sender=model, dispatch_uid=self._dispatch_uid(signal, model))
+            signal.connect(
+                receiver, sender=model, dispatch_uid=self._dispatch_uid(signal, model)
+            )
 
     def _disconnect_signals(self, model):
         """
         Disconnect signals for the model.
         """
         for signal, receiver in self._signals.items():
-            signal.disconnect(sender=model, dispatch_uid=self._dispatch_uid(signal, model))
+            signal.disconnect(
+                sender=model, dispatch_uid=self._dispatch_uid(signal, model)
+            )
 
     def _dispatch_uid(self, signal, model) -> DispatchUID:
         """

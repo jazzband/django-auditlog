@@ -1,1 +1,1 @@
-default_app_config = 'auditlog_tests.apps.AuditlogTestConfig'
+default_app_config = "auditlog_tests.apps.AuditlogTestConfig"

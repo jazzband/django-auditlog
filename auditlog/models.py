@@ -31,33 +31,49 @@ class LogEntryManager(models.Manager):
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
         """
-        changes = kwargs.get('changes', None)
+        changes = kwargs.get("changes", None)
         pk = self._get_pk_value(instance)
 
         if changes is not None:
-            kwargs.setdefault('content_type', ContentType.objects.get_for_model(instance))
-            kwargs.setdefault('object_pk', pk)
-            kwargs.setdefault('object_repr', smart_str(instance))
+            kwargs.setdefault(
+                "content_type", ContentType.objects.get_for_model(instance)
+            )
+            kwargs.setdefault("object_pk", pk)
+            kwargs.setdefault("object_repr", smart_str(instance))
 
             if isinstance(pk, int):
-                kwargs.setdefault('object_id', pk)
+                kwargs.setdefault("object_id", pk)
 
-            get_additional_data = getattr(instance, 'get_additional_data', None)
+            get_additional_data = getattr(instance, "get_additional_data", None)
             if callable(get_additional_data):
-                kwargs.setdefault('additional_data', get_additional_data())
+                kwargs.setdefault("additional_data", get_additional_data())
 
             # Delete log entries with the same pk as a newly created model. This should only be necessary when an pk is
             # used twice.
-            if kwargs.get('action', None) is LogEntry.Action.CREATE:
-                if kwargs.get('object_id', None) is not None and self.filter(content_type=kwargs.get('content_type'),
-                                                                             object_id=kwargs.get(
-                                                                                     'object_id')).exists():
-                    self.filter(content_type=kwargs.get('content_type'), object_id=kwargs.get('object_id')).delete()
+            if kwargs.get("action", None) is LogEntry.Action.CREATE:
+                if (
+                    kwargs.get("object_id", None) is not None
+                    and self.filter(
+                        content_type=kwargs.get("content_type"),
+                        object_id=kwargs.get("object_id"),
+                    ).exists()
+                ):
+                    self.filter(
+                        content_type=kwargs.get("content_type"),
+                        object_id=kwargs.get("object_id"),
+                    ).delete()
                 else:
-                    self.filter(content_type=kwargs.get('content_type'), object_pk=kwargs.get('object_pk', '')).delete()
+                    self.filter(
+                        content_type=kwargs.get("content_type"),
+                        object_pk=kwargs.get("object_pk", ""),
+                    ).delete()
             # save LogEntry to same database instance is using
             db = instance._state.db
-            return self.create(**kwargs) if db is None or db == '' else self.using(db).create(**kwargs)
+            return (
+                self.create(**kwargs)
+                if db is None or db == ""
+                else self.using(db).create(**kwargs)
+            )
         return None
 
     def get_for_object(self, instance):
@@ -94,15 +110,29 @@ class LogEntryManager(models.Manager):
             return self.none()
 
         content_type = ContentType.objects.get_for_model(queryset.model)
-        primary_keys = list(queryset.values_list(queryset.model._meta.pk.name, flat=True))
+        primary_keys = list(
+            queryset.values_list(queryset.model._meta.pk.name, flat=True)
+        )
 
         if isinstance(primary_keys[0], int):
-            return self.filter(content_type=content_type).filter(Q(object_id__in=primary_keys)).distinct()
+            return (
+                self.filter(content_type=content_type)
+                .filter(Q(object_id__in=primary_keys))
+                .distinct()
+            )
         elif isinstance(queryset.model._meta.pk, models.UUIDField):
             primary_keys = [smart_str(pk) for pk in primary_keys]
-            return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
+            return (
+                self.filter(content_type=content_type)
+                .filter(Q(object_pk__in=primary_keys))
+                .distinct()
+            )
         else:
-            return self.filter(content_type=content_type).filter(Q(object_pk__in=primary_keys)).distinct()
+            return (
+                self.filter(content_type=content_type)
+                .filter(Q(object_pk__in=primary_keys))
+                .distinct()
+            )
 
     def get_for_model(self, model):
         """
@@ -158,6 +188,7 @@ class LogEntry(models.Model):
 
         The valid actions are :py:attr:`Action.CREATE`, :py:attr:`Action.UPDATE` and :py:attr:`Action.DELETE`.
         """
+
         CREATE = 0
         UPDATE = 1
         DELETE = 2
@@ -168,24 +199,44 @@ class LogEntry(models.Model):
             (DELETE, _("delete")),
         )
 
-    content_type = models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE, related_name='+',
-                                     verbose_name=_("content type"))
-    object_pk = models.CharField(db_index=True, max_length=255, verbose_name=_("object pk"))
-    object_id = models.BigIntegerField(blank=True, db_index=True, null=True, verbose_name=_("object id"))
+    content_type = models.ForeignKey(
+        to="contenttypes.ContentType",
+        on_delete=models.CASCADE,
+        related_name="+",
+        verbose_name=_("content type"),
+    )
+    object_pk = models.CharField(
+        db_index=True, max_length=255, verbose_name=_("object pk")
+    )
+    object_id = models.BigIntegerField(
+        blank=True, db_index=True, null=True, verbose_name=_("object id")
+    )
     object_repr = models.TextField(verbose_name=_("object representation"))
-    action = models.PositiveSmallIntegerField(choices=Action.choices, verbose_name=_("action"))
+    action = models.PositiveSmallIntegerField(
+        choices=Action.choices, verbose_name=_("action")
+    )
     changes = models.TextField(blank=True, verbose_name=_("change message"))
-    actor = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, blank=True, null=True,
-                              related_name='+', verbose_name=_("actor"))
-    remote_addr = models.GenericIPAddressField(blank=True, null=True, verbose_name=_("remote address"))
+    actor = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name="+",
+        verbose_name=_("actor"),
+    )
+    remote_addr = models.GenericIPAddressField(
+        blank=True, null=True, verbose_name=_("remote address")
+    )
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
-    additional_data = JSONField(blank=True, null=True, verbose_name=_("additional data"))
+    additional_data = JSONField(
+        blank=True, null=True, verbose_name=_("additional data")
+    )
 
     objects = LogEntryManager()
 
     class Meta:
-        get_latest_by = 'timestamp'
-        ordering = ['-timestamp']
+        get_latest_by = "timestamp"
+        ordering = ["-timestamp"]
         verbose_name = _("log entry")
         verbose_name_plural = _("log entries")
 
@@ -212,7 +263,7 @@ class LogEntry(models.Model):
             return {}
 
     @property
-    def changes_str(self, colon=': ', arrow=' \u2192 ', separator='; '):
+    def changes_str(self, colon=": ", arrow=" \u2192 ", separator="; "):
         """
         Return the changes recorded in this log entry as a string. The formatting of the string can be customized by
         setting alternate values for colon, arrow and separator. If the formatting is still not satisfying, please use
@@ -226,7 +277,7 @@ class LogEntry(models.Model):
         substrings = []
 
         for field, values in self.changes_dict.items():
-            substring = '{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}'.format(
+            substring = "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
                 field_name=field,
                 colon=colon,
                 old=values[0],
@@ -244,6 +295,7 @@ class LogEntry(models.Model):
         """
         # Get the model and model_fields
         from auditlog.registry import auditlog
+
         model = self.content_type.model_class()
         model_fields = auditlog.get_model_fields(model._meta.model)
         changes_display_dict = {}
@@ -258,9 +310,14 @@ class LogEntry(models.Model):
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
             choices_dict = None
-            if getattr(field, 'choices') and len(field.choices) > 0:
+            if getattr(field, "choices") and len(field.choices) > 0:
                 choices_dict = dict(field.choices)
-            if hasattr(field, 'base_field') and isinstance(field.base_field, Field) and getattr(field.base_field, 'choices') and len(field.base_field.choices) > 0:
+            if (
+                hasattr(field, "base_field")
+                and isinstance(field.base_field, Field)
+                and getattr(field.base_field, "choices")
+                and len(field.base_field.choices) > 0
+            ):
                 choices_dict = dict(field.base_field.choices)
 
             if choices_dict:
@@ -268,13 +325,17 @@ class LogEntry(models.Model):
                     try:
                         value = ast.literal_eval(value)
                         if type(value) is [].__class__:
-                            values_display.append(', '.join([choices_dict.get(val, 'None') for val in value]))
+                            values_display.append(
+                                ", ".join(
+                                    [choices_dict.get(val, "None") for val in value]
+                                )
+                            )
                         else:
-                            values_display.append(choices_dict.get(value, 'None'))
+                            values_display.append(choices_dict.get(value, "None"))
                     except ValueError:
-                        values_display.append(choices_dict.get(value, 'None'))
+                        values_display.append(choices_dict.get(value, "None"))
                     except:
-                        values_display.append(choices_dict.get(value, 'None'))
+                        values_display.append(choices_dict.get(value, "None"))
             else:
                 try:
                     field_type = field.get_internal_type()
@@ -301,7 +362,9 @@ class LogEntry(models.Model):
                         value = "{}...".format(value[:140])
 
                     values_display.append(value)
-            verbose_name = model_fields['mapping_fields'].get(field.name, getattr(field, 'verbose_name', field.name))
+            verbose_name = model_fields["mapping_fields"].get(
+                field.name, getattr(field, "verbose_name", field.name)
+            )
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
 
@@ -327,14 +390,14 @@ class AuditlogHistoryField(GenericRelation):
     """
 
     def __init__(self, pk_indexable=True, delete_related=True, **kwargs):
-        kwargs['to'] = LogEntry
+        kwargs["to"] = LogEntry
 
         if pk_indexable:
-            kwargs['object_id_field'] = 'object_id'
+            kwargs["object_id_field"] = "object_id"
         else:
-            kwargs['object_id_field'] = 'object_pk'
+            kwargs["object_id_field"] = "object_pk"
 
-        kwargs['content_type_field'] = 'content_type'
+        kwargs["content_type_field"] = "content_type"
         self.delete_related = delete_related
         super(AuditlogHistoryField, self).__init__(**kwargs)
 
@@ -356,6 +419,8 @@ try:
     from south.modelsinspector import add_introspection_rules
 
     add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
-    raise DeprecationWarning("South support will be dropped in django-auditlog 0.4.0 or later.")
+    raise DeprecationWarning(
+        "South support will be dropped in django-auditlog 0.4.0 or later."
+    )
 except ImportError:
     pass
