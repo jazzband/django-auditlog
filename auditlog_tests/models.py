@@ -64,7 +64,7 @@ class RelatedModel(models.Model):
     A model with a foreign key.
     """
 
-    related = models.ForeignKey(to='self', on_delete=models.CASCADE)
+    related = models.ForeignKey(to="self", on_delete=models.CASCADE)
 
     history = AuditlogHistoryField()
 
@@ -74,12 +74,12 @@ class ManyRelatedModel(models.Model):
     A model with a many to many relation.
     """
 
-    related = models.ManyToManyField('self')
+    related = models.ManyToManyField("self")
 
     history = AuditlogHistoryField()
 
 
-@auditlog.register(include_fields=['label'])
+@auditlog.register(include_fields=["label"])
 class SimpleIncludeModel(models.Model):
     """
     A simple model used for register's include_fields kwarg
@@ -108,7 +108,7 @@ class SimpleMappingModel(models.Model):
     """
 
     sku = models.CharField(max_length=100)
-    vtxt = models.CharField(verbose_name='Version', max_length=100)
+    vtxt = models.CharField(verbose_name="Version", max_length=100)
     not_mapped = models.CharField(max_length=100)
 
     history = AuditlogHistoryField()
@@ -133,8 +133,8 @@ class AdditionalDataIncludedModel(models.Model):
         manager and added to each logentry instance on creation.
         """
         object_details = {
-            'related_model_id': self.related.id,
-            'related_model_text': self.related.text
+            "related_model_id": self.related.id,
+            "related_model_text": self.related.text,
         }
         return object_details
 
@@ -144,6 +144,7 @@ class DateTimeFieldModel(models.Model):
     A model with a DateTimeField, used to test DateTimeField
     changes are detected properly.
     """
+
     label = models.CharField(max_length=100)
     timestamp = models.DateTimeField()
     date = models.DateField()
@@ -158,14 +159,15 @@ class ChoicesFieldModel(models.Model):
     A model with a CharField restricted to a set of choices.
     This model is used to test the changes_display_dict method.
     """
-    RED = 'r'
-    YELLOW = 'y'
-    GREEN = 'g'
+
+    RED = "r"
+    YELLOW = "y"
+    GREEN = "g"
 
     STATUS_CHOICES = (
-        (RED, 'Red'),
-        (YELLOW, 'Yellow'),
-        (GREEN, 'Green'),
+        (RED, "Red"),
+        (YELLOW, "Yellow"),
+        (GREEN, "Green"),
     )
 
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
@@ -191,17 +193,20 @@ class PostgresArrayFieldModel(models.Model):
     """
     Test auditlog with Postgres's ArrayField
     """
-    RED = 'r'
-    YELLOW = 'y'
-    GREEN = 'g'
+
+    RED = "r"
+    YELLOW = "y"
+    GREEN = "g"
 
     STATUS_CHOICES = (
-        (RED, 'Red'),
-        (YELLOW, 'Yellow'),
-        (GREEN, 'Green'),
+        (RED, "Red"),
+        (YELLOW, "Yellow"),
+        (GREEN, "Green"),
     )
 
-    arrayfield = ArrayField(models.CharField(max_length=1, choices=STATUS_CHOICES), size=3)
+    arrayfield = ArrayField(
+        models.CharField(max_length=1, choices=STATUS_CHOICES), size=3
+    )
 
     history = AuditlogHistoryField()
 
@@ -218,8 +223,8 @@ auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.related.through)
-auditlog.register(SimpleExcludeModel, exclude_fields=['text'])
-auditlog.register(SimpleMappingModel, mapping_fields={'sku': 'Product No.'})
+auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
+auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
