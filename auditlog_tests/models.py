@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 

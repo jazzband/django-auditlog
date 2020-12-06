@@ -1,35 +1,36 @@
 import datetime
-import django
 import json
+
+import django
+from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib import auth
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
-from django.test import TestCase, RequestFactory
+from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
-from dateutil.tz import gettz
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
 from auditlog_tests.models import (
-    SimpleModel,
-    AltPrimaryKeyModel,
-    UUIDPrimaryKeyModel,
-    ProxyModel,
-    SimpleIncludeModel,
-    SimpleExcludeModel,
-    SimpleMappingModel,
-    RelatedModel,
-    ManyRelatedModel,
     AdditionalDataIncludedModel,
-    DateTimeFieldModel,
-    ChoicesFieldModel,
+    AltPrimaryKeyModel,
     CharfieldTextfieldModel,
-    PostgresArrayFieldModel,
+    ChoicesFieldModel,
+    DateTimeFieldModel,
+    ManyRelatedModel,
     NoDeleteHistoryModel,
+    PostgresArrayFieldModel,
+    ProxyModel,
+    RelatedModel,
+    SimpleExcludeModel,
+    SimpleIncludeModel,
+    SimpleMappingModel,
+    SimpleModel,
+    UUIDPrimaryKeyModel,
 )
 
 
