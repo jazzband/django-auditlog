@@ -5,8 +5,6 @@ from django.db import models
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
 
-from multiselectfield import MultiSelectField
-
 
 @auditlog.register()
 class SimpleModel(models.Model):
@@ -171,8 +169,7 @@ class ChoicesFieldModel(models.Model):
     )
 
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
-    multiselect = MultiSelectField(max_length=3, choices=STATUS_CHOICES, max_choices=3)
-    multiplechoice = models.CharField(max_length=3, choices=STATUS_CHOICES)
+    multiplechoice = models.CharField(max_length=255, choices=STATUS_CHOICES)
 
     history = AuditlogHistoryField()
 

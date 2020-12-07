@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, NOT_PROVIDED, DateTimeField
@@ -27,10 +25,6 @@ def track_field(field):
     if getattr(field, 'remote_field', None) is not None and field.remote_field.model == LogEntry:
         return False
 
-    # 1.8 check
-    elif getattr(field, 'rel', None) is not None and field.rel.to == LogEntry:
-        return False
-
     return True
 
 
@@ -46,17 +40,13 @@ def get_fields_in_model(instance):
     """
     assert isinstance(instance, Model)
 
-    # Check if the Django 1.8 _meta API is available
-    use_api = hasattr(instance._meta, 'get_fields') and callable(instance._meta.get_fields)
-
-    if use_api:
-        return [f for f in instance._meta.get_fields() if track_field(f)]
-    return instance._meta.fields
+    return [f for f in instance._meta.get_fields() if track_field(f)]
 
 
 def get_field_value(obj, field):
     """
     Gets the value of a given model instance field.
+
     :param obj: The model instance.
     :type obj: Model
     :param field: The field you want to find the value of.
@@ -66,7 +56,7 @@ def get_field_value(obj, field):
     """
     if isinstance(field, DateTimeField):
         # DateTimeFields are timezone-aware, so we need to convert the field
-        # to its naive form before we can accuratly compare them for changes.
+        # to its naive form before we can accurately compare them for changes.
         try:
             value = field.to_python(getattr(obj, field.name, None))
             if value is not None and settings.USE_TZ and not timezone.is_naive(value):
@@ -97,9 +87,9 @@ def model_instance_diff(old, new):
     """
     from auditlog.registry import auditlog
 
-    if not(old is None or isinstance(old, Model)):
+    if not (old is None or isinstance(old, Model)):
         raise TypeError("The supplied old instance is not a valid model instance.")
-    if not(new is None or isinstance(new, Model)):
+    if not (new is None or isinstance(new, Model)):
         raise TypeError("The supplied new instance is not a valid model instance.")
 
     diff = {}

@@ -2,7 +2,8 @@
 Settings file for the Auditlog test suite.
 """
 import os
-import django
+
+DEBUG = True
 
 SECRET_KEY = 'test'
 
@@ -12,12 +13,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sessions',
     'django.contrib.admin',
+    'django.contrib.staticfiles',
     'auditlog',
     'auditlog_tests',
-    'multiselectfield',
 ]
 
-middlewares = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -25,30 +26,14 @@ middlewares = (
     'auditlog.middleware.AuditlogMiddleware',
 )
 
-if django.VERSION < (1, 10):
-    MIDDLEWARE_CLASSES = middlewares
-else:
-    MIDDLEWARE = middlewares
-
-if django.VERSION <= (1, 9):
-    POSTGRES_DRIVER = 'django.db.backends.postgresql_psycopg2'
-else:
-    POSTGRES_DRIVER = 'django.db.backends.postgresql'
-
-DATABASE_ROUTERS = ['auditlog_tests.router.PostgresRouter']
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'auditlog_tests.db',
-    },
-    'postgres': {
-        'ENGINE': POSTGRES_DRIVER,
-        'NAME': 'auditlog_tests_db',
-        'USER': 'postgres',
-        'PASSWORD': '',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('TEST_DB_NAME', 'auditlog_tests_db'),
+        'USER': os.getenv('TEST_DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('TEST_DB_PASS', ''),
+        'HOST': os.getenv('TEST_DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('TEST_DB_PORT', '5432'),
     }
 }
 
@@ -59,12 +44,15 @@ TEMPLATES = [
         'DIRS': [],
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ]
         },
     },
 ]
+
+STATIC_URL = '/static/'
 
 ROOT_URLCONF = 'auditlog_tests.urls'
 

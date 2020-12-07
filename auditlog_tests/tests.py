@@ -17,7 +17,6 @@ from auditlog_tests.models import SimpleModel, AltPrimaryKeyModel, UUIDPrimaryKe
     ProxyModel, SimpleIncludeModel, SimpleExcludeModel, SimpleMappingModel, RelatedModel, \
     ManyRelatedModel, AdditionalDataIncludedModel, DateTimeFieldModel, ChoicesFieldModel, \
     CharfieldTextfieldModel, PostgresArrayFieldModel, NoDeleteHistoryModel
-from auditlog import compat
 
 
 class SimpleModelTest(TestCase):
@@ -506,7 +505,6 @@ class ChoicesFieldModelTest(TestCase):
     def setUp(self):
         self.obj = ChoicesFieldModel.objects.create(
             status=ChoicesFieldModel.RED,
-            multiselect=[ChoicesFieldModel.RED, ChoicesFieldModel.GREEN],
             multiplechoice=[ChoicesFieldModel.RED, ChoicesFieldModel.YELLOW, ChoicesFieldModel.GREEN],
         )
 
@@ -517,22 +515,6 @@ class ChoicesFieldModelTest(TestCase):
         self.obj.status = ChoicesFieldModel.GREEN
         self.obj.save()
         self.assertTrue(self.obj.history.latest().changes_display_dict["status"][1] == "Green", msg="The human readable text 'Green' is displayed.")
-
-    def test_changes_display_dict_multiselect(self):
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Red, Green",
-                        msg="The human readable text for the two choices, 'Red, Green' is displayed.")
-        self.obj.multiselect = ChoicesFieldModel.GREEN
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
-                        msg="The human readable text 'Green' is displayed.")
-        self.obj.multiselect = None
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "None",
-                        msg="The human readable text 'None' is displayed.")
-        self.obj.multiselect = ChoicesFieldModel.GREEN
-        self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["multiselect"][1] == "Green",
-                        msg="The human readable text 'Green' is displayed.")
 
     def test_changes_display_dict_multiplechoice(self):
         self.assertTrue(self.obj.history.latest().changes_display_dict["multiplechoice"][1] == "Red, Yellow, Green",
@@ -575,65 +557,32 @@ class CharfieldTextfieldModelTest(TestCase):
 
 
 class PostgresArrayFieldModelTest(TestCase):
+    databases = '__all__'
 
     def setUp(self):
         self.obj = PostgresArrayFieldModel.objects.create(
             arrayfield=[PostgresArrayFieldModel.RED, PostgresArrayFieldModel.GREEN],
         )
 
+    @property
+    def latest_array_change(self):
+        return self.obj.history.latest().changes_display_dict["arrayfield"][1]
+
     def test_changes_display_dict_arrayfield(self):
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Red, Green",
+        self.assertTrue(self.latest_array_change == "Red, Green",
                         msg="The human readable text for the two choices, 'Red, Green' is displayed.")
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
+        self.assertTrue(self.latest_array_change == "Green",
                         msg="The human readable text 'Green' is displayed.")
         self.obj.arrayfield = []
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "",
+        self.assertTrue(self.latest_array_change == "",
                         msg="The human readable text '' is displayed.")
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
-        self.assertTrue(self.obj.history.latest().changes_display_dict["arrayfield"][1] == "Green",
+        self.assertTrue(self.latest_array_change == "Green",
                         msg="The human readable text 'Green' is displayed.")
-
-
-class CompatibilityTest(TestCase):
-    """Test case for compatibility functions."""
-
-    def test_is_authenticated(self):
-        """Test that the 'is_authenticated' compatibility function is working.
-
-        Bit of explanation: the `is_authenticated` property on request.user is
-        *always* set to 'False' for AnonymousUser, and it is *always* set to
-        'True' for *any* other (i.e. identified/authenticated) user.
-
-        So, the logic of this test is to ensure that compat.is_authenticated()
-        returns the correct value based on whether or not the User is an
-        anonymous user (simulating what goes on in the real request.user).
-
-        """
-
-        # Test compat.is_authenticated for anonymous users
-        self.user = auth.get_user(self.client)
-        if django.VERSION < (1, 10):
-            assert self.user.is_anonymous()
-        else:
-            assert self.user.is_anonymous
-        assert not compat.is_authenticated(self.user)
-
-        # Setup some other user, which is *not* anonymous, and check
-        # compat.is_authenticated
-        self.user = User.objects.create(
-            username="test.user",
-            email="test.user@mail.com",
-            password="auditlog"
-        )
-        if django.VERSION < (1, 10):
-            assert not self.user.is_anonymous()
-        else:
-            assert not self.user.is_anonymous
-        assert compat.is_authenticated(self.user)
 
 
 class AdminPanelTest(TestCase):
