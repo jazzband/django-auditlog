@@ -77,6 +77,7 @@ class AuditlogMiddleware(MiddlewareMixin):
         except ValueError:
             auth_user_model = apps.get_model('auth', 'user')
         if sender == LogEntry and isinstance(user, auth_user_model) and instance.actor is None:
-            instance.actor = user
+            if auth_user_model.objects.filter(pk=user.pk).exists():
+                instance.actor = user
         if hasattr(threadlocal, 'auditlog'):
             instance.remote_addr = threadlocal.auditlog['remote_addr']
