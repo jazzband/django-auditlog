@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Model, NOT_PROVIDED, DateTimeField
 from django.utils import timezone
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str
 
 
 def track_field(field):
@@ -17,12 +17,16 @@ def track_field(field):
     :rtype: bool
     """
     from auditlog.models import LogEntry
+
     # Do not track many to many relations
     if field.many_to_many:
         return False
 
     # Do not track relations to LogEntry
-    if getattr(field, 'remote_field', None) is not None and field.remote_field.model == LogEntry:
+    if (
+        getattr(field, "remote_field", None) is not None
+        and field.remote_field.model == LogEntry
+    ):
         return False
 
     return True
@@ -65,7 +69,7 @@ def get_field_value(obj, field):
             value = field.default if field.default is not NOT_PROVIDED else None
     else:
         try:
-            value = smart_text(getattr(obj, field.name, None))
+            value = smart_str(getattr(obj, field.name, None))
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
 
@@ -108,16 +112,26 @@ def model_instance_diff(old, new):
         model_fields = None
 
     # Check if fields must be filtered
-    if model_fields and (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
+    if (
+        model_fields
+        and (model_fields["include_fields"] or model_fields["exclude_fields"])
+        and fields
+    ):
         filtered_fields = []
-        if model_fields['include_fields']:
-            filtered_fields = [field for field in fields
-                               if field.name in model_fields['include_fields']]
+        if model_fields["include_fields"]:
+            filtered_fields = [
+                field
+                for field in fields
+                if field.name in model_fields["include_fields"]
+            ]
         else:
             filtered_fields = fields
-        if model_fields['exclude_fields']:
-            filtered_fields = [field for field in filtered_fields
-                               if field.name not in model_fields['exclude_fields']]
+        if model_fields["exclude_fields"]:
+            filtered_fields = [
+                field
+                for field in filtered_fields
+                if field.name not in model_fields["exclude_fields"]
+            ]
         fields = filtered_fields
 
     for field in fields:
@@ -125,7 +139,7 @@ def model_instance_diff(old, new):
         new_value = get_field_value(new, field)
 
         if old_value != new_value:
-            diff[field.name] = (smart_text(old_value), smart_text(new_value))
+            diff[field.name] = (smart_str(old_value), smart_str(new_value))
 
     if len(diff) == 0:
         diff = None
