@@ -14,9 +14,9 @@ from django.utils.encoding import python_2_unicode_compatible, smart_text
 from django.utils.six import iteritems, integer_types
 from django.utils.translation import ugettext_lazy as _
 
-from jsonfield.fields import JSONField
 from dateutil import parser
 from dateutil.tz import gettz
+from jsonfield_compat import JSONField
 
 
 class LogEntryManager(models.Manager):
