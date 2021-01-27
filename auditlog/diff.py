@@ -64,11 +64,9 @@ def get_field_value(obj, field):
         except ObjectDoesNotExist:
             value = field.default if field.default is not NOT_PROVIDED else None
     elif isinstance(field, DecimalField):
-        value = getattr(obj, field.name, None)
-        if value and not float(value).is_integer():
-            value = smart_text(value.rstrip('0').rstrip('.'))
-        else:
-            value = smart_text(value)
+        value = smart_text(getattr(obj, field.name, None))
+        if value != "None" and "." in value:
+            value = value.rstrip('0').rstrip('.')
     else:
         try:
             value = smart_text(getattr(obj, field.name, None))
