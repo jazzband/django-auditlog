@@ -27,12 +27,6 @@ Contents
 Contribute to Auditlog
 ----------------------
 
-.. note::
-   Due to multiple reasons the development of Auditlog is not a priority for me at this moment. Therefore progress might
-   be slow. This does not mean that this project is abandoned! Community involvement in the form of pull requests is
-   very much appreciated. Also, if you like to take Auditlog to the next level and be a permanent contributor, please
-   contact the author. Contact information can be found via GitHub.
-
 If you discovered a bug or want to improve the code, please submit an issue and/or pull request via GitHub.
 Before submitting a new issue, please make sure there is no issue submitted that involves the same problem.
 
