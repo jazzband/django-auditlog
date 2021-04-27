@@ -135,7 +135,7 @@ The :py:class:`AuditlogHistoryField` provides easy access to :py:class:`LogEntry
           </tr>
         </thead>
         <tbody>
-        {% for key, value in mymodel.history.latest.changes_dict.iteritems %}
+        {% for key, value in mymodel.history.latest.changes_dict.items %}
           <tr>
             <td>{{ key }}</td>
             <td>{{ value.0|default:"None" }}</td>
