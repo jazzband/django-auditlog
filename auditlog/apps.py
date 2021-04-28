@@ -1,6 +1,10 @@
 from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
 
 class AuditlogConfig(AppConfig):
+    """Default configuration for auditlog app."""
+
     name = "auditlog"
-    verbose_name = "Audit log"
+    label = "auditlog"
+    verbose_name = _("Audit Log")

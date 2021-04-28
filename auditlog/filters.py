@@ -1,8 +1,9 @@
 from django.contrib.admin import SimpleListFilter
+from django.utils.translation import gettext_lazy as _
 
 
 class ResourceTypeFilter(SimpleListFilter):
-    title = "Resource Type"
+    title = _("Resource Type")
     parameter_name = "resource_type"
 
     def lookups(self, request, model_admin):
