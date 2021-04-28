@@ -24,5 +24,5 @@ To use Auditlog in your application, just add ``'auditlog'`` to your project's `
 ``manage.py migrate`` to create/upgrade the necessary database structure.
 
 If you want Auditlog to automatically set the actor for log entries you also need to enable the middleware by adding
-``'auditlog.middleware.AuditlogMiddleware'`` to your ``MIDDLEWARE_CLASSES`` setting. Please check :doc:`usage` for more
+``'auditlog.middleware.AuditlogMiddleware'`` to your ``MIDDLEWARE`` setting. Please check :doc:`usage` for more
 information.
