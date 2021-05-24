@@ -57,3 +57,5 @@ STATIC_URL = "/static/"
 ROOT_URLCONF = "auditlog_tests.urls"
 
 USE_TZ = True
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
