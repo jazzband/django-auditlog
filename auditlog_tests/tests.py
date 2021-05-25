@@ -167,7 +167,10 @@ class MiddlewareTest(TestCase):
     """
 
     def setUp(self):
-        self.middleware = AuditlogMiddleware()
+        def get_response(request):
+            return HttpResponse()
+
+        self.middleware = AuditlogMiddleware(get_response)
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="test", email="test@example.com", password="top_secret"
@@ -330,12 +333,7 @@ class AdditionalDataModelTest(TestCase):
             obj_with_additional_data.history.count() == 1, msg="There is 1 log entry"
         )
         log_entry = obj_with_additional_data.history.get()
-        # FIXME: Work-around for the fact that additional_data isn't working
-        # on Django 3.1 correctly (see https://github.com/jazzband/django-auditlog/issues/266)
-        if django.VERSION >= (3, 1):
-            extra_data = json.loads(log_entry.additional_data)
-        else:
-            extra_data = log_entry.additional_data
+        extra_data = log_entry.additional_data
         self.assertIsNotNone(extra_data)
         self.assertTrue(
             extra_data["related_model_text"] == related_model.text,

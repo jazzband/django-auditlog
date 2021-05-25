@@ -1,5 +1,10 @@
-import jsonfield.fields
 from django.db import migrations, models
+from django.utils.version import get_complete_version
+
+if get_complete_version() >= (3, 1):
+    from django.db.models import JSONField
+else:
+    from jsonfield.fields import JSONField
 
 
 class Migration(migrations.Migration):
@@ -12,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="logentry",
             name="additional_data",
-            field=jsonfield.fields.JSONField(null=True, blank=True),
+            field=JSONField(null=True, blank=True),
         ),
     ]
