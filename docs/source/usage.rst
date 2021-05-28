@@ -83,10 +83,10 @@ When using automatic logging, the actor is empty by default. However, auditlog c
 request automatically. This does not need any custom code, adding a middleware class is enough. When an actor is logged
 the remote address of that actor will be logged as well.
 
-To enable the automatic logging of the actors, simply add the following to your ``MIDDLEWARE_CLASSES`` setting in your
+To enable the automatic logging of the actors, simply add the following to your ``MIDDLEWARE`` setting in your
 project's configuration file::
 
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         # Request altering middleware, e.g., Django's default middleware classes
         'auditlog.middleware.AuditlogMiddleware',
         # Other middleware
