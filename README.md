@@ -1,8 +1,12 @@
 django-auditlog
 ===============
 
-[![Build Status](https://travis-ci.org/jjkester/django-auditlog.svg?branch=master)](https://travis-ci.org/jjkester/django-auditlog)
+[![Jazzband](https://jazzband.co/static/img/badge.svg)](https://jazzband.co/)
+[![Build Status](https://github.com/jazzband/django-auditlog/workflows/Test/badge.svg)](https://github.com/jazzband/django-auditlog/actions)
 [![Docs](https://readthedocs.org/projects/django-auditlog/badge/?version=latest)](http://django-auditlog.readthedocs.org/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/jazzband/django-auditlog/branch/master/graph/badge.svg)](https://codecov.io/gh/jazzband/django-auditlog)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/django-auditlog.svg)](https://pypi.python.org/pypi/django-auditlog)
+[![Supported Django versions](https://img.shields.io/pypi/djversions/django-auditlog.svg)](https://pypi.python.org/pypi/django-auditlog)
 
 **Please remember that this app is still in development.**
 **Test this app before deploying it in production environments.**
@@ -27,3 +31,14 @@ Contribute
 ----------
 
 If you have great ideas for Auditlog, or if you like to improve something, feel free to fork this repository and/or create a pull request. I'm open for suggestions. If you like to discuss something with me (about Auditlog), please open an issue.
+
+Releases
+--------
+
+1. Make sure all tests on `master` are green.
+2. Create a new branch `vX.Y.Z` from master for that specific release.
+3. Bump versions in `setup.py` and `docs/source/conf.py` (docs have 2 places where the versions need to be changed!)
+4. Pull request `vX.Y.Z` -> `stable`. Merging policy is very strict. This triggers a new release.
+5. Pull request `stable` -> `master`. Now everything is back in sync.
+
+Opening a pull request from `master` directly to `stable` is discouraged as `master` may be updated while the PR is open, thus changing the contents of the release.
