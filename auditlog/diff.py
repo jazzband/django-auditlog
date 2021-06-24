@@ -17,12 +17,16 @@ def track_field(field):
     :rtype: bool
     """
     from auditlog.models import LogEntry
+
     # Do not track many to many relations
     if field.many_to_many:
         return False
 
     # Do not track relations to LogEntry
-    if getattr(field, 'remote_field', None) is not None and field.remote_field.model == LogEntry:
+    if (
+        getattr(field, "remote_field", None) is not None
+        and field.remote_field.model == LogEntry
+    ):
         return False
 
     return True
@@ -108,16 +112,26 @@ def model_instance_diff(old, new):
         model_fields = None
 
     # Check if fields must be filtered
-    if model_fields and (model_fields['include_fields'] or model_fields['exclude_fields']) and fields:
+    if (
+        model_fields
+        and (model_fields["include_fields"] or model_fields["exclude_fields"])
+        and fields
+    ):
         filtered_fields = []
-        if model_fields['include_fields']:
-            filtered_fields = [field for field in fields
-                               if field.name in model_fields['include_fields']]
+        if model_fields["include_fields"]:
+            filtered_fields = [
+                field
+                for field in fields
+                if field.name in model_fields["include_fields"]
+            ]
         else:
             filtered_fields = fields
-        if model_fields['exclude_fields']:
-            filtered_fields = [field for field in filtered_fields
-                               if field.name not in model_fields['exclude_fields']]
+        if model_fields["exclude_fields"]:
+            filtered_fields = [
+                field
+                for field in filtered_fields
+                if field.name not in model_fields["exclude_fields"]
+            ]
         fields = filtered_fields
 
     for field in fields:

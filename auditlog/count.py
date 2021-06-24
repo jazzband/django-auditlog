@@ -12,7 +12,7 @@ def limit_query_time(timeout, default=None):
     def decorator(function):
         def _limit_query_time(*args, **kwargs):
             with transaction.atomic(), connection.cursor() as cursor:
-                cursor.execute('SET LOCAL statement_timeout TO %s;', (timeout,))
+                cursor.execute("SET LOCAL statement_timeout TO %s;", (timeout,))
                 try:
                     return function(*args, **kwargs)
                 except OperationalError:

@@ -20,13 +20,13 @@ class AuditlogMiddleware(object):
 
     def __call__(self, request):
 
-        if request.META.get('HTTP_X_FORWARDED_FOR'):
+        if request.META.get("HTTP_X_FORWARDED_FOR"):
             # In case of proxy, set 'original' address
-            remote_addr = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0]
+            remote_addr = request.META.get("HTTP_X_FORWARDED_FOR").split(",")[0]
         else:
-            remote_addr = request.META.get('REMOTE_ADDR')
+            remote_addr = request.META.get("REMOTE_ADDR")
 
-        if hasattr(request, 'user') and request.user.is_authenticated:
+        if hasattr(request, "user") and request.user.is_authenticated:
             context = set_actor(actor=request.user, remote_addr=remote_addr)
         else:
             context = nullcontext()

@@ -11,8 +11,8 @@ from auditlog.registry import auditlog
 
 
 class ShortActorFilter(SimpleListFilter):
-    title = 'Actor'
-    parameter_name = 'actor'
+    title = "Actor"
+    parameter_name = "actor"
 
     def lookups(self, request, model_admin):
         return [("null", "System"), ("not_null", "Users")]
@@ -27,21 +27,21 @@ class ShortActorFilter(SimpleListFilter):
 
 
 class ResourceTypeFilter(SimpleListFilter):
-    title = 'Resource Type'
-    parameter_name = 'resource_type'
+    title = "Resource Type"
+    parameter_name = "resource_type"
 
     def lookups(self, request, model_admin):
         tracked_model_names = [
-            '{}.{}'.format(m._meta.app_label, m._meta.model_name)
+            "{}.{}".format(m._meta.app_label, m._meta.model_name)
             for m in auditlog.list()
         ]
-        model_name_concat = Concat('app_label', Value('.'), 'model')
+        model_name_concat = Concat("app_label", Value("."), "model")
         content_types = ContentType.objects.annotate(
             model_name=model_name_concat,
         ).filter(
             model_name__in=tracked_model_names,
         )
-        return content_types.order_by('model_name').values_list('id', 'model_name')
+        return content_types.order_by("model_name").values_list("id", "model_name")
 
     def queryset(self, request, queryset):
         if self.value() is None:
@@ -50,8 +50,8 @@ class ResourceTypeFilter(SimpleListFilter):
 
 
 class FieldFilter(SimpleListFilter):
-    title = 'Field'
-    parameter_name = 'field'
+    title = "Field"
+    parameter_name = "field"
     parent = ResourceTypeFilter
 
     def __init__(self, request, *args, **kwargs):
@@ -68,19 +68,20 @@ class FieldFilter(SimpleListFilter):
         return ContentType.objects.get(id=content_type_id).model_class()
 
     def lookups(self, request, model_admin):
-        if connection.vendor != 'postgresql':
+        if connection.vendor != "postgresql":
             # filtering inside JSON is PostgreSQL-specific for now
             return []
         if not self.target_model:
             return []
-        return sorted((field.name, field.name) for field in self.target_model._meta.fields)
+        return sorted(
+            (field.name, field.name) for field in self.target_model._meta.fields
+        )
 
     def queryset(self, request, queryset):
         if self.value() is None:
             return queryset
-        return (
-            queryset.annotate(changes_json=Cast("changes", JSONField()))
-            .filter(**{'changes_json__{}__isnull'.format(self.value()): False})
+        return queryset.annotate(changes_json=Cast("changes", JSONField())).filter(
+            **{"changes_json__{}__isnull".format(self.value()): False}
         )
 
 
@@ -89,6 +90,7 @@ def get_timestamp_filter():
     if apps.is_installed("rangefilter"):
         try:
             from rangefilter.filter import DateTimeRangeFilter
+
             return DateTimeRangeFilter
         except ImportError:
             pass

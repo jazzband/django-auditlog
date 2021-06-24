@@ -6,27 +6,47 @@ from django.utils.functional import cached_property
 from .count import limit_query_time
 from .models import LogEntry
 from .mixins import LogEntryAdminMixin
-from .filters import ShortActorFilter, ResourceTypeFilter, FieldFilter, get_timestamp_filter
+from .filters import (
+    ShortActorFilter,
+    ResourceTypeFilter,
+    FieldFilter,
+    get_timestamp_filter,
+)
 
 
 class TimeLimitedPaginator(Paginator):
     """A PostgreSQL-specific paginator with a hard time limit for total count of pages."""
+
     @cached_property
-    @limit_query_time(getattr(settings, 'AUDITLOG_PAGINATOR_TIMEOUT', 500), default=100000)
+    @limit_query_time(
+        getattr(settings, "AUDITLOG_PAGINATOR_TIMEOUT", 500), default=100000
+    )
     def count(self):
         return super().count
 
 
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
-    list_display = ['created', 'resource_url', 'action', 'msg_short', 'user_url']
-    search_fields = ['timestamp', 'object_repr', 'changes', 'actor__first_name', 'actor__last_name']
-    list_filter = ['action', ShortActorFilter, ResourceTypeFilter, FieldFilter, ('timestamp', get_timestamp_filter())]
-    readonly_fields = ['created', 'resource_url', 'action', 'user_url', 'msg']
-    fieldsets = [
-        (None, {'fields': ['created', 'user_url', 'resource_url']}),
-        ('Changes', {'fields': ['action', 'msg']}),
+    list_display = ["created", "resource_url", "action", "msg_short", "user_url"]
+    search_fields = [
+        "timestamp",
+        "object_repr",
+        "changes",
+        "actor__first_name",
+        "actor__last_name",
     ]
-    list_select_related = ['actor', 'content_type']
+    list_filter = [
+        "action",
+        ShortActorFilter,
+        ResourceTypeFilter,
+        FieldFilter,
+        ("timestamp", get_timestamp_filter()),
+    ]
+    readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
+    fieldsets = [
+        (None, {"fields": ["created", "user_url", "resource_url"]}),
+        ("Changes", {"fields": ["action", "msg"]}),
+    ]
+    list_select_related = ["actor", "content_type"]
     show_full_result_count = False
     paginator = TimeLimitedPaginator
 
