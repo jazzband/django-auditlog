@@ -3,10 +3,10 @@ from django.contrib import admin
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
 
-from .count import limit_query_time
-from .models import LogEntry
-from .mixins import LogEntryAdminMixin
-from .filters import (
+from auditlog.count import limit_query_time
+from auditlog.models import LogEntry
+from auditlog.mixins import LogEntryAdminMixin
+from auditlog.filters import (
     ShortActorFilter,
     ResourceTypeFilter,
     FieldFilter,
