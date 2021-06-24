@@ -10,6 +10,8 @@ import os
 import sys
 from datetime import date
 
+from pkg_resources import get_distribution
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -31,10 +33,9 @@ project = "django-auditlog"
 author = "Jan-Jelle Kester and contributors"
 copyright = f"2013-{date.today().year}, {author}"
 
-# The full version, including alpha/beta/rc tags
-import auditlog
-
-release = auditlog.__version__
+release = get_distribution("django-auditlog").version
+# for example take major/minor
+version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
 
@@ -67,4 +68,4 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# html_static_path = ['_static']
