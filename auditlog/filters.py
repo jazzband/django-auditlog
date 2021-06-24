@@ -33,7 +33,7 @@ class ResourceTypeFilter(SimpleListFilter):
     def lookups(self, request, model_admin):
         tracked_model_names = [
             "{}.{}".format(m._meta.app_label, m._meta.model_name)
-            for m in auditlog.list()
+            for m in auditlog.get_models()
         ]
         model_name_concat = Concat("app_label", Value("."), "model")
         content_types = ContentType.objects.annotate(
