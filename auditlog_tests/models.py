@@ -2,10 +2,10 @@ import uuid
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from multiselectfield import MultiSelectField
+
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
-
-from multiselectfield import MultiSelectField
 
 
 @auditlog.register()

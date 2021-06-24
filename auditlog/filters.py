@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField
 from django.db import connection
 from django.db.models import Value
-from django.db.models.functions import Concat, Cast
+from django.db.models.functions import Cast, Concat
 
 from auditlog.registry import auditlog
 

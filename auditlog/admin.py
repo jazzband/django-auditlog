@@ -4,14 +4,14 @@ from django.core.paginator import Paginator
 from django.utils.functional import cached_property
 
 from auditlog.count import limit_query_time
-from auditlog.models import LogEntry
-from auditlog.mixins import LogEntryAdminMixin
 from auditlog.filters import (
-    ShortActorFilter,
-    ResourceTypeFilter,
     FieldFilter,
+    ResourceTypeFilter,
+    ShortActorFilter,
     get_timestamp_filter,
 )
+from auditlog.mixins import LogEntryAdminMixin
+from auditlog.models import LogEntry
 
 
 class TimeLimitedPaginator(Paginator):

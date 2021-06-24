@@ -1,4 +1,4 @@
-from django.db import connection, transaction, OperationalError
+from django.db import OperationalError, connection, transaction
 
 
 def limit_query_time(timeout, default=None):

@@ -1,32 +1,33 @@
 import datetime
-from django.conf import settings
-from django.contrib.auth.models import User, AnonymousUser
-from django.db.models.signals import pre_save
-from django.test import TestCase, RequestFactory
-from django.utils import dateformat, formats, timezone
-from dateutil.tz import gettz
+
 import mock
+from auditlog_tests.models import (
+    AdditionalDataIncludedModel,
+    AltPrimaryKeyModel,
+    CharfieldTextfieldModel,
+    ChoicesFieldModel,
+    DateTimeFieldModel,
+    ManyRelatedModel,
+    NoDeleteHistoryModel,
+    PostgresArrayFieldModel,
+    ProxyModel,
+    RelatedModel,
+    SimpleExcludeModel,
+    SimpleIncludeModel,
+    SimpleMappingModel,
+    SimpleModel,
+    UUIDPrimaryKeyModel,
+)
+from dateutil.tz import gettz
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser, User
+from django.db.models.signals import pre_save
+from django.test import RequestFactory, TestCase
+from django.utils import dateformat, formats, timezone
 
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
-from auditlog_tests.models import (
-    SimpleModel,
-    AltPrimaryKeyModel,
-    UUIDPrimaryKeyModel,
-    ProxyModel,
-    SimpleIncludeModel,
-    SimpleExcludeModel,
-    SimpleMappingModel,
-    RelatedModel,
-    ManyRelatedModel,
-    AdditionalDataIncludedModel,
-    DateTimeFieldModel,
-    ChoicesFieldModel,
-    CharfieldTextfieldModel,
-    PostgresArrayFieldModel,
-    NoDeleteHistoryModel,
-)
 
 
 class SimpleModelTest(TestCase):

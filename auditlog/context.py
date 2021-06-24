@@ -1,7 +1,7 @@
 import contextlib
-from functools import partial
-import time
 import threading
+import time
+from functools import partial
 
 from django.contrib.auth import get_user_model
 from django.db.models.signals import pre_save
