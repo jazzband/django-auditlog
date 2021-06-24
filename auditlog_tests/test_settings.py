@@ -13,7 +13,6 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "auditlog",
     "auditlog_tests",
-    "multiselectfield",
 ]
 
 MIDDLEWARE = [

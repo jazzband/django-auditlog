@@ -2,7 +2,6 @@ import uuid
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from multiselectfield import MultiSelectField
 
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
@@ -173,7 +172,6 @@ class ChoicesFieldModel(models.Model):
     )
 
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
-    multiselect = MultiSelectField(max_length=3, choices=STATUS_CHOICES, max_choices=3)
     multiplechoice = models.CharField(max_length=255, choices=STATUS_CHOICES)
 
     history = AuditlogHistoryField()
