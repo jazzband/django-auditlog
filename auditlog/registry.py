@@ -110,8 +110,6 @@ class AuditlogModelRegistry(object):
         """Get a list of all registered models."""
         return list(self._registry.keys())
 
-    list = get_models  # TODO: remove after all users migrate to get_models
-
     def get_model_fields(self, model: ModelBase):
         return {
             "include_fields": list(self._registry[model]["include_fields"]),

@@ -328,9 +328,7 @@ class LogEntry(models.Model):
                             )
                         else:
                             values_display.append(choices_dict.get(value, "None"))
-                    except ValueError:
-                        values_display.append(choices_dict.get(value, "None"))
-                    except:
+                    except Exception:
                         values_display.append(choices_dict.get(value, "None"))
             else:
                 try:
