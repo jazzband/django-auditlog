@@ -4,6 +4,19 @@ import json
 
 import django
 import mock
+from dateutil.tz import gettz
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import pre_save
+from django.test import RequestFactory, TestCase
+from django.utils import dateformat, formats, timezone
+
+from auditlog.context import set_actor
+from auditlog.middleware import AuditlogMiddleware
+from auditlog.models import LogEntry
+from auditlog.registry import auditlog
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -21,19 +34,6 @@ from auditlog_tests.models import (
     SimpleModel,
     UUIDPrimaryKeyModel,
 )
-from dateutil.tz import gettz
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser, User
-from django.contrib.contenttypes.models import ContentType
-from django.db.models.signals import pre_save
-from django.test import RequestFactory, TestCase
-from django.utils import dateformat, formats, timezone
-
-from auditlog.context import set_actor
-from auditlog.middleware import AuditlogMiddleware
-from auditlog.models import LogEntry
-from auditlog.registry import auditlog
 
 
 class SimpleModelTest(TestCase):
