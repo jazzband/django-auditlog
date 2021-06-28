@@ -62,16 +62,26 @@ class LogEntryAdminMixin(object):
         if obj.action == LogEntry.Action.DELETE:
             return ""  # delete
         changes = json.loads(obj.changes)
-        msg = "<table><tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-        for i, field in enumerate(sorted(changes), 1):
-            value = [i, field] + (
-                ["***", "***"] if field == "password" else changes[field]
-            )
-            msg += format_html(
-                "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>", *value
-            )
 
-        msg += "</table>"
-        return mark_safe(msg)
+        msg = []
+
+        msg.append("<table>")
+        msg.append(self._format_header("#", "Field", "From", "To"))
+        for i, (field, change) in enumerate(sorted(changes.items()), 1):
+            value = [i, field] + (["***", "***"] if field == "password" else change)
+            msg.append(self._format_line(*value))
+        msg.append("</table>")
+
+        return mark_safe("".join(msg))
 
     msg.short_description = "Changes"
+
+    def _format_header(self, *labels):
+        return format_html(
+            "".join(["<tr>", "<th>{}</th>" * len(labels), "</tr>"]), *labels
+        )
+
+    def _format_line(self, *values):
+        return format_html(
+            "".join(["<tr>", "<td>{}</td>" * len(values), "</tr>"]), *values
+        )
