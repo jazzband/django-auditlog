@@ -8,7 +8,7 @@ from django.db.models.signals import ModelSignal, post_delete, post_save, pre_sa
 
 from auditlog.conf import settings
 
-DispatchUID = Tuple[int, str, int]
+DispatchUID = Tuple[int, int, int]
 
 
 class AuditlogModelRegistry:
@@ -132,10 +132,11 @@ class AuditlogModelRegistry:
         """
         Connect signals for the model.
         """
-        for signal in self._signals:
-            receiver = self._signals[signal]
+        for signal, receiver in self._signals.items():
             signal.connect(
-                receiver, sender=model, dispatch_uid=self._dispatch_uid(signal, model)
+                receiver,
+                sender=model,
+                dispatch_uid=self._dispatch_uid(signal, receiver),
             )
 
     def _disconnect_signals(self, model):
@@ -144,14 +145,12 @@ class AuditlogModelRegistry:
         """
         for signal, receiver in self._signals.items():
             signal.disconnect(
-                sender=model, dispatch_uid=self._dispatch_uid(signal, model)
+                sender=model, dispatch_uid=self._dispatch_uid(signal, receiver)
             )
 
-    def _dispatch_uid(self, signal, model) -> DispatchUID:
-        """
-        Generate a dispatch_uid.
-        """
-        return self.__hash__(), model.__qualname__, signal.__hash__()
+    def _dispatch_uid(self, signal, receiver) -> DispatchUID:
+        """Generate a dispatch_uid which is unique for a combination of self, signal, and receiver."""
+        return id(self), id(signal), id(receiver)
 
     def _get_model_classes(self, app_model: str) -> List[ModelBase]:
         try:
