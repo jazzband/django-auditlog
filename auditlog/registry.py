@@ -4,7 +4,7 @@ from django.db.models import Model
 from django.db.models.base import ModelBase
 from django.db.models.signals import ModelSignal, post_delete, post_save, pre_save
 
-DispatchUID = Tuple[int, str, int]
+DispatchUID = Tuple[int, int, int]
 
 
 class AuditlogModelRegistry(object):
@@ -121,10 +121,11 @@ class AuditlogModelRegistry(object):
         """
         Connect signals for the model.
         """
-        for signal in self._signals:
-            receiver = self._signals[signal]
+        for signal, receiver in self._signals.items():
             signal.connect(
-                receiver, sender=model, dispatch_uid=self._dispatch_uid(signal, model)
+                receiver,
+                sender=model,
+                dispatch_uid=self._dispatch_uid(signal, receiver),
             )
 
     def _disconnect_signals(self, model):
@@ -133,14 +134,12 @@ class AuditlogModelRegistry(object):
         """
         for signal, receiver in self._signals.items():
             signal.disconnect(
-                sender=model, dispatch_uid=self._dispatch_uid(signal, model)
+                sender=model, dispatch_uid=self._dispatch_uid(signal, receiver)
             )
 
-    def _dispatch_uid(self, signal, model) -> DispatchUID:
-        """
-        Generate a dispatch_uid.
-        """
-        return self.__hash__(), model.__qualname__, signal.__hash__()
+    def _dispatch_uid(self, signal, receiver) -> DispatchUID:
+        """Generate a dispatch_uid which is unique for a combination of self, signal, and receiver."""
+        return id(self), id(signal), id(receiver)
 
 
 auditlog = AuditlogModelRegistry()
