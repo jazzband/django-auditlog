@@ -27,6 +27,7 @@ from auditlog_tests.models import (
     DateTimeFieldModel,
     JSONModel,
     ManyRelatedModel,
+    ManyRelatedOtherModel,
     NoDeleteHistoryModel,
     PostgresArrayFieldModel,
     ProxyModel,
@@ -300,22 +301,65 @@ class ProxyModelWithActorTest(WithActorMixin, ProxyModelBase):
 
 class ManyRelatedModelTest(TestCase):
     """
-    Test the behaviour of a many-to-many relationship.
+    Test the behaviour of many-to-many relationships.
     """
 
     def setUp(self):
         self.obj = ManyRelatedModel.objects.create()
-        self.rel_obj = ManyRelatedModel.objects.create()
-        self.obj.related.add(self.rel_obj)
+        self.recursive = ManyRelatedModel.objects.create()
+        self.related = ManyRelatedOtherModel.objects.create()
+        self.base_log_entry_count = (
+            LogEntry.objects.count()
+        )  # created by the create() calls above
 
-    def test_related(self):
+    def test_recursive(self):
+        self.obj.recursive.add(self.recursive)
         self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
+            LogEntry.objects.get_for_objects(self.obj.recursive.all()).first(),
+            self.recursive.history.first(),
         )
+
+    def test_related_add_from_first_side(self):
+        self.obj.related.add(self.related)
         self.assertEqual(
             LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
+            self.related.history.first(),
+        )
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 1)
+
+    def test_related_add_from_other_side(self):
+        self.related.related.add(self.obj)
+        self.assertEqual(
+            LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
+            self.related.history.first(),
+        )
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 1)
+
+    def test_related_remove_from_first_side(self):
+        self.obj.related.add(self.related)
+        self.obj.related.remove(self.related)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
+
+    def test_related_remove_from_other_side(self):
+        self.related.related.add(self.obj)
+        self.related.related.remove(self.obj)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
+
+    def test_related_clear_from_first_side(self):
+        self.obj.related.add(self.related)
+        self.obj.related.clear()
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
+
+    def test_related_clear_from_other_side(self):
+        self.related.related.add(self.obj)
+        self.related.related.clear()
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
+
+    def test_additional_data(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.additional_data, {"related_model_id": self.related.id}
         )
 
 
@@ -927,7 +971,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 18)
+        self.assertEqual(len(self.test_auditlog.get_models()), 19)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
