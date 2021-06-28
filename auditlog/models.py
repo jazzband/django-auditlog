@@ -76,6 +76,55 @@ class LogEntryManager(models.Manager):
             )
         return None
 
+    def log_m2m_changes(
+        self, changed_queryset, instance, operation, field_name, **kwargs
+    ):
+        """Create a new "changed" log entry from m2m record.
+
+        :param instance: The model instance to log a change for.
+        :type instance: Model
+        :param operation: "add" or "delete".
+        :type action: str
+        :param kwargs: Field overrides for the :py:class:`LogEntry` object.
+        :return: The new log entry or `None` if there were no changes.
+        :rtype: LogEntry
+        """
+
+        pk = self._get_pk_value(instance)
+        if changed_queryset is not None:
+            kwargs.setdefault(
+                "content_type", ContentType.objects.get_for_model(instance)
+            )
+            kwargs.setdefault("object_pk", pk)
+            kwargs.setdefault("object_repr", smart_str(instance))
+            kwargs.setdefault("action", LogEntry.Action.UPDATE)
+
+            if isinstance(pk, int):
+                kwargs.setdefault("object_id", pk)
+
+            get_additional_data = getattr(instance, "get_additional_data", None)
+            if callable(get_additional_data):
+                kwargs.setdefault("additional_data", get_additional_data())
+
+            objects = [smart_str(instance) for instance in changed_queryset]
+            kwargs["changes"] = json.dumps(
+                {
+                    field_name: {
+                        "type": "m2m",
+                        "operation": operation,
+                        "objects": objects,
+                    }
+                }
+            )
+            db = instance._state.db
+            return (
+                self.create(**kwargs)
+                if db is None or db == ""
+                else self.using(db).create(**kwargs)
+            )
+
+        return None
+
     def get_for_object(self, instance):
         """
         Get log entries for the specified model instance.
