@@ -24,7 +24,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
-        "django-admin-rangefilter>=0.5.0",
+        "django-admin-rangefilter>=0.8.0",
         "django-jsonfield>=1.0.0",
         "python-dateutil>=2.6.0",
     ],
