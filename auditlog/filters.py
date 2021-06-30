@@ -89,7 +89,7 @@ def get_timestamp_filter():
     """Returns rangefilter filter class if able or a simple list filter as a fallback."""
     if apps.is_installed("rangefilter"):
         try:
-            from rangefilter.filter import DateTimeRangeFilter
+            from rangefilter.filters import DateTimeRangeFilter
 
             return DateTimeRangeFilter
         except ImportError:
