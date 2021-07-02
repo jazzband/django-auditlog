@@ -29,6 +29,7 @@ from auditlog_tests.models import (
     SimpleExcludeModel,
     SimpleIncludeModel,
     SimpleMappingModel,
+    SimpleMaskedModel,
     SimpleModel,
     UUIDPrimaryKeyModel,
 )
@@ -307,6 +308,18 @@ class SimpleMappingModelTest(TestCase):
                 "The diff function uses the django default verbose name for 'not_mapped'"
                 " and can be retrieved."
             ),
+        )
+
+
+class SimpeMaskedFieldsModelTest(TestCase):
+    """Log masked changes for fields in masked_fields"""
+
+    def test_register_masked_fields(self):
+        smm = SimpleMaskedModel(address="Sensitive data", text="Looong text")
+        smm.save()
+        self.assertTrue(
+            smm.history.latest().changes_dict["address"][1] == "*******ve data",
+            msg="The diff function masks 'address' field.",
         )
 
 

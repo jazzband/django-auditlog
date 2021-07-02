@@ -114,6 +114,17 @@ class SimpleMappingModel(models.Model):
 
     history = AuditlogHistoryField()
 
+@auditlog.register(masked_fields=["address"])
+class SimpleMaskedModel(models.Model):
+    """
+    A simple model used for register's masked_fields kwarg
+    """
+
+    address = models.CharField(max_length=100)
+    text = models.TextField()
+
+    history = AuditlogHistoryField()
+
 
 class AdditionalDataIncludedModel(models.Model):
     """
