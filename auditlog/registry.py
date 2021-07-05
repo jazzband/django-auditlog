@@ -40,7 +40,7 @@ class AuditlogModelRegistry(object):
         include_fields: Optional[List[str]] = None,
         exclude_fields: Optional[List[str]] = None,
         mapping_fields: Optional[Dict[str, str]] = None,
-        masked_fields: Optional[List[str]] = None,
+        mask_fields: Optional[List[str]] = None,
     ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
@@ -49,7 +49,7 @@ class AuditlogModelRegistry(object):
         :param include_fields: The fields to include. Implicitly excludes all other fields.
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
         :param mapping_fields: Mapping from field names to strings in diff.
-        :param masked_fields: The fields to mask for sensitive info.
+        :param mask_fields: The fields to mask for sensitive info.
 
         """
 
@@ -59,8 +59,8 @@ class AuditlogModelRegistry(object):
             exclude_fields = []
         if mapping_fields is None:
             mapping_fields = {}
-        if masked_fields is None:
-            masked_fields = []
+        if mask_fields is None:
+            mask_fields = []
 
         def registrar(cls):
             """Register models for a given class."""
@@ -71,7 +71,7 @@ class AuditlogModelRegistry(object):
                 "include_fields": include_fields,
                 "exclude_fields": exclude_fields,
                 "mapping_fields": mapping_fields,
-                "masked_fields": masked_fields,
+                "mask_fields": mask_fields,
             }
             self._connect_signals(cls)
 
@@ -119,7 +119,7 @@ class AuditlogModelRegistry(object):
             "include_fields": list(self._registry[model]["include_fields"]),
             "exclude_fields": list(self._registry[model]["exclude_fields"]),
             "mapping_fields": dict(self._registry[model]["mapping_fields"]),
-            "masked_fields": list(self._registry[model]["masked_fields"]),
+            "mask_fields": list(self._registry[model]["mask_fields"]),
         }
 
     def _connect_signals(self, model):

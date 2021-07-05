@@ -114,10 +114,10 @@ class SimpleMappingModel(models.Model):
 
     history = AuditlogHistoryField()
 
-@auditlog.register(masked_fields=["address"])
+@auditlog.register(mask_fields=["address"])
 class SimpleMaskedModel(models.Model):
     """
-    A simple model used for register's masked_fields kwarg
+    A simple model used for register's mask_fields kwarg
     """
 
     address = models.CharField(max_length=100)

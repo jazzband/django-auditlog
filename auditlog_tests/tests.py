@@ -312,9 +312,9 @@ class SimpleMappingModelTest(TestCase):
 
 
 class SimpeMaskedFieldsModelTest(TestCase):
-    """Log masked changes for fields in masked_fields"""
+    """Log masked changes for fields in mask_fields"""
 
-    def test_register_masked_fields(self):
+    def test_register_mask_fields(self):
         smm = SimpleMaskedModel(address="Sensitive data", text="Looong text")
         smm.save()
         self.assertTrue(
