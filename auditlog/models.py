@@ -12,6 +12,9 @@ from django.db.models import Field, Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import ugettext_lazy as _
+
+from auditlog import settings as auditlog_settings
+
 try:
     # Django 3.1
     from django.db.models import JSONField
@@ -366,7 +369,7 @@ class LogEntry(models.Model):
                         except ValueError:
                             pass
                     # check if length is longer than 140 and truncate with ellipsis
-                    if len(value) > 140:
+                    if auditlog_settings.ENABLE_ELLIPSIS and len(value) > 140:
                         value = "{}...".format(value[:140])
 
                     values_display.append(value)
