@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-
-from auditlog.models import LogEntry
+from django.db import connections
 
 
 class Command(BaseCommand):
@@ -28,7 +27,8 @@ class Command(BaseCommand):
             answer = response == "y"
 
         if answer:
-            count, _ = LogEntry.objects.all().delete()
-            self.stdout.write("Deleted %d objects." % count)
+            with connections.cursor() as cursor:
+                cursor.execute("TRUNCATE TABLE auditlog_logentry;")
+                self.stdout.write("Deleted all objects.")
         else:
             self.stdout.write("Aborted.")
