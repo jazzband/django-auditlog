@@ -278,7 +278,7 @@ class MiddlewareTest(TestCase):
         self.assertFalse(pre_save.has_listeners(LogEntry))
 
 
-class SimpeIncludeModelTest(TestCase):
+class SimpleIncludeModelTest(TestCase):
     """Log only changes in include_fields"""
 
     def test_specified_save_fields_are_ignored_if_not_included(self):
@@ -317,7 +317,7 @@ class SimpeIncludeModelTest(TestCase):
         self.assertTrue(sim.history.count() == 2, msg="There are two log entries")
 
 
-class SimpeExcludeModelTest(TestCase):
+class SimpleExcludeModelTest(TestCase):
     """Log only changes that are not in exclude_fields"""
 
     def test_specified_save_fields_are_excluded_normally(self):
@@ -335,12 +335,12 @@ class SimpeExcludeModelTest(TestCase):
         sem.save()
         self.assertTrue(sem.history.count() == 1, msg="There is one log entry")
 
-        # Change label, ignore
+        # Change label, record it.
         sem.label = "Changed label"
         sem.save()
         self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
 
-        # Change text, record
+        # Change text, ignore it.
         sem.text = "Short text"
         sem.save()
         self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
