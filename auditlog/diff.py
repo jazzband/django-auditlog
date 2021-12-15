@@ -85,8 +85,8 @@ def model_instance_diff(old, new, fields_to_check=None):
     :type old: Model
     :param new: The new state of the model instance.
     :type new: Model
-    :param fields_to_check: An iterable of the field names to be restricted to, while ignoring the rest of the model
-        fields. This is used to pass the `update_fields` kwarg from the model's `save` method.
+    :param fields_to_check: An iterable of the field names to restrict the diff to, while ignoring the rest of
+        the model's fields. This is used to pass the `update_fields` kwarg from the model's `save` method.
     :type fields_to_check: Iterable
     :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
              as value.
