@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db import connections
+from django.db import connection
 
 
 class Command(BaseCommand):
@@ -27,7 +27,7 @@ class Command(BaseCommand):
             answer = response == "y"
 
         if answer:
-            with connections.cursor() as cursor:
+            with connection.cursor() as cursor:
                 cursor.execute("TRUNCATE TABLE auditlog_logentry;")
                 self.stdout.write("Deleted all objects.")
         else:
