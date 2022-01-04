@@ -83,10 +83,10 @@ When using automatic logging, the actor is empty by default. However, auditlog c
 request automatically. This does not need any custom code, adding a middleware class is enough. When an actor is logged
 the remote address of that actor will be logged as well.
 
-To enable the automatic logging of the actors, simply add the following to your ``MIDDLEWARE_CLASSES`` setting in your
+To enable the automatic logging of the actors, simply add the following to your ``MIDDLEWARE`` setting in your
 project's configuration file::
 
-    MIDDLEWARE_CLASSES = (
+    MIDDLEWARE = (
         # Request altering middleware, e.g., Django's default middleware classes
         'auditlog.middleware.AuditlogMiddleware',
         # Other middleware
@@ -135,7 +135,7 @@ The :py:class:`AuditlogHistoryField` provides easy access to :py:class:`LogEntry
           </tr>
         </thead>
         <tbody>
-        {% for key, value in mymodel.history.latest.changes_dict.iteritems %}
+        {% for key, value in mymodel.history.latest.changes_dict.items %}
           <tr>
             <td>{{ key }}</td>
             <td>{{ value.0|default:"None" }}</td>
@@ -191,8 +191,8 @@ Management commands
 
 Auditlog provides the ``auditlogflush`` management command to clear all log entries from the database.
 
-The command asks for confirmation, it is not possible to execute the command without giving any form of (simulated) user
-input.
+By default, the command asks for confirmation. It is possible to run the command with the `-y` or `--yes` flag to skip
+confirmation and immediately delete all entries.
 
 .. warning::
 

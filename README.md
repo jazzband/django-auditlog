@@ -1,8 +1,12 @@
 django-auditlog
 ===============
 
-[![Build Status](https://travis-ci.org/jjkester/django-auditlog.svg?branch=master)](https://travis-ci.org/jjkester/django-auditlog)
+[![Jazzband](https://jazzband.co/static/img/badge.svg)](https://jazzband.co/)
+[![Build Status](https://github.com/jazzband/django-auditlog/workflows/Test/badge.svg)](https://github.com/jazzband/django-auditlog/actions)
 [![Docs](https://readthedocs.org/projects/django-auditlog/badge/?version=latest)](http://django-auditlog.readthedocs.org/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/jazzband/django-auditlog/branch/master/graph/badge.svg)](https://codecov.io/gh/jazzband/django-auditlog)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/django-auditlog.svg)](https://pypi.python.org/pypi/django-auditlog)
+[![Supported Django versions](https://img.shields.io/pypi/djversions/django-auditlog.svg)](https://pypi.python.org/pypi/django-auditlog)
 
 **Please remember that this app is still in development.**
 **Test this app before deploying it in production environments.**
@@ -35,4 +39,4 @@ Releases
 2. Create a new branch `vX.Y.Z` from master for that specific release.
 3. Bump versions in `setup.py` and `docs/source/conf.py` (docs have 2 places where the versions need to be changed!)
 4. Pull request `vX.Y.Z` -> `master`. 
-5. Pull request `master` -> `stable`. This merge triggers the deploy to pypi
+5. Pull request `master` -> `stable`. This merge triggers the deploy to pypi.
