@@ -213,7 +213,7 @@ class LogEntry(models.Model):
     )
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(
-        choices=Action.choices, verbose_name=_("action")
+        choices=Action.choices, verbose_name=_("action"), db_index=True
     )
     changes = models.TextField(blank=True, verbose_name=_("change message"))
     actor = models.ForeignKey(
