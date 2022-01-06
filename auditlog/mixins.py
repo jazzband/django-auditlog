@@ -40,7 +40,9 @@ class LogEntryAdminMixin(object):
         except NoReverseMatch:
             return obj.object_repr
         else:
-            return format_html('<a href="{}">{}</a>', link, obj.object_repr)
+            return format_html(
+                '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
+            )
 
     resource_url.short_description = "Resource"
 
