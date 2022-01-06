@@ -112,7 +112,7 @@ class SimpleModelTest(TestCase):
             msg="There is no log entries created",
         )
         obj.refresh_from_db()
-        self.assertFalse(obj.boolean) # Change didn't persist in DB as expected.
+        self.assertFalse(obj.boolean)  # Change didn't persist in DB as expected.
 
         # Passing `None`` should save both fields according to Django.
         obj.integer = 1
@@ -288,7 +288,7 @@ class SimpleIncludeModelTest(TestCase):
 
         self.assertTrue(
             obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
-            msg="Text change was not logged, even when passed explicitly"
+            msg="Text change was not logged, even when passed explicitly",
         )
 
         obj.label = "New label"
@@ -327,7 +327,7 @@ class SimpleExcludeModelTest(TestCase):
 
         self.assertTrue(
             obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
-            msg="Text change was not logged, even when passed explicitly"
+            msg="Text change was not logged, even when passed explicitly",
         )
 
     def test_register_exclude_fields(self):
