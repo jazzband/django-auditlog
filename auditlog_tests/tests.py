@@ -798,7 +798,7 @@ class CharfieldTextfieldModelTest(TestCase):
     def test_changes_display_dict_longchar(self):
         self.assertTrue(
             self.obj.history.latest().changes_display_dict["longchar"][1]
-            == "{}...".format(self.PLACEHOLDER_LONGCHAR[:140]),
+            == f"{self.PLACEHOLDER_LONGCHAR[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
         SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGCHAR[:139]
@@ -813,7 +813,7 @@ class CharfieldTextfieldModelTest(TestCase):
     def test_changes_display_dict_longtextfield(self):
         self.assertTrue(
             self.obj.history.latest().changes_display_dict["longtextfield"][1]
-            == "{}...".format(self.PLACEHOLDER_LONGTEXTFIELD[:140]),
+            == f"{self.PLACEHOLDER_LONGTEXTFIELD[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
         SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGTEXTFIELD[:139]
@@ -883,13 +883,11 @@ class AdminPanelTest(TestCase):
         assert res.status_code == 200
         res = self.client.get("/admin/auditlog/logentry/add/")
         assert res.status_code == 200
-        res = self.client.get(
-            "/admin/auditlog/logentry/{}/".format(log_pk), follow=True
-        )
+        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
         assert res.status_code == 200
-        res = self.client.get("/admin/auditlog/logentry/{}/delete/".format(log_pk))
+        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
         assert res.status_code == 200
-        res = self.client.get("/admin/auditlog/logentry/{}/history/".format(log_pk))
+        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
         assert res.status_code == 200
 
 

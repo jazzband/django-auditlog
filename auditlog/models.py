@@ -359,7 +359,7 @@ class LogEntry(models.Model):
                             pass
                     # check if length is longer than 140 and truncate with ellipsis
                     if len(value) > 140:
-                        value = "{}...".format(value[:140])
+                        value = f"{value[:140]}..."
 
                     values_display.append(value)
             verbose_name = model_fields["mapping_fields"].get(
@@ -399,14 +399,14 @@ class AuditlogHistoryField(GenericRelation):
 
         kwargs["content_type_field"] = "content_type"
         self.delete_related = delete_related
-        super(AuditlogHistoryField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def bulk_related_objects(self, objs, using=DEFAULT_DB_ALIAS):
         """
         Return all objects related to ``objs`` via this ``GenericRelation``.
         """
         if self.delete_related:
-            return super(AuditlogHistoryField, self).bulk_related_objects(objs, using)
+            return super().bulk_related_objects(objs, using)
 
         # When deleting, Collector.collect() finds related objects using this
         # method.  However, because we don't want to delete these related
@@ -418,7 +418,7 @@ class AuditlogHistoryField(GenericRelation):
 try:
     from south.modelsinspector import add_introspection_rules
 
-    add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
+    add_introspection_rules([], [r"^auditlog\.models\.AuditlogHistoryField"])
     raise DeprecationWarning(
         "South support will be dropped in django-auditlog 0.4.0 or later."
     )

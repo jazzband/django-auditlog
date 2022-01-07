@@ -11,7 +11,7 @@ from auditlog.models import LogEntry
 MAX = 75
 
 
-class LogEntryAdminMixin(object):
+class LogEntryAdminMixin:
     def created(self, obj):
         return obj.timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -20,7 +20,7 @@ class LogEntryAdminMixin(object):
     def user_url(self, obj):
         if obj.actor:
             app_label, model = settings.AUTH_USER_MODEL.split(".")
-            viewname = "admin:%s_%s_change" % (app_label, model.lower())
+            viewname = f"admin:{app_label}_{model.lower()}_change"
             try:
                 link = urlresolvers.reverse(viewname, args=[obj.actor.pk])
             except NoReverseMatch:
@@ -33,7 +33,7 @@ class LogEntryAdminMixin(object):
 
     def resource_url(self, obj):
         app_label, model = obj.content_type.app_label, obj.content_type.model
-        viewname = "admin:%s_%s_change" % (app_label, model)
+        viewname = f"admin:{app_label}_{model}_change"
         try:
             args = [obj.object_pk] if obj.object_id is None else [obj.object_id]
             link = urlresolvers.reverse(viewname, args=args)
