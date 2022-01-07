@@ -76,7 +76,7 @@ def get_field_value(obj, field):
     return value
 
 
-def model_instance_diff(old, new):
+def model_instance_diff(old, new, fields_to_check=None):
     """
     Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
     created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
@@ -85,6 +85,9 @@ def model_instance_diff(old, new):
     :type old: Model
     :param new: The new state of the model instance.
     :type new: Model
+    :param fields_to_check: An iterable of the field names to restrict the diff to, while ignoring the rest of
+        the model's fields. This is used to pass the `update_fields` kwarg from the model's `save` method.
+    :type fields_to_check: Iterable
     :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
              as value.
     :rtype: dict
@@ -110,6 +113,9 @@ def model_instance_diff(old, new):
     else:
         fields = set()
         model_fields = None
+
+    if fields_to_check:
+        fields = set([field for field in fields if field.name in fields_to_check])
 
     # Check if fields must be filtered
     if (
