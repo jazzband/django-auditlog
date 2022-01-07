@@ -14,7 +14,7 @@ The repository can be found at https://github.com/jazzband/django-auditlog/.
 - Python 3.7 or higher
 - Django 2.2 or higher
 
-Auditlog is currently tested with Python 3.7 - 3.8 and Django 2.2, 3.1 and 3.2. The latest test report can be found
+Auditlog is currently tested with Python 3.7+ and Django 2.2, 3.2 and 4.0. The latest test report can be found
 at https://github.com/jazzband/django-auditlog/actions.
 
 Adding Auditlog to your Django application
