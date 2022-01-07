@@ -115,7 +115,7 @@ def model_instance_diff(old, new, fields_to_check=None):
         model_fields = None
 
     if fields_to_check:
-        fields = set([field for field in fields if field.name in fields_to_check])
+        fields = {field for field in fields if field.name in fields_to_check}
 
     # Check if fields must be filtered
     if (

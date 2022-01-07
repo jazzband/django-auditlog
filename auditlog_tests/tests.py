@@ -1031,13 +1031,11 @@ class AdminPanelTest(TestCase):
         assert res.status_code == 200
         res = self.client.get("/admin/auditlog/logentry/add/")
         assert res.status_code == 200
-        res = self.client.get(
-            "/admin/auditlog/logentry/{}/".format(log_pk), follow=True
-        )
+        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
         assert res.status_code == 200
-        res = self.client.get("/admin/auditlog/logentry/{}/delete/".format(log_pk))
+        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
         assert res.status_code == 200
-        res = self.client.get("/admin/auditlog/logentry/{}/history/".format(log_pk))
+        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
         assert res.status_code == 200
 
 

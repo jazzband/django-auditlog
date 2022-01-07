@@ -14,7 +14,7 @@ from django.db.models.signals import (
 DispatchUID = Tuple[int, int, int]
 
 
-class AuditlogModelRegistry(object):
+class AuditlogModelRegistry:
     """
     A registry that keeps track of the models that use Auditlog to track changes.
     """
