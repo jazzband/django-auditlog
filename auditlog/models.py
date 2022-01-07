@@ -12,7 +12,7 @@ from django.db.models import Field, Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
-from jsonfield.fields import JSONField
+from django_jsonfield_backport.models import JSONField
 
 
 class LogEntryManager(models.Manager):
