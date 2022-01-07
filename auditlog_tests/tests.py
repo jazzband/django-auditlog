@@ -81,6 +81,49 @@ class SimpleModelTest(TestCase):
             msg="The change is correctly logged",
         )
 
+    def test_update_specific_field_supplied_via_save_method(self):
+        obj = self.obj
+
+        # Change 2 fields, but save one only.
+        obj.boolean = True
+        obj.text = "Short text"
+        obj.save(update_fields=["boolean"])
+
+        # This implicitly asserts there is only one UPDATE change since the `.get` would fail otherwise.
+        self.assertJSONEqual(
+            obj.history.get(action=LogEntry.Action.UPDATE).changes,
+            '{"boolean": ["False", "True"]}',
+            msg="Object modifications that are not saved to DB are not logged when using the `update_fields`.",
+        )
+
+    def test_django_update_fields_edge_cases(self):
+        """
+        The test ensures that if Django's `update_fields` behavior ever changes for special values `(None, [])`, the
+        package should too. https://docs.djangoproject.com/en/3.2/ref/models/instances/#specifying-which-fields-to-save
+        """
+        obj = self.obj
+
+        # Change boolean, but save no changes by passing an empty list.
+        obj.boolean = True
+        obj.save(update_fields=[])
+
+        self.assertTrue(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+            msg="There is no log entries created",
+        )
+        obj.refresh_from_db()
+        self.assertFalse(obj.boolean)  # Change didn't persist in DB as expected.
+
+        # Passing `None` should save both fields according to Django.
+        obj.integer = 1
+        obj.boolean = True
+        obj.save(update_fields=None)
+        self.assertJSONEqual(
+            obj.history.get(action=LogEntry.Action.UPDATE).changes,
+            '{"boolean": ["False", "True"], "integer": ["None", "1"]}',
+            msg="The 2 fields changed are correctly logged",
+        )
+
     def test_delete(self):
         """Deletion is logged correctly."""
         # Get the object to work with
@@ -235,8 +278,28 @@ class MiddlewareTest(TestCase):
         self.assertFalse(pre_save.has_listeners(LogEntry))
 
 
-class SimpeIncludeModelTest(TestCase):
+class SimpleIncludeModelTest(TestCase):
     """Log only changes in include_fields"""
+
+    def test_specified_save_fields_are_ignored_if_not_included(self):
+        obj = SimpleIncludeModel.objects.create(label="Initial label", text="Text")
+        obj.text = "New text"
+        obj.save(update_fields=["text"])
+
+        self.assertTrue(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+            msg="Text change was not logged, even when passed explicitly",
+        )
+
+        obj.label = "New label"
+        obj.text = "Newer text"
+        obj.save(update_fields=["text", "label"])
+
+        self.assertJSONEqual(
+            obj.history.get(action=LogEntry.Action.UPDATE).changes,
+            '{"label": ["Initial label", "New label"]}',
+            msg="Only the label was logged, regardless of multiple entries in `update_fields`",
+        )
 
     def test_register_include_fields(self):
         sim = SimpleIncludeModel(label="Include model", text="Looong text")
@@ -254,20 +317,30 @@ class SimpeIncludeModelTest(TestCase):
         self.assertTrue(sim.history.count() == 2, msg="There are two log entries")
 
 
-class SimpeExcludeModelTest(TestCase):
+class SimpleExcludeModelTest(TestCase):
     """Log only changes that are not in exclude_fields"""
+
+    def test_specified_save_fields_are_excluded_normally(self):
+        obj = SimpleExcludeModel.objects.create(label="Exclude model", text="Text")
+        obj.text = "New text"
+        obj.save(update_fields=["text"])
+
+        self.assertTrue(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+            msg="Text change was not logged, even when passed explicitly",
+        )
 
     def test_register_exclude_fields(self):
         sem = SimpleExcludeModel(label="Exclude model", text="Looong text")
         sem.save()
         self.assertTrue(sem.history.count() == 1, msg="There is one log entry")
 
-        # Change label, ignore
+        # Change label, record it.
         sem.label = "Changed label"
         sem.save()
         self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
 
-        # Change text, record
+        # Change text, ignore it.
         sem.text = "Short text"
         sem.save()
         self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
