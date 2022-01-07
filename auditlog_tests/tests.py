@@ -1,9 +1,7 @@
 import datetime
 import itertools
-import json
 from unittest import mock
 
-import django
 from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -549,12 +547,7 @@ class AdditionalDataModelTest(TestCase):
             obj_with_additional_data.history.count(), 1, msg="There is 1 log entry"
         )
         log_entry = obj_with_additional_data.history.get()
-        # FIXME: Work-around for the fact that additional_data isn't working
-        # on Django 3.1 correctly (see https://github.com/jazzband/django-auditlog/issues/266)
-        if django.VERSION >= (3, 1):
-            extra_data = json.loads(log_entry.additional_data)
-        else:
-            extra_data = log_entry.additional_data
+        extra_data = log_entry.additional_data
         self.assertIsNotNone(extra_data)
         self.assertEqual(
             extra_data["related_model_text"],

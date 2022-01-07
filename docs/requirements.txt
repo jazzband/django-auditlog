@@ -3,3 +3,4 @@ django>=3.2,<3.3
 sphinx
 sphinx_rtd_theme
 psycopg2-binary
+django-jsonfield-backport>=1.0.0
