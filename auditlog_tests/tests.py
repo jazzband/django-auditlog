@@ -98,8 +98,8 @@ class SimpleModelTest(TestCase):
 
     def test_django_update_fields_edge_cases(self):
         """
-        The test ensures that if Django's `update_fields` behavior was ever changed for special values (None, []),
-        the package should too. https://docs.djangoproject.com/en/models/instances/#specifying-which-fields-to-save
+        The test ensures that if Django's `update_fields` behavior ever changes for special values `(None, [])`, the
+        package should too. https://docs.djangoproject.com/en/3.2/ref/models/instances/#specifying-which-fields-to-save
         """
         obj = self.obj
 
@@ -114,7 +114,7 @@ class SimpleModelTest(TestCase):
         obj.refresh_from_db()
         self.assertFalse(obj.boolean)  # Change didn't persist in DB as expected.
 
-        # Passing `None`` should save both fields according to Django.
+        # Passing `None` should save both fields according to Django.
         obj.integer = 1
         obj.boolean = True
         obj.save(update_fields=None)
