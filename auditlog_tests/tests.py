@@ -209,7 +209,10 @@ class MiddlewareTest(TestCase):
     """
 
     def setUp(self):
-        self.middleware = AuditlogMiddleware()
+        def get_response(request):
+            return HttpResponse()
+
+        self.middleware = AuditlogMiddleware(get_response)
         self.factory = RequestFactory()
         self.user = User.objects.create_user(
             username="test", email="test@example.com", password="top_secret"
