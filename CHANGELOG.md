@@ -7,6 +7,12 @@
 ## 0.4.7 (2019-12-19)
 ## 0.4.6 (2018-09-18)
 ## 0.4.5 (2018-01-12)
+
+### Improvements
+
+Added support for Django 2.0, along with a number of bug fixes.
+
+
 ## 0.4.4 (2017-11-17)
 
 ### Improvements
