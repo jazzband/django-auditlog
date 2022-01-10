@@ -19,6 +19,17 @@
 ## 0.2.1 (2014-07-08)
 ## 0.2.0 (2014-03-08)
 ## 0.1.1 (2013-12-12)
+
+### New functionality
+
+- Utility methods for using log entry data
+
+### Improvements
+
+- Only save a new log entry if there are actual changes
+- Better way of loading the user model in the middleware
+
+
 ## 0.1.0 (2013-10-21)
 
 First beta release of Auditlog.
