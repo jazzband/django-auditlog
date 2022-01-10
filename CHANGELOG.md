@@ -11,6 +11,16 @@
 ## 0.4.3 (2017-02-16)
 ## 0.4.2 (2017-02-16)
 ## 0.4.1 (2016-12-27)
+
+### Improvements
+
+- Improved Django Admin pages
+
+### Fixes
+
+- Fixed multithreading issue where the wrong user was written to the log
+
+
 ## 0.4.0 (2016-08-17)
 
 ### Breaking changes
