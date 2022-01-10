@@ -12,6 +12,26 @@
 ## 0.4.2 (2017-02-16)
 ## 0.4.1 (2016-12-27)
 ## 0.4.0 (2016-08-17)
+
+### Breaking changes
+
+- Dropped support for Django 1.7
+- Updated dependencies - _please check whether your project works with these higher versions_
+
+### New features
+
+- Management command for deleting all log entries
+- Added admin interface (thanks, @crackjack)
+
+### Improvements
+
+- Django: add 1.10 support
+
+### Fixes
+
+- Solved migration error for MySQL users
+
+
 ## 0.3.3 (2016-01-23)
 
 ### Fixes
