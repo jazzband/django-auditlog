@@ -9,6 +9,12 @@
 ## 0.4.5 (2018-01-12)
 ## 0.4.4 (2017-11-17)
 ## 0.4.3 (2017-02-16)
+
+### Fixes
+
+- Fixes cricital bug in admin mixin making the library only usable on Django 1.11
+
+
 ## 0.4.2 (2017-02-16)
 
 _As it turns out, haste is never good. Due to the focus on quickly releasing this version a nasty bug was not spotted, which makes this version only usable with Django 1.11 and above. Upgrading to 0.4.3 is not only encouraged but most likely necessary. Apologies for the inconvenience and lacking quality control._
