@@ -13,6 +13,18 @@
 ## 0.4.1 (2016-12-27)
 ## 0.4.0 (2016-08-17)
 ## 0.3.3 (2016-01-23)
+
+### Fixes
+
+- fix `unregister` method
+- `LogEntry.objects.get_for_objects` works properly on PostgreSQL
+- Added index in 0.3.2 no longer breaks for users with MySQL databases
+
+### Important notes
+
+- The `object_pk` field is now limited to 255 chars
+
+
 ## 0.3.2 (2015-10-19)
 
 ### New functionality
