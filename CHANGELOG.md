@@ -16,6 +16,26 @@
 ## 0.3.2 (2015-10-19)
 ## 0.3.1 (2015-07-29)
 ## 0.3.0 (2015-07-22)
+
+### Breaking changes
+
+- Django: drop out-of-date versions support, support 1.7+
+- South is no longer supported
+
+### New functionality
+
+- Workaround for many-to-many support
+- Additional data
+- Python: support 2.7 and 3.4
+
+### Improvements
+
+- Better diffs
+- Remote address is logged through middleware
+- Better documentation
+- Compatibility with [django-polymorphic](https://pypi.org/project/django-polymorphic/)
+
+
 ## 0.2.1 (2014-07-08)
 
 ### New functionality
