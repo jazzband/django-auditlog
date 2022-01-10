@@ -10,6 +10,19 @@
 ## 0.4.4 (2017-11-17)
 ## 0.4.3 (2017-02-16)
 ## 0.4.2 (2017-02-16)
+
+_As it turns out, haste is never good. Due to the focus on quickly releasing this version a nasty bug was not spotted, which makes this version only usable with Django 1.11 and above. Upgrading to 0.4.3 is not only encouraged but most likely necessary. Apologies for the inconvenience and lacking quality control._
+
+### Improvements
+
+- Models can be registered with decorators now
+
+### Fixes
+
+- A lot, yes, [_really_ a lot](https://github.com/jjkester/django-auditlog/milestone/8?closed=1), of fixes for the admin integration
+- Flush command fixed for Django 1.10
+
+
 ## 0.4.1 (2016-12-27)
 
 ### Improvements
