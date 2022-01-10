@@ -3,6 +3,20 @@
 ## 1.0.0 (unreleased)
 ### Final (unreleased)
 ### Alpha 1 (1.0a1, 2020-09-07)
+
+#### Improvements
+
+- Refactor the `auditlogflush` management command
+- Clean up project structure
+- Python: add 3.8 support, drop 2.7 and 3.4 support
+- Django: add 3.0 and 3.1 support, drop 1.11, 2.0 and 2.1 support
+
+#### Fixes
+
+- Fix field choices diff
+- Allow higher versions of python-dateutil than 2.6.0
+
+
 ## 0.4.8 (2019-11-12)
 
 ### Improvements
