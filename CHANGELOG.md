@@ -4,6 +4,12 @@
 ### Final (unreleased)
 ### Alpha 1 (1.0a1, 2020-09-07)
 ## 0.4.8 (2019-11-12)
+
+### Improvements
+
+- Add support for PostgreSQL 10
+
+
 ## 0.4.7 (2019-12-19)
 
 ### Improvements
