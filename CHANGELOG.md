@@ -17,6 +17,12 @@
 ## 0.3.1 (2015-07-29)
 ## 0.3.0 (2015-07-22)
 ## 0.2.1 (2014-07-08)
+
+### New functionality
+
+- South compatibility for `AuditlogHistoryField`
+
+
 ## 0.2.0 (2014-03-08)
 
 Although this release contains mostly bugfixes, the improvements were significant enough to justify a higher version number.
