@@ -15,6 +15,12 @@
 ## 0.3.3 (2016-01-23)
 ## 0.3.2 (2015-10-19)
 ## 0.3.1 (2015-07-29)
+
+### Fixes
+
+- Auditlog data is now correctly stored in the thread.
+
+
 ## 0.3.0 (2015-07-22)
 
 ### Breaking changes
