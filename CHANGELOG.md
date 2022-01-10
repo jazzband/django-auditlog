@@ -18,6 +18,16 @@
 ## 0.3.0 (2015-07-22)
 ## 0.2.1 (2014-07-08)
 ## 0.2.0 (2014-03-08)
+
+Although this release contains mostly bugfixes, the improvements were significant enough to justify a higher version number.
+
+### Improvements
+
+- Signal disconnection fixed
+- Model diffs use unicode strings instead of regular strings
+- Tests on middleware
+
+
 ## 0.1.1 (2013-12-12)
 
 ### New functionality
