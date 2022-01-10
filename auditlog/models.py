@@ -418,7 +418,7 @@ class AuditlogHistoryField(GenericRelation):
 try:
     from south.modelsinspector import add_introspection_rules
 
-    add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
+    add_introspection_rules([], [r"^auditlog\.models\.AuditlogHistoryField"])
     raise DeprecationWarning(
         "South support will be dropped in django-auditlog 0.4.0 or later."
     )
