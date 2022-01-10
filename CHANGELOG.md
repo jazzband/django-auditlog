@@ -1,7 +1,37 @@
 # Changes
 
 ## 1.0.0 (unreleased)
+
 ### Final (unreleased)
+
+#### Improvements
+
+- build: add classifiers for Python and Django
+- build: replace django-jsonfield with django-jsonfield-backport ([#339](https://github.com/jazzband/django-auditlog/pull/339))
+- ci: replace Travis with Github Actions
+- docs: follow Jazzband guidelines (badge, how to contribute, code of conduct) ([#269](https://github.com/jazzband/django-auditlog/pull/269))
+- docs: add a changelog
+- docs: remove note about maintenance
+- docs: update the release strategy
+- docs: use the latest django LTS (3.2) to build docs
+- feat: add a db index to `LogEntry`'s `action` field ([#236](https://github.com/jazzband/django-auditlog/pull/236))
+- feat: add the content type to `resource` field
+- feat: add the `actor` username to search fields in admin
+- refactor: lint the code with Black and isort
+- tests: init pre-commit config
+- Python: add 3.9 and 3.10 support, drop 3.5 and 3.6 support
+- Django: add 3.2 (LTS) and 4.0 support, drop 3.0 and 3.1 support
+
+#### Fixes
+
+- docs: replace `MIDDLEWARE_CLASSES` with `MIDDLEWARE`
+- Remove old django (< 1.9) related codes
+- Replace deprecated `smart_text()` with `smart_str()`
+- Replace `ugettext` with `gettext` for Django 4
+- Support Django's save method `update_fields` kwarg ([#336](https://github.com/jazzband/django-auditlog/pull/336))
+- Fix invalid escape sequence on Python 3.7
+
+
 ### Alpha 1 (1.0a1, 2020-09-07)
 
 #### Improvements
