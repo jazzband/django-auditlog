@@ -6,6 +6,22 @@
 ## 0.4.8 (2019-11-12)
 ## 0.4.7 (2019-12-19)
 ## 0.4.6 (2018-09-18)
+
+### Features
+
+- Allow `AuditlogHistoryField` to block cascading deletes ([#172](https://github.com/jazzband/django-auditlog/pull/172))
+
+### Improvements
+
+- Add Python classifiers for supported Python versions ([#176](https://github.com/jazzband/django-auditlog/pull/176))
+- Update README to include steps to release ([#185](https://github.com/jazzband/django-auditlog/pull/185))
+
+### Fixes
+
+- Fix the rendering of the `msg` field with Django 2.0 ([#166](https://github.com/jazzband/django-auditlog/pull/166))
+- Mark `LogEntryAdminMixin` methods output as safe where required ([#167](https://github.com/jazzband/django-auditlog/pull/167))
+
+
 ## 0.4.5 (2018-01-12)
 
 ### Improvements
