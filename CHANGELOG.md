@@ -8,6 +8,22 @@
 ## 0.4.6 (2018-09-18)
 ## 0.4.5 (2018-01-12)
 ## 0.4.4 (2017-11-17)
+
+### Improvements
+
+- Use [Tox](https://tox.wiki) to run tests
+- Use Codecov to check to coverage before merging
+- Django: drop 1.9 support, add 1.11 (LTS) support
+- Python: tests against 2.7, 3.4, 3.5 and 3.6 versions
+- Add `python-dateutil` to requirements
+
+### Fixes
+
+- Support models with UUID primary keys ([#111](https://github.com/jazzband/django-auditlog/pull/111))
+- Add management commands package to setup.py ([#130](https://github.com/jazzband/django-auditlog/pull/130))
+- Add `changes_display_dict` property to `LogEntry` model to display diff in a more human readable format ([#94](https://github.com/jazzband/django-auditlog/pull/94))
+
+
 ## 0.4.3 (2017-02-16)
 
 ### Fixes
