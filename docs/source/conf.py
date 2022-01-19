@@ -9,7 +9,7 @@
 import os
 import sys
 from datetime import date
-from pkg_resources import get_distribution
+from importlib.metadata import version
 
 # -- Path setup --------------------------------------------------------------
 
@@ -31,7 +31,7 @@ project = 'django-auditlog'
 author = 'Jan-Jelle Kester and contributors'
 copyright = f'2013-{date.today().year}, {author}'
 
-release = get_distribution('django-auditlog').version
+release = version('django-auditlog')
 # for example take major/minor
 version = '.'.join(release.split('.')[:2])
 
