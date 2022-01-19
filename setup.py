@@ -17,6 +17,11 @@ setup(
         "auditlog.management.commands",
     ],
     url="https://github.com/jazzband/django-auditlog",
+    project_urls={
+        "Documentation": "https://django-auditlog.readthedocs.io",
+        "Source": "https://github.com/jazzband/django-auditlog",
+        "Tracker": "https://github.com/jazzband/django-auditlog/issues",
+    },
     license="MIT",
     author="Jan-Jelle Kester",
     description="Audit log app for Django",
