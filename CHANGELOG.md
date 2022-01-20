@@ -1,8 +1,8 @@
 # Changes
 
-## 1.0.0 (unreleased)
+## 1.0.0 (2022-01-24)
 
-### Final (unreleased)
+### Final
 
 #### Improvements
 
