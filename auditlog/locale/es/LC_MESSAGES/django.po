@@ -1,0 +1,150 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-01-30 15:13-0600\n"
+"PO-Revision-Date: 2021-04-05 13:31-0400\n"
+"Last-Translator: Luis Saavedra <luis94855510@gmail.com>\n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 2.3\n"
+
+#: auditlog/admin.py:23 auditlog/mixins.py:61 auditlog/mixins.py:84
+msgid "Changes"
+msgstr "Cambios"
+
+#: auditlog/apps.py:10
+msgid "Audit Log"
+msgstr "Registro de Auditoría"
+
+#: auditlog/filters.py:6
+msgid "Resource Type"
+msgstr "Tipo de Recurso"
+
+#: auditlog/mixins.py:19
+msgid "Created"
+msgstr "Creado"
+
+#: auditlog/mixins.py:33
+msgid "User"
+msgstr "Usuario"
+
+#: auditlog/mixins.py:48
+msgid "Resource"
+msgstr "Recurso"
+
+#: auditlog/mixins.py:69
+msgid "Field"
+msgstr "Campo"
+
+#: auditlog/mixins.py:70
+msgid "From"
+msgstr "De"
+
+#: auditlog/mixins.py:71
+msgid "To"
+msgstr "A"
+
+#: auditlog/models.py:197
+msgid "create"
+msgstr "creado"
+
+#: auditlog/models.py:198
+msgid "update"
+msgstr "actualizado"
+
+#: auditlog/models.py:199
+msgid "delete"
+msgstr "eliminado"
+
+#: auditlog/models.py:206
+msgid "content type"
+msgstr "tipo de contenido"
+
+#: auditlog/models.py:209
+msgid "object pk"
+msgstr "pk del objeto"
+
+#: auditlog/models.py:212
+msgid "object id"
+msgstr "id del objeto"
+
+#: auditlog/models.py:214
+msgid "object representation"
+msgstr "representación del objeto"
+
+#: auditlog/models.py:216
+msgid "action"
+msgstr "acción"
+
+#: auditlog/models.py:218
+msgid "change message"
+msgstr "mensaje de cambios"
+
+#: auditlog/models.py:225
+msgid "actor"
+msgstr "actor"
+
+#: auditlog/models.py:228
+msgid "remote address"
+msgstr "dirección remota"
+
+#: auditlog/models.py:230
+msgid "timestamp"
+msgstr "marca de tiempo"
+
+#: auditlog/models.py:232
+msgid "additional data"
+msgstr "datos adicionales"
+
+#: auditlog/models.py:240
+msgid "log entry"
+msgstr "entrada de registro"
+
+#: auditlog/models.py:241
+msgid "log entries"
+msgstr "entradas de registro"
+
+#: auditlog/models.py:245
+msgid "Created {repr:s}"
+msgstr "Creado {repr:s}"
+
+#: auditlog/models.py:247
+msgid "Updated {repr:s}"
+msgstr "Actualizado {repr:s}"
+
+#: auditlog/models.py:249
+msgid "Deleted {repr:s}"
+msgstr "Eliminado {repr:s}"
+
+#: auditlog/models.py:251
+msgid "Logged {repr:s}"
+msgstr "Registrado {repr:s}"
+
+#~ msgid "Deletes all log entries from the database."
+#~ msgstr "Eliminar todas las entradas de registro de la base de datos."
+
+#~ msgid "Continue without asking confirmation."
+#~ msgstr "Continuar sin pedir confirmación."
+
+#~ msgid "This action will clear all log entries from the database."
+#~ msgstr ""
+#~ "Esta acción borrará todas las entradas del registro de la base de datos."
+
+#~ msgid "Are you sure you want to continue?"
+#~ msgstr "¿Estás seguro de que quieres continuar?"
+
+#~ msgid "Deleted %d objects."
+#~ msgstr "%d objetos eliminados."
+
+#~ msgid "Aborted."
+#~ msgstr "Abortado."

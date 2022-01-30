@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
 from auditlog.filters import ResourceTypeFilter
 from auditlog.mixins import LogEntryAdminMixin
@@ -19,7 +20,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
     fieldsets = [
         (None, {"fields": ["created", "user_url", "resource_url"]}),
-        ("Changes", {"fields": ["action", "msg"]}),
+        (_("Changes"), {"fields": ["action", "msg"]}),
     ]
 
 

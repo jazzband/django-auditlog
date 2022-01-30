@@ -16,6 +16,9 @@ setup(
         "auditlog.management",
         "auditlog.management.commands",
     ],
+    package_data={
+        "auditlog": ["locale/*/LC_MESSAGES/*.po", "locale/*/LC_MESSAGES/*.mo"],
+    },
     url="https://github.com/jazzband/django-auditlog",
     project_urls={
         "Documentation": "https://django-auditlog.readthedocs.io",
