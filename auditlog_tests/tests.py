@@ -1,9 +1,9 @@
 import datetime
 import itertools
 import json
+from unittest import mock
 
 import django
-import mock
 from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib.auth import get_user_model
