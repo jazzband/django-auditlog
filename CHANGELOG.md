@@ -6,6 +6,7 @@
 
 #### Improvements
 
+- feat: enable use of replica database (delegating the choice to `DATABASES_ROUTER`) ([#359](https://github.com/jazzband/django-auditlog/pull/359))
 - build: add classifiers for Python and Django
 - build: replace django-jsonfield with django-jsonfield-backport ([#339](https://github.com/jazzband/django-auditlog/pull/339))
 - ci: replace Travis with Github Actions
