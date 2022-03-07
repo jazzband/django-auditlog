@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import django
 from dateutil.tz import gettz
@@ -11,6 +12,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
 
+from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
@@ -148,6 +150,24 @@ class SimpleModelTest(TestCase):
         SimpleModel.objects.all().delete()
         self.setUp()
         self.test_create()
+
+    def test_create_log_to_object_from_other_database(self):
+        msg = "The log should not try to write to the same database as the object"
+
+        instance = self.obj
+        # simulate object obtained from a different database (read only)
+        instance._state.db = "replica"
+
+        changes = model_instance_diff(None, instance)
+
+        log_entry = LogEntry.objects.log_create(
+            instance,
+            action=LogEntry.Action.CREATE,
+            changes=json.dumps(changes),
+        )
+        self.assertEqual(
+            log_entry._state.db, "default", msg=msg
+        )  # must be created in default database
 
 
 class AltPrimaryKeyModelTest(SimpleModelTest):
