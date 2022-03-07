@@ -155,9 +155,8 @@ class SimpleModelTest(TestCase):
         msg = "The log should not try to write to the same database as the object"
 
         instance = self.obj
-        instance._state.db = (
-            "replica"  # simulate object obtained from a different database (read only)
-        )
+       # simulate object obtained from a different database (read only)
+        instance._state.db = "replica"
 
         changes = model_instance_diff(None, instance)
 
