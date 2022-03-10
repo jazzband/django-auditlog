@@ -81,7 +81,7 @@ You do not need to map all the fields of the model, any fields not mapped will f
 Fields that contain sensitive info and we want keep track of field change but not to contain the exact change.
 
 To mask specific fields from the log you can pass ``mask_fields`` to the ``register``
-method. If ``mask_fields`` is specified the first half the value of the fields are masked using ``*``.
+method. If ``mask_fields`` is specified, the first half value of the fields is masked using ``*``.
 
 For example, to mask the field ``address``, use::
 
