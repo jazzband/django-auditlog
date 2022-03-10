@@ -420,8 +420,9 @@ class SimpeMaskedFieldsModelTest(TestCase):
     def test_register_mask_fields(self):
         smm = SimpleMaskedModel(address="Sensitive data", text="Looong text")
         smm.save()
-        self.assertTrue(
-            smm.history.latest().changes_dict["address"][1] == "*******ve data",
+        self.assertEqual(
+            smm.history.latest().changes_dict["address"][1],
+            "*******ve data",
             msg="The diff function masks 'address' field.",
         )
 
