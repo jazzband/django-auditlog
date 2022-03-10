@@ -87,7 +87,7 @@ For example, to mask the field ``address``, use::
 
     auditlog.register(MyModel, mask_fields=['address'])
 
-.. versionadded:: X.X.X
+.. versionadded:: 1.1.0
 
     Masking fields
 
