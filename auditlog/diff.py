@@ -78,7 +78,7 @@ def get_field_value(obj, field):
 
 def mask_str(value: str) -> str:
     """
-    Masks the first half of input string to remove sensitive data.
+    Masks the first half of the input string to remove sensitive data.
 
     :param value: The value to mask.
     :type value: str
