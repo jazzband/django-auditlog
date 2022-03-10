@@ -76,6 +76,21 @@ during the `register()` call.
 
 You do not need to map all the fields of the model, any fields not mapped will fall back on their ``verbose_name``. Django provides a default ``verbose_name`` which is a "munged camel case version" so ``product_name`` would become ``Product Name`` by default.
 
+**Masking fields**
+
+Fields that contain sensitive info and we want keep track of field change but not to contain the exact change.
+
+To mask specific fields from the log you can pass ``mask_fields`` to the ``register``
+method. If ``mask_fields`` is specified, the first half value of the fields is masked using ``*``.
+
+For example, to mask the field ``address``, use::
+
+    auditlog.register(MyModel, mask_fields=['address'])
+
+.. versionadded:: 1.1.0
+
+    Masking fields
+
 Actors
 ------
 

@@ -76,6 +76,19 @@ def get_field_value(obj, field):
     return value
 
 
+def mask_str(value: str) -> str:
+    """
+    Masks the first half of the input string to remove sensitive data.
+
+    :param value: The value to mask.
+    :type value: str
+    :return: The masked version of the string.
+    :rtype: str
+    """
+    mask_limit = int(len(value) / 2)
+    return "*" * mask_limit + value[mask_limit:]
+
+
 def model_instance_diff(old, new, fields_to_check=None):
     """
     Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
@@ -145,7 +158,13 @@ def model_instance_diff(old, new, fields_to_check=None):
         new_value = get_field_value(new, field)
 
         if old_value != new_value:
-            diff[field.name] = (smart_str(old_value), smart_str(new_value))
+            if model_fields and field.name in model_fields["mask_fields"]:
+                diff[field.name] = (
+                    mask_str(smart_str(old_value)),
+                    mask_str(smart_str(new_value)),
+                )
+            else:
+                diff[field.name] = (smart_str(old_value), smart_str(new_value))
 
     if len(diff) == 0:
         diff = None
