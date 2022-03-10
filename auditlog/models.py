@@ -11,8 +11,8 @@ from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Field, Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
-from django.utils.translation import ugettext_lazy as _
-from jsonfield.fields import JSONField
+from django.utils.translation import gettext_lazy as _
+from django_jsonfield_backport.models import JSONField
 
 
 class LogEntryManager(models.Manager):
@@ -67,13 +67,7 @@ class LogEntryManager(models.Manager):
                         content_type=kwargs.get("content_type"),
                         object_pk=kwargs.get("object_pk", ""),
                     ).delete()
-            # save LogEntry to same database instance is using
-            db = instance._state.db
-            return (
-                self.create(**kwargs)
-                if db is None or db == ""
-                else self.using(db).create(**kwargs)
-            )
+            return self.create(**kwargs)
         return None
 
     def get_for_object(self, instance):
@@ -213,7 +207,7 @@ class LogEntry(models.Model):
     )
     object_repr = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(
-        choices=Action.choices, verbose_name=_("action")
+        choices=Action.choices, verbose_name=_("action"), db_index=True
     )
     changes = models.TextField(blank=True, verbose_name=_("change message"))
     actor = models.ForeignKey(
@@ -359,7 +353,7 @@ class LogEntry(models.Model):
                             pass
                     # check if length is longer than 140 and truncate with ellipsis
                     if len(value) > 140:
-                        value = "{}...".format(value[:140])
+                        value = f"{value[:140]}..."
 
                     values_display.append(value)
             verbose_name = model_fields["mapping_fields"].get(
@@ -399,14 +393,14 @@ class AuditlogHistoryField(GenericRelation):
 
         kwargs["content_type_field"] = "content_type"
         self.delete_related = delete_related
-        super(AuditlogHistoryField, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def bulk_related_objects(self, objs, using=DEFAULT_DB_ALIAS):
         """
         Return all objects related to ``objs`` via this ``GenericRelation``.
         """
         if self.delete_related:
-            return super(AuditlogHistoryField, self).bulk_related_objects(objs, using)
+            return super().bulk_related_objects(objs, using)
 
         # When deleting, Collector.collect() finds related objects using this
         # method.  However, because we don't want to delete these related
@@ -418,7 +412,7 @@ class AuditlogHistoryField(GenericRelation):
 try:
     from south.modelsinspector import add_introspection_rules
 
-    add_introspection_rules([], ["^auditlog\.models\.AuditlogHistoryField"])
+    add_introspection_rules([], [r"^auditlog\.models\.AuditlogHistoryField"])
     raise DeprecationWarning(
         "South support will be dropped in django-auditlog 0.4.0 or later."
     )
