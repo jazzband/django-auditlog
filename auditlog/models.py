@@ -220,7 +220,9 @@ class LogEntry(models.Model):
     remote_addr = models.GenericIPAddressField(
         blank=True, null=True, verbose_name=_("remote address")
     )
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
+    timestamp = models.DateTimeField(
+        db_index=True, auto_now_add=True, verbose_name=_("timestamp")
+    )
     additional_data = models.JSONField(
         blank=True, null=True, verbose_name=_("additional data")
     )
