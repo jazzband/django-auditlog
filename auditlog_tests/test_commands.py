@@ -1,8 +1,10 @@
 """Tests for auditlog.management.commands"""
 
+import datetime
 from io import StringIO
 from unittest import mock
 
+import freezegun
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -63,5 +65,45 @@ class AuditlogFlushTest(TestCase):
             out,
             "This action will clear all log entries from the database.\nDeleted 1 objects.",
             msg="Output shows warning and deleted 1 object.",
+        )
+        self.assertEqual(err, "", msg="No stderr")
+
+    def test_before_date_input(self):
+        self.mock_input.return_value = "N\n"
+        out, err = self.call_command("--before-date=2000-01-01")
+        self.assertEqual(
+            out,
+            "This action will clear all log entries before 2000-01-01 from the database.\nAborted.",
+            msg="Output shows warning with date and then aborted.",
+        )
+        self.assertEqual(err, "", msg="No stderr")
+
+    def test_before_date(self):
+        with freezegun.freeze_time("1999-12-31"):
+            obj = self.make_object()
+
+        with freezegun.freeze_time("2000-01-02"):
+            obj.text = "I have new text"
+            obj.save()
+
+        self.assertEqual(
+            {v["timestamp"] for v in obj.history.values("timestamp")},
+            {
+                datetime.datetime(1999, 12, 31, tzinfo=datetime.timezone.utc),
+                datetime.datetime(2000, 1, 2, tzinfo=datetime.timezone.utc),
+            },
+            msg="Entries exist for 1999-12-31 and 2000-01-02",
+        )
+
+        out, err = self.call_command("--yes", "--before-date=2000-01-01")
+        self.assertEqual(
+            {v["timestamp"] for v in obj.history.values("timestamp")},
+            {
+                datetime.datetime(2000, 1, 2, tzinfo=datetime.timezone.utc),
+            },
+            msg="An entry exists only for 2000-01-02",
+        )
+        self.assertEqual(
+            out, "Deleted 1 objects.", msg="Output shows deleted 1 object."
         )
         self.assertEqual(err, "", msg="No stderr")
