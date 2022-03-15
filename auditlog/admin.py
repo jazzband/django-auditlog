@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
 
@@ -33,7 +34,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         "changes",
         "actor__first_name",
         "actor__last_name",
-        "actor__username",
+        "actor__{}".format(get_user_model().USERNAME_FIELD),
     ]
     list_filter = [
         "action",
