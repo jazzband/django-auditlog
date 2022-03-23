@@ -61,7 +61,7 @@ during the `register()` call.
         sku = models.CharField(max_length=20)
         version = models.CharField(max_length=5)
         product = models.CharField(max_length=50, verbose_name='Product Name')
-        history = AuditLogHistoryField()
+        history = AuditlogHistoryField()
         
     auditlog.register(MyModel, mapping_fields={'sku': 'Product No.', 'version': 'Product Revision'})
     
