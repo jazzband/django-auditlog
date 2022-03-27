@@ -15,7 +15,7 @@ from django.utils import dateformat, formats, timezone
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from auditlog.registry import auditlog
+from auditlog.registry import auditlog, auditlog_register
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -790,6 +790,58 @@ class UnregisterTest(TestCase):
 
         # Check for log entries
         self.assertEqual(LogEntry.objects.count(), 0, msg="There are no log entries")
+
+
+class RegisterBySettingsTest(TestCase):
+    def setUp(self):
+        auditlog.unregister(SimpleModel)
+        auditlog.unregister(SimpleExcludeModel)
+        auditlog.unregister(SimpleIncludeModel)
+        auditlog.unregister(SimpleMappingModel)
+        auditlog.unregister(SimpleMaskedModel)
+
+        # Re-register models in `AUDITLOG_INCLUDE_TRACKING_MODELS`
+        auditlog_register(auditlog)
+
+    def test_register_contains(self):
+        """Creation is not logged after unregistering."""
+        self.assertEqual(
+            True, auditlog.contains(SimpleModel), msg="The model must be registered"
+        )
+
+        auditlog.unregister(SimpleModel)
+        self.assertEqual(
+            False,
+            auditlog.contains(SimpleModel),
+            msg="The model must not be registered",
+        )
+        auditlog.register(SimpleModel)
+
+    def test_register_by_settings(self):
+
+        self.assertEqual(
+            True, auditlog.contains(SimpleModel), msg="The model must be registered"
+        )
+        self.assertEqual(
+            True,
+            auditlog.contains(SimpleExcludeModel),
+            msg="The model must be registered",
+        )
+        self.assertEqual(
+            True,
+            auditlog.contains(SimpleIncludeModel),
+            msg="The model must be registered",
+        )
+        self.assertEqual(
+            True,
+            auditlog.contains(SimpleMappingModel),
+            msg="The model must be registered",
+        )
+        self.assertEqual(
+            True,
+            auditlog.contains(SimpleMaskedModel),
+            msg="The model must be registered",
+        )
 
 
 class ChoicesFieldModelTest(TestCase):

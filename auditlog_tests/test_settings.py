@@ -59,3 +59,26 @@ ROOT_URLCONF = "auditlog_tests.urls"
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+
+AUDITLOG_INCLUDE_ALL_MODELS = False
+AUDITLOG_INCLUDE_TRACKING_MODELS = (
+    "auditlog_tests.SimpleModel",
+    {
+        "model": "auditlog_tests.SimpleExcludeModel",
+        "exclude_fields": ["text"],
+    },
+    {
+        "model": "auditlog_tests.SimpleIncludeModel",
+        "include_fields": ["label"],
+    },
+    {
+        "model": "auditlog_tests.SimpleMappingModel",
+        "mapping_fields": {"sku": "Product No."},
+    },
+    {
+        "model": "auditlog_tests.SimpleMaskedModel",
+        "mask_fields": ["address"],
+    },
+)
+AUDITLOG_EXCLUDE_TRACKING_MODELS = ()
