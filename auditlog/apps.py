@@ -7,6 +7,6 @@ class AuditlogConfig(AppConfig):
     default_auto_field = "django.db.models.AutoField"
 
     def ready(self):
-        from .registry import auditlog_register, auditlog
+        from .registry import auditlog, auditlog_register
 
         auditlog_register(auditlog)

@@ -1,5 +1,6 @@
-from typing import Union, Dict, Any, Iterable, Optional, List, Tuple, Callable
 import copy
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+
 from django.apps import apps
 from django.conf import settings
 from django.db.models import Model
@@ -9,7 +10,7 @@ from django.db.models.signals import ModelSignal, post_delete, post_save, pre_sa
 DispatchUID = Tuple[int, str, int]
 
 
-DEFAULT_EXCLUDE_MODELS = ["auditlog.LogEntry", "admin.LogEntry"]
+_DEFAULT_EXCLUDE_MODELS = ("auditlog.LogEntry", "admin.LogEntry")
 
 
 class AuditlogModelRegistry:
@@ -188,16 +189,28 @@ def _auditlog_register_models(
             raise TypeError(f"item must be a dict or str")
 
 
-def auditlog_register(auditlog: AuditlogModelRegistry):
-    if getattr(settings, "AUDITLOG_INCLUDE_ALL_MODELS", False):
-        exclude_models: List[ModelBase] = [
-            model
-            for app_model in getattr(settings, "AUDITLOG_EXCLUDE_TRACKING_MODELS", ())
-            + DEFAULT_EXCLUDE_MODELS
-            for model in _get_model_classes(app_model)
-        ]
+def get_default_exclude_models():
+    return _DEFAULT_EXCLUDE_MODELS
 
-        models = apps.get_models()
+
+def get_exclude_models():
+    exclude_models: List[ModelBase] = [
+        model
+        for app_model in getattr(settings, "AUDITLOG_EXCLUDE_TRACKING_MODELS", ())
+        + get_default_exclude_models()
+        for model in _get_model_classes(app_model)
+    ]
+    return exclude_models
+
+
+def auditlog_register(
+    auditlog: AuditlogModelRegistry,
+    include_all_models=False,
+    include_auto_created=False,
+):
+    if getattr(settings, "AUDITLOG_INCLUDE_ALL_MODELS", False) or include_all_models:
+        exclude_models = get_exclude_models()
+        models = apps.get_models(include_auto_created=include_auto_created)
 
         for model in models:
             if model in exclude_models:

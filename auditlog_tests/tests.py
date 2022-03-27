@@ -1,8 +1,10 @@
+import copy
 import datetime
 import json
 
 import django
 from dateutil.tz import gettz
+from django.apps import apps
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import AnonymousUser, User
@@ -15,7 +17,12 @@ from django.utils import dateformat, formats, timezone
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from auditlog.registry import auditlog, auditlog_register
+from auditlog.registry import (
+    AuditlogModelRegistry,
+    auditlog,
+    auditlog_register,
+    get_exclude_models,
+)
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -790,6 +797,33 @@ class UnregisterTest(TestCase):
 
         # Check for log entries
         self.assertEqual(LogEntry.objects.count(), 0, msg="There are no log entries")
+
+
+class RegisterAllModels(TestCase):
+    def setUp(self) -> None:
+        self.test_auditlog = AuditlogModelRegistry()
+
+    def tearDown(self) -> None:
+        for model in self.test_auditlog.get_models():
+            self.test_auditlog.unregister(model)
+
+    def test_check_register_all_models(self):
+        exclude_models = get_exclude_models()
+
+        all_models = [
+            model
+            for model in apps.get_models(include_auto_created=True)
+            if not model in exclude_models
+        ]
+
+        auditlog_register(
+            self.test_auditlog, include_all_models=True, include_auto_created=True
+        )
+
+        self.assertEqual(len(all_models), len(self.test_auditlog.get_models()))
+
+        for model in all_models:
+            self.assertEqual(True, self.test_auditlog.contains(model))
 
 
 class RegisterBySettingsTest(TestCase):
