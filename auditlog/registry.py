@@ -1,10 +1,15 @@
-from typing import Callable, Dict, List, Optional, Tuple
-
+from typing import Union, Dict, Any, Iterable, Optional, List, Tuple, Callable
+import copy
+from django.apps import apps
+from django.conf import settings
 from django.db.models import Model
 from django.db.models.base import ModelBase
 from django.db.models.signals import ModelSignal, post_delete, post_save, pre_save
 
 DispatchUID = Tuple[int, str, int]
+
+
+DEFAULT_EXCLUDE_MODELS = ["auditlog.LogEntry", "admin.LogEntry"]
 
 
 class AuditlogModelRegistry:
@@ -146,6 +151,63 @@ class AuditlogModelRegistry:
         Generate a dispatch_uid.
         """
         return self.__hash__(), model.__qualname__, signal.__hash__()
+
+
+def _get_model_classes(app_model: str) -> List[ModelBase]:
+    try:
+        app_label, model_name = app_model.split(".")
+        return [apps.get_model(app_label, model_name)]
+    except ValueError:
+        return apps.get_app_config(app_model).get_models()
+
+
+def _auditlog_register_models(
+    auditlog: AuditlogModelRegistry, models: Iterable[Union[str, Dict[str, Any]]]
+):
+    models = copy.deepcopy(models)
+
+    if not isinstance(models, list) and not isinstance(models, tuple):
+        raise TypeError(f"'models'({type(models)}) is not an list or tuple")
+
+    for model in models:
+        if isinstance(model, str):
+            for model_class in _get_model_classes(model):
+                auditlog.register(model_class)
+
+        elif isinstance(model, dict):
+            if not "model" in model:
+                raise ValueError("item must contain 'model' key")
+            if not "." in model["model"]:
+                raise ValueError(
+                    "model with options must be in the format <app_name>.<model_name>"
+                )
+
+            model["model"] = _get_model_classes(model["model"])[0]
+            auditlog.register(**model)
+        else:
+            raise TypeError(f"item must be a dict or str")
+
+
+def auditlog_register(auditlog: AuditlogModelRegistry):
+    if getattr(settings, "AUDITLOG_INCLUDE_ALL_MODELS", False):
+        exclude_models: List[ModelBase] = [
+            model
+            for app_model in getattr(settings, "AUDITLOG_EXCLUDE_TRACKING_MODELS", ())
+            + DEFAULT_EXCLUDE_MODELS
+            for model in _get_model_classes(app_model)
+        ]
+
+        models = apps.get_models()
+
+        for model in models:
+            if model in exclude_models:
+                continue
+
+            auditlog.register(model)
+    else:
+        _auditlog_register_models(
+            auditlog, getattr(settings, "AUDITLOG_INCLUDE_TRACKING_MODELS", ())
+        )
 
 
 auditlog = AuditlogModelRegistry()
