@@ -1,8 +1,9 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import NOT_PROVIDED, DateTimeField, JSONField, Model
+from django.db.models import NOT_PROVIDED, DateTimeField, Model
 from django.utils import timezone
 from django.utils.encoding import smart_str
+from django_jsonfield_backport.models import JSONField
 
 
 def track_field(field):
@@ -70,6 +71,8 @@ def get_field_value(obj, field):
     elif isinstance(field, JSONField):
         try:
             value = field.to_python(getattr(obj, field.name, None))
+        except ObjectDoesNotExist:
+            value = field.default if field.default is not NOT_PROVIDED else None
     else:
         try:
             value = smart_str(getattr(obj, field.name, None))
