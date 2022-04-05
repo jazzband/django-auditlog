@@ -12,7 +12,6 @@ from django.db.models import Field, Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
-from django_jsonfield_backport.models import JSONField
 
 
 class LogEntryManager(models.Manager):
@@ -222,7 +221,7 @@ class LogEntry(models.Model):
         blank=True, null=True, verbose_name=_("remote address")
     )
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
-    additional_data = JSONField(
+    additional_data = models.JSONField(
         blank=True, null=True, verbose_name=_("additional data")
     )
 
