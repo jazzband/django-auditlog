@@ -5,5 +5,3 @@ try:
 except DistributionNotFound:
     # package is not installed
     pass
-
-default_app_config = "auditlog.apps.AuditlogConfig"
