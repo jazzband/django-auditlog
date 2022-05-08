@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import NOT_PROVIDED, DateTimeField, Model
 from django.utils import timezone
 from django.utils.encoding import smart_str
-from django_jsonfield_backport.models import JSONField
+from django.db.models import JSONField
 
 
 def track_field(field):
