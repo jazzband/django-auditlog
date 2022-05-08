@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import django
 from dateutil.tz import gettz
@@ -11,6 +12,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
 
+from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
@@ -28,6 +30,7 @@ from auditlog_tests.models import (
     SimpleExcludeModel,
     SimpleIncludeModel,
     SimpleMappingModel,
+    SimpleMaskedModel,
     SimpleModel,
     UUIDPrimaryKeyModel,
 )
@@ -43,7 +46,7 @@ class SimpleModelTest(TestCase):
         obj = self.obj
 
         # Check for log entries
-        self.assertTrue(obj.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(obj.history.count(), 1, msg="There is one log entry")
 
         try:
             history = obj.history.get()
@@ -67,8 +70,9 @@ class SimpleModelTest(TestCase):
         obj.save()
 
         # Check for log entries
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 1,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            1,
             msg="There is one log entry for 'UPDATE'",
         )
 
@@ -106,8 +110,9 @@ class SimpleModelTest(TestCase):
         obj.boolean = True
         obj.save(update_fields=[])
 
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
             msg="There is no log entries created",
         )
         obj.refresh_from_db()
@@ -134,13 +139,13 @@ class SimpleModelTest(TestCase):
         obj.delete()
 
         # Check for log entries
-        self.assertTrue(
+        self.assertEqual(
             LogEntry.objects.filter(
                 content_type=history.content_type,
                 object_pk=history.object_pk,
                 action=LogEntry.Action.DELETE,
-            ).count()
-            == 1,
+            ).count(),
+            1,
             msg="There is one log entry for 'DELETE'",
         )
 
@@ -148,6 +153,24 @@ class SimpleModelTest(TestCase):
         SimpleModel.objects.all().delete()
         self.setUp()
         self.test_create()
+
+    def test_create_log_to_object_from_other_database(self):
+        msg = "The log should not try to write to the same database as the object"
+
+        instance = self.obj
+        # simulate object obtained from a different database (read only)
+        instance._state.db = "replica"
+
+        changes = model_instance_diff(None, instance)
+
+        log_entry = LogEntry.objects.log_create(
+            instance,
+            action=LogEntry.Action.CREATE,
+            changes=json.dumps(changes),
+        )
+        self.assertEqual(
+            log_entry._state.db, "default", msg=msg
+        )  # must be created in default database
 
 
 class AltPrimaryKeyModelTest(SimpleModelTest):
@@ -288,8 +311,9 @@ class SimpleIncludeModelTest(TestCase):
         obj.text = "New text"
         obj.save(update_fields=["text"])
 
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
             msg="Text change was not logged, even when passed explicitly",
         )
 
@@ -306,17 +330,17 @@ class SimpleIncludeModelTest(TestCase):
     def test_register_include_fields(self):
         sim = SimpleIncludeModel(label="Include model", text="Looong text")
         sim.save()
-        self.assertTrue(sim.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(sim.history.count(), 1, msg="There is one log entry")
 
         # Change label, record
         sim.label = "Changed label"
         sim.save()
-        self.assertTrue(sim.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(sim.history.count(), 2, msg="There are two log entries")
 
         # Change text, ignore
         sim.text = "Short text"
         sim.save()
-        self.assertTrue(sim.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(sim.history.count(), 2, msg="There are two log entries")
 
 
 class SimpleExcludeModelTest(TestCase):
@@ -327,25 +351,26 @@ class SimpleExcludeModelTest(TestCase):
         obj.text = "New text"
         obj.save(update_fields=["text"])
 
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
             msg="Text change was not logged, even when passed explicitly",
         )
 
     def test_register_exclude_fields(self):
         sem = SimpleExcludeModel(label="Exclude model", text="Looong text")
         sem.save()
-        self.assertTrue(sem.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(sem.history.count(), 1, msg="There is one log entry")
 
         # Change label, record it.
         sem.label = "Changed label"
         sem.save()
-        self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(sem.history.count(), 2, msg="There are two log entries")
 
         # Change text, ignore it.
         sem.text = "Short text"
         sem.save()
-        self.assertTrue(sem.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(sem.history.count(), 2, msg="There are two log entries")
 
 
 class SimpleMappingModelTest(TestCase):
@@ -356,32 +381,49 @@ class SimpleMappingModelTest(TestCase):
             sku="ASD301301A6", vtxt="2.1.5", not_mapped="Not mapped"
         )
         smm.save()
-        self.assertTrue(
-            smm.history.latest().changes_dict["sku"][1] == "ASD301301A6",
+        self.assertEqual(
+            smm.history.latest().changes_dict["sku"][1],
+            "ASD301301A6",
             msg="The diff function retains 'sku' and can be retrieved.",
         )
-        self.assertTrue(
-            smm.history.latest().changes_dict["not_mapped"][1] == "Not mapped",
+        self.assertEqual(
+            smm.history.latest().changes_dict["not_mapped"][1],
+            "Not mapped",
             msg="The diff function does not map 'not_mapped' and can be retrieved.",
         )
-        self.assertTrue(
-            smm.history.latest().changes_display_dict["Product No."][1]
-            == "ASD301301A6",
+        self.assertEqual(
+            smm.history.latest().changes_display_dict["Product No."][1],
+            "ASD301301A6",
             msg="The diff function maps 'sku' as 'Product No.' and can be retrieved.",
         )
-        self.assertTrue(
-            smm.history.latest().changes_display_dict["Version"][1] == "2.1.5",
+        self.assertEqual(
+            smm.history.latest().changes_display_dict["Version"][1],
+            "2.1.5",
             msg=(
                 "The diff function maps 'vtxt' as 'Version' through verbose_name"
                 " setting on the model field and can be retrieved."
             ),
         )
-        self.assertTrue(
-            smm.history.latest().changes_display_dict["not mapped"][1] == "Not mapped",
+        self.assertEqual(
+            smm.history.latest().changes_display_dict["not mapped"][1],
+            "Not mapped",
             msg=(
                 "The diff function uses the django default verbose name for 'not_mapped'"
                 " and can be retrieved."
             ),
+        )
+
+
+class SimpeMaskedFieldsModelTest(TestCase):
+    """Log masked changes for fields in mask_fields"""
+
+    def test_register_mask_fields(self):
+        smm = SimpleMaskedModel(address="Sensitive data", text="Looong text")
+        smm.save()
+        self.assertEqual(
+            smm.history.latest().changes_dict["address"][1],
+            "*******ve data",
+            msg="The diff function masks 'address' field.",
         )
 
 
@@ -401,18 +443,20 @@ class AdditionalDataModelTest(TestCase):
             label="Additional data to log entries", related=related_model
         )
         obj_with_additional_data.save()
-        self.assertTrue(
-            obj_with_additional_data.history.count() == 1, msg="There is 1 log entry"
+        self.assertEqual(
+            obj_with_additional_data.history.count(), 1, msg="There is 1 log entry"
         )
         log_entry = obj_with_additional_data.history.get()
         extra_data = log_entry.additional_data
         self.assertIsNotNone(extra_data)
-        self.assertTrue(
-            extra_data["related_model_text"] == related_model.text,
+        self.assertEqual(
+            extra_data["related_model_text"],
+            related_model.text,
             msg="Related model's text is logged",
         )
-        self.assertTrue(
-            extra_data["related_model_id"] == related_model.id,
+        self.assertEqual(
+            extra_data["related_model_id"],
+            related_model.id,
             msg="Related model's id is logged",
         )
 
@@ -435,7 +479,7 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to same datetime and timezone
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -445,7 +489,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # Nothing should have changed
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
     def test_model_with_different_timezone(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -459,7 +503,7 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to same datetime in another timezone
         timestamp = datetime.datetime(2017, 1, 10, 13, 0, tzinfo=self.utc_plus_one)
@@ -467,7 +511,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # Nothing should have changed
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
     def test_model_with_different_datetime(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -481,7 +525,7 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to another datetime in the same timezone
         timestamp = datetime.datetime(2017, 1, 10, 13, 0, tzinfo=timezone.utc)
@@ -489,7 +533,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # The time should have changed.
-        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(dtm.history.count(), 2, msg="There are two log entries")
 
     def test_model_with_different_date(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -503,7 +547,7 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to another datetime in the same timezone
         date = datetime.datetime(2017, 1, 11)
@@ -511,7 +555,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # The time should have changed.
-        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(dtm.history.count(), 2, msg="There are two log entries")
 
     def test_model_with_different_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -525,7 +569,7 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to another datetime in the same timezone
         time = datetime.time(6, 0)
@@ -533,7 +577,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # The time should have changed.
-        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(dtm.history.count(), 2, msg="There are two log entries")
 
     def test_model_with_different_time_and_timezone(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -547,7 +591,7 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(dtm.history.count() == 1, msg="There is one log entry")
+        self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to another datetime and another timezone
         timestamp = datetime.datetime(2017, 1, 10, 14, 0, tzinfo=self.utc_plus_one)
@@ -555,7 +599,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # The time should have changed.
-        self.assertTrue(dtm.history.count() == 2, msg="There are two log entries")
+        self.assertEqual(dtm.history.count(), 2, msg="There are two log entries")
 
     def test_changes_display_dict_datetime(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
@@ -570,9 +614,9 @@ class DateTimeFieldModelTest(TestCase):
         )
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
-        self.assertTrue(
-            dtm.history.latest().changes_display_dict["timestamp"][1]
-            == dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
+        self.assertEqual(
+            dtm.history.latest().changes_display_dict["timestamp"][1],
+            dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
             msg=(
                 "The datetime should be formatted according to Django's settings for"
                 " DATETIME_FORMAT"
@@ -582,9 +626,9 @@ class DateTimeFieldModelTest(TestCase):
         dtm.timestamp = timestamp
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
-        self.assertTrue(
-            dtm.history.latest().changes_display_dict["timestamp"][1]
-            == dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
+        self.assertEqual(
+            dtm.history.latest().changes_display_dict["timestamp"][1],
+            dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
             msg=(
                 "The datetime should be formatted according to Django's settings for"
                 " DATETIME_FORMAT"
@@ -593,9 +637,9 @@ class DateTimeFieldModelTest(TestCase):
 
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE="en-GB"):
-            self.assertTrue(
-                dtm.history.latest().changes_display_dict["timestamp"][1]
-                == formats.localize(localized_timestamp),
+            self.assertEqual(
+                dtm.history.latest().changes_display_dict["timestamp"][1],
+                formats.localize(localized_timestamp),
                 msg=(
                     "The datetime should be formatted according to Django's settings for"
                     " USE_L10N is True with a different LANGUAGE_CODE."
@@ -614,9 +658,9 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(
-            dtm.history.latest().changes_display_dict["date"][1]
-            == dateformat.format(date, settings.DATE_FORMAT),
+        self.assertEqual(
+            dtm.history.latest().changes_display_dict["date"][1],
+            dateformat.format(date, settings.DATE_FORMAT),
             msg=(
                 "The date should be formatted according to Django's settings for"
                 " DATE_FORMAT unless USE_L10N is True."
@@ -625,9 +669,9 @@ class DateTimeFieldModelTest(TestCase):
         date = datetime.date(2017, 1, 11)
         dtm.date = date
         dtm.save()
-        self.assertTrue(
-            dtm.history.latest().changes_display_dict["date"][1]
-            == dateformat.format(date, settings.DATE_FORMAT),
+        self.assertEqual(
+            dtm.history.latest().changes_display_dict["date"][1],
+            dateformat.format(date, settings.DATE_FORMAT),
             msg=(
                 "The date should be formatted according to Django's settings for"
                 " DATE_FORMAT unless USE_L10N is True."
@@ -636,9 +680,9 @@ class DateTimeFieldModelTest(TestCase):
 
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE="en-GB"):
-            self.assertTrue(
-                dtm.history.latest().changes_display_dict["date"][1]
-                == formats.localize(date),
+            self.assertEqual(
+                dtm.history.latest().changes_display_dict["date"][1],
+                formats.localize(date),
                 msg=(
                     "The date should be formatted according to Django's settings for"
                     " USE_L10N is True with a different LANGUAGE_CODE."
@@ -657,9 +701,9 @@ class DateTimeFieldModelTest(TestCase):
             naive_dt=self.now,
         )
         dtm.save()
-        self.assertTrue(
-            dtm.history.latest().changes_display_dict["time"][1]
-            == dateformat.format(time, settings.TIME_FORMAT),
+        self.assertEqual(
+            dtm.history.latest().changes_display_dict["time"][1],
+            dateformat.format(time, settings.TIME_FORMAT),
             msg=(
                 "The time should be formatted according to Django's settings for"
                 " TIME_FORMAT unless USE_L10N is True."
@@ -668,9 +712,9 @@ class DateTimeFieldModelTest(TestCase):
         time = datetime.time(6, 0)
         dtm.time = time
         dtm.save()
-        self.assertTrue(
-            dtm.history.latest().changes_display_dict["time"][1]
-            == dateformat.format(time, settings.TIME_FORMAT),
+        self.assertEqual(
+            dtm.history.latest().changes_display_dict["time"][1],
+            dateformat.format(time, settings.TIME_FORMAT),
             msg=(
                 "The time should be formatted according to Django's settings for"
                 " TIME_FORMAT unless USE_L10N is True."
@@ -679,9 +723,9 @@ class DateTimeFieldModelTest(TestCase):
 
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE="en-GB"):
-            self.assertTrue(
-                dtm.history.latest().changes_display_dict["time"][1]
-                == formats.localize(time),
+            self.assertEqual(
+                dtm.history.latest().changes_display_dict["time"][1],
+                formats.localize(time),
                 msg=(
                     "The time should be formatted according to Django's settings for"
                     " USE_L10N is True with a different LANGUAGE_CODE."
@@ -721,7 +765,7 @@ class UnregisterTest(TestCase):
         obj = self.obj
 
         # Check for log entries
-        self.assertTrue(obj.history.count() == 0, msg="There are no log entries")
+        self.assertEqual(obj.history.count(), 0, msg="There are no log entries")
 
     def test_unregister_update(self):
         """Updates are not logged after unregistering."""
@@ -733,7 +777,7 @@ class UnregisterTest(TestCase):
         obj.save()
 
         # Check for log entries
-        self.assertTrue(obj.history.count() == 0, msg="There are no log entries")
+        self.assertEqual(obj.history.count(), 0, msg="There are no log entries")
 
     def test_unregister_delete(self):
         """Deletion is not logged after unregistering."""
@@ -744,7 +788,7 @@ class UnregisterTest(TestCase):
         obj.delete()
 
         # Check for log entries
-        self.assertTrue(LogEntry.objects.count() == 0, msg="There are no log entries")
+        self.assertEqual(LogEntry.objects.count(), 0, msg="There are no log entries")
 
 
 class ChoicesFieldModelTest(TestCase):
@@ -760,28 +804,30 @@ class ChoicesFieldModelTest(TestCase):
 
     def test_changes_display_dict_single_choice(self):
 
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["status"][1] == "Red",
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["status"][1],
+            "Red",
             msg="The human readable text 'Red' is displayed.",
         )
         self.obj.status = ChoicesFieldModel.GREEN
         self.obj.save()
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["status"][1] == "Green",
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["status"][1],
+            "Green",
             msg="The human readable text 'Green' is displayed.",
         )
 
     def test_changes_display_dict_multiplechoice(self):
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["multiplechoice"][1]
-            == "Red, Yellow, Green",
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["multiplechoice"][1],
+            "Red, Yellow, Green",
             msg="The human readable text 'Red, Yellow, Green' is displayed.",
         )
         self.obj.multiplechoice = ChoicesFieldModel.RED
         self.obj.save()
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["multiplechoice"][1]
-            == "Red",
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["multiplechoice"][1],
+            "Red",
             msg="The human readable text 'Red' is displayed.",
         )
 
@@ -796,32 +842,32 @@ class CharfieldTextfieldModelTest(TestCase):
         )
 
     def test_changes_display_dict_longchar(self):
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["longchar"][1]
-            == f"{self.PLACEHOLDER_LONGCHAR[:140]}...",
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["longchar"][1],
+            f"{self.PLACEHOLDER_LONGCHAR[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
         SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGCHAR[:139]
         self.obj.longchar = SHORTENED_PLACEHOLDER
         self.obj.save()
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["longchar"][1]
-            == SHORTENED_PLACEHOLDER,
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["longchar"][1],
+            SHORTENED_PLACEHOLDER,
             msg="The field should display the entire string because it is less than 140 characters",
         )
 
     def test_changes_display_dict_longtextfield(self):
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["longtextfield"][1]
-            == f"{self.PLACEHOLDER_LONGTEXTFIELD[:140]}...",
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["longtextfield"][1],
+            f"{self.PLACEHOLDER_LONGTEXTFIELD[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
         SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGTEXTFIELD[:139]
         self.obj.longtextfield = SHORTENED_PLACEHOLDER
         self.obj.save()
-        self.assertTrue(
-            self.obj.history.latest().changes_display_dict["longtextfield"][1]
-            == SHORTENED_PLACEHOLDER,
+        self.assertEqual(
+            self.obj.history.latest().changes_display_dict["longtextfield"][1],
+            SHORTENED_PLACEHOLDER,
             msg="The field should display the entire string because it is less than 140 characters",
         )
 
@@ -839,26 +885,30 @@ class PostgresArrayFieldModelTest(TestCase):
         return self.obj.history.latest().changes_display_dict["arrayfield"][1]
 
     def test_changes_display_dict_arrayfield(self):
-        self.assertTrue(
-            self.latest_array_change == "Red, Green",
+        self.assertEqual(
+            self.latest_array_change,
+            "Red, Green",
             msg="The human readable text for the two choices, 'Red, Green' is displayed.",
         )
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
-        self.assertTrue(
-            self.latest_array_change == "Green",
+        self.assertEqual(
+            self.latest_array_change,
+            "Green",
             msg="The human readable text 'Green' is displayed.",
         )
         self.obj.arrayfield = []
         self.obj.save()
-        self.assertTrue(
-            self.latest_array_change == "",
+        self.assertEqual(
+            self.latest_array_change,
+            "",
             msg="The human readable text '' is displayed.",
         )
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
-        self.assertTrue(
-            self.latest_array_change == "Green",
+        self.assertEqual(
+            self.latest_array_change,
+            "Green",
             msg="The human readable text 'Green' is displayed.",
         )
 

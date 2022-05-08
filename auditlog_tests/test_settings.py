@@ -14,7 +14,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.admin",
     "django.contrib.staticfiles",
-    "django_jsonfield_backport",
     "auditlog",
     "auditlog_tests",
 ]
