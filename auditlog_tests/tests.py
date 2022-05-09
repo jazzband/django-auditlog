@@ -1007,23 +1007,23 @@ class JSONModelTest(TestCase):
         """No changes are logged."""
         obj = JSONModel.objects.create(
             json={
-                "description": "Method form.",
                 "quantity": "1814.4348944665",
-                "unit_of_measure": "bytes",
-                "unit_price": "144.9156",
-                "discount_rate": "42.8375",
                 "tax_rate": "17.06",
+                "unit_price": "144.9156",
+                "description": "Method form.",
+                "discount_rate": "42.8375",
+                "unit_of_measure": "bytes",
             }
         )
 
         # Change the order of the keys but not the values
         obj.json = {
-            "quantity": "1814.4348944665",
             "tax_rate": "17.06",
-            "unit_price": "144.9156",
             "description": "Method form.",
-            "discount_rate": "42.8375",
+            "quantity": "1814.4348944665",
             "unit_of_measure": "bytes",
+            "unit_price": "144.9156",
+            "discount_rate": "42.8375",
         }
         obj.save()
 
