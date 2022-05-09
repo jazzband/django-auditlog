@@ -91,6 +91,55 @@ For example, to mask the field ``address``, use::
 
     Masking fields
 
+Settings
+--------
+
+You can register a model using Django settings variables in `settings.py`, as the following example
+
+**AUDITLOG_INCLUDE_ALL_MODELS**
+
+.. code-block:: python
+
+    # Django project settings.py
+
+    # register all models.
+    AUDITLOG_INCLUDE_ALL_MODELS=True
+
+**AUDITLOG_INCLUDE_TRACKING_MODELS**
+
+.. code-block:: python
+
+    # Django project settings.py
+
+    # assign models to register. this has the same behavior as auditlog.register()
+    AUDITLOG_INCLUDE_TRACKING_MODELS = (
+        "<appname>.<model1>",
+        {
+            "model": "<appname>.<model1>",
+            "include_fields": ["field1", "field2"],
+            "exclude_fields": ["field3", "field4"],
+            "mapping_fields": {
+                "field1": "FIELD",
+            },
+            "mask_fields": ["field5", "field6"],
+        },
+        "<appname>.<model3>",
+    )
+
+**AUDITLOG_EXCLUDE_TRACKING_MODELS**
+
+
+.. code-block:: python
+
+    # Django project settings.py
+
+    # assign models to exclude. this option is executed when
+    # AUDITLOG_INCLUDE_ALL_MODELS value is True.
+    AUDITLOG_EXCLUDE_TRACKING_MODELS = (
+        "<app_name>",
+        "<app_name>.<model>"
+    )
+
 Actors
 ------
 
