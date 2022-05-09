@@ -19,11 +19,11 @@ from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import (
     AuditlogModelRegistry,
+    _auditlog_register_models,
+    _get_model_classes,
     auditlog,
     auditlog_register,
     get_exclude_models,
-    _get_model_classes,
-    _auditlog_register_models,
 )
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
