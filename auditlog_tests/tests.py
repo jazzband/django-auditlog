@@ -1016,7 +1016,7 @@ class JSONModelTest(TestCase):
             }
         )
 
-        # Change the order
+        # Change the order of the keys but not the values
         obj.json = {
             "quantity": "1814.4348944665",
             "tax_rate": "17.06",
