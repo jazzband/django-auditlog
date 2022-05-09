@@ -22,6 +22,7 @@ from auditlog_tests.models import (
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
+    JSONModel,
     ManyRelatedModel,
     NoDeleteHistoryModel,
     PostgresArrayFieldModel,
@@ -969,4 +970,66 @@ class NoDeleteHistoryTest(TestCase):
         self.assertEqual(
             list(entries.values_list("action", flat=True)),
             [LogEntry.Action.CREATE, LogEntry.Action.UPDATE, LogEntry.Action.DELETE],
+        )
+
+
+class JSONModelTest(TestCase):
+    def setUp(self):
+        self.obj = JSONModel.objects.create()
+
+    def test_update(self):
+        """Changes on a JSONField are logged correctly."""
+        # Get the object to work with
+        obj = self.obj
+
+        # Change something
+        obj.json = {
+            "quantity": "1",
+        }
+        obj.save()
+
+        # Check for log entries
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            1,
+            msg="There is one log entry for 'UPDATE'",
+        )
+
+        history = obj.history.get(action=LogEntry.Action.UPDATE)
+
+        self.assertJSONEqual(
+            history.changes,
+            '{"json": ["{}", "{\'quantity\': \'1\'}"]}',
+            msg="The change is correctly logged",
+        )
+
+    def test_update_with_no_changes(self):
+        """No changing updates are not logged."""
+        obj = JSONModel.objects.create(
+            json={
+                "description": "Method form.",
+                "quantity": "1814.4348944665",
+                "unit_of_measure": "bytes",
+                "unit_price": "144.9156",
+                "discount_rate": "42.8375",
+                "tax_rate": "17.06",
+            }
+        )
+
+        # Change the order
+        obj.json = {
+            "quantity": "1814.4348944665",
+            "tax_rate": "17.06",
+            "unit_price": "144.9156",
+            "description": "Method form.",
+            "discount_rate": "42.8375",
+            "unit_of_measure": "bytes",
+        }
+        obj.save()
+
+        # Check for log entries
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
+            msg="There is no log entry",
         )
