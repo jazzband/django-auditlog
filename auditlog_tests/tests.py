@@ -1004,7 +1004,7 @@ class JSONModelTest(TestCase):
         )
 
     def test_update_with_no_changes(self):
-        """No changing updates are not logged."""
+        """No changes are logged."""
         obj = JSONModel.objects.create(
             json={
                 "description": "Method form.",
