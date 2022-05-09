@@ -156,10 +156,13 @@ class AuditlogModelRegistry:
 
 def _get_model_classes(app_model: str) -> List[ModelBase]:
     try:
-        app_label, model_name = app_model.split(".")
-        return [apps.get_model(app_label, model_name)]
-    except ValueError:
-        return apps.get_app_config(app_model).get_models()
+        try:
+            app_label, model_name = app_model.split(".")
+            return [apps.get_model(app_label, model_name)]
+        except ValueError:
+            return apps.get_app_config(app_model).get_models()
+    except LookupError:
+        return []
 
 
 def _auditlog_register_models(
@@ -173,31 +176,31 @@ def _auditlog_register_models(
     for model in models:
         if isinstance(model, str):
             for model_class in _get_model_classes(model):
+                auditlog.unregister(model_class)
                 auditlog.register(model_class)
 
         elif isinstance(model, dict):
-            if not "model" in model:
+            if "model" not in model:
                 raise ValueError("item must contain 'model' key")
-            if not "." in model["model"]:
+            if "." not in model["model"]:
                 raise ValueError(
                     "model with options must be in the format <app_name>.<model_name>"
                 )
-
-            model["model"] = _get_model_classes(model["model"])[0]
-            auditlog.register(**model)
+            try:
+                model["model"] = _get_model_classes(model["model"])[0]
+                auditlog.unregister(model["model"])
+                auditlog.register(**model)
+            except IndexError:
+                pass
         else:
             raise TypeError(f"item must be a dict or str")
-
-
-def get_default_exclude_models():
-    return _DEFAULT_EXCLUDE_MODELS
 
 
 def get_exclude_models():
     exclude_models: List[ModelBase] = [
         model
         for app_model in getattr(settings, "AUDITLOG_EXCLUDE_TRACKING_MODELS", ())
-        + get_default_exclude_models()
+        + _DEFAULT_EXCLUDE_MODELS
         for model in _get_model_classes(app_model)
     ]
     return exclude_models
@@ -215,12 +218,11 @@ def auditlog_register(
         for model in models:
             if model in exclude_models:
                 continue
-
             auditlog.register(model)
-    else:
-        _auditlog_register_models(
-            auditlog, getattr(settings, "AUDITLOG_INCLUDE_TRACKING_MODELS", ())
-        )
+
+    _auditlog_register_models(
+        auditlog, getattr(settings, "AUDITLOG_INCLUDE_TRACKING_MODELS", ())
+    )
 
 
 auditlog = AuditlogModelRegistry()

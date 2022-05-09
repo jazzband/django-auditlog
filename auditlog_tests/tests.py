@@ -22,6 +22,8 @@ from auditlog.registry import (
     auditlog,
     auditlog_register,
     get_exclude_models,
+    _get_model_classes,
+    _auditlog_register_models,
 )
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
@@ -800,12 +802,56 @@ class UnregisterTest(TestCase):
 
 
 class RegisterAllModels(TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.test_auditlog = AuditlogModelRegistry()
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         for model in self.test_auditlog.get_models():
             self.test_auditlog.unregister(model)
+
+    def test_auditlog_register_models(self):
+        with self.assertRaises(TypeError):
+            _auditlog_register_models(self.test_auditlog, "no list")
+        with self.assertRaises(TypeError):
+            _auditlog_register_models(self.test_auditlog, {})
+
+        with self.assertRaises(ValueError):
+            # must include the model key.
+            _auditlog_register_models(
+                self.test_auditlog,
+                (
+                    "<appname>.<model1>",
+                    {
+                        # "model": "<appname>.<model1>",
+                    },
+                ),
+            )
+
+        with self.assertRaises(ValueError):
+            # It should take the format `<app_name>.< model_name>``
+            _auditlog_register_models(
+                self.test_auditlog,
+                (
+                    "<appname>.<model1>",
+                    {
+                        "model": "<appname>",
+                    },
+                ),
+            )
+
+        with self.assertRaises(TypeError):
+            # models item must be a dict or str
+            _auditlog_register_models(self.test_auditlog, (1, 2, 3, 4))
+
+    def test_given_app_label(self):
+        count = len(list(_get_model_classes("auditlog")))
+        auditlog_models_count = len(
+            list(apps.get_app_config("auditlog").get_models(include_auto_created=True))
+        )
+        self.assertEqual(count, auditlog_models_count)
+
+    def test_return_empty_when_given_wrong_model_name(self):
+        self.assertEqual([], _get_model_classes("fake_model"))
 
     def test_check_register_all_models(self):
         exclude_models = get_exclude_models()
