@@ -1055,6 +1055,6 @@ class ModelInstanceDiffTest(TestCase):
         # Check for log entries
         self.assertEqual(
             changes,
-            '{"boolean": ("True", "False")}',
+            {"boolean": ("True", "False")},
             msg="ObjectDoesNotExist should be handled",
         )
