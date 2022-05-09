@@ -810,12 +810,19 @@ class RegisterAllModels(TestCase):
             self.test_auditlog.unregister(model)
 
     def test_auditlog_register_models(self):
-        with self.assertRaises(TypeError):
+        value = "no list"
+        with self.assertRaisesMessage(
+            TypeError, f"models'({type(value)}) is not an list or tuple"
+        ):
             _auditlog_register_models(self.test_auditlog, "no list")
-        with self.assertRaises(TypeError):
+
+        value = {}
+        with self.assertRaisesMessage(
+            TypeError, f"models'({type(value)}) is not an list or tuple"
+        ):
             _auditlog_register_models(self.test_auditlog, {})
 
-        with self.assertRaises(ValueError):
+        with self.assertRaisesMessage(ValueError, "item must contain 'model' key"):
             # must include the model key.
             _auditlog_register_models(
                 self.test_auditlog,
@@ -827,7 +834,10 @@ class RegisterAllModels(TestCase):
                 ),
             )
 
-        with self.assertRaises(ValueError):
+        with self.assertRaisesMessage(
+            ValueError,
+            "model with options must be in the format <app_name>.<model_name>",
+        ):
             # It should take the format `<app_name>.< model_name>``
             _auditlog_register_models(
                 self.test_auditlog,
@@ -839,7 +849,7 @@ class RegisterAllModels(TestCase):
                 ),
             )
 
-        with self.assertRaises(TypeError):
+        with self.assertRaisesMessage(TypeError, "item must be a dict or str"):
             # models item must be a dict or str
             _auditlog_register_models(self.test_auditlog, (1, 2, 3, 4))
 

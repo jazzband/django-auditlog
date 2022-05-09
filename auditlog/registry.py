@@ -193,7 +193,7 @@ def _auditlog_register_models(
             except IndexError:
                 pass
         else:
-            raise TypeError(f"item must be a dict or str")
+            raise TypeError("item must be a dict or str")
 
 
 def get_exclude_models():
