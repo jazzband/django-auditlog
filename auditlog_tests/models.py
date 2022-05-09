@@ -2,7 +2,6 @@ import uuid
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django_jsonfield_backport.models import JSONField
 
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import auditlog
