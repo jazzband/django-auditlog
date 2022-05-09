@@ -66,19 +66,16 @@ def get_field_value(obj, field):
             if value is not None and settings.USE_TZ and not timezone.is_naive(value):
                 value = timezone.make_naive(value, timezone=timezone.utc)
         except ObjectDoesNotExist:
-            breakpoint()
             value = field.default if field.default is not NOT_PROVIDED else None
     elif isinstance(field, JSONField):
         try:
             value = field.to_python(getattr(obj, field.name, None))
         except ObjectDoesNotExist:
-            breakpoint()
             value = field.default if field.default is not NOT_PROVIDED else None
     else:
         try:
             value = smart_str(getattr(obj, field.name, None))
         except ObjectDoesNotExist:
-            breakpoint()
             value = field.default if field.default is not NOT_PROVIDED else None
 
     return value
