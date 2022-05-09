@@ -186,12 +186,10 @@ def _auditlog_register_models(
                 raise ValueError(
                     "model with options must be in the format <app_name>.<model_name>"
                 )
-            try:
-                model["model"] = _get_model_classes(model["model"])[0]
-                auditlog.unregister(model["model"])
-                auditlog.register(**model)
-            except IndexError:
-                pass
+
+            model["model"] = _get_model_classes(model["model"])[0]
+            auditlog.unregister(model["model"])
+            auditlog.register(**model)
         else:
             raise TypeError("item must be a dict or str")
 
