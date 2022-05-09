@@ -1,7 +1,5 @@
 # Changes
 
-## 2.0.1
-
 #### Fixes
 - Fix inconsistent changes with JSONField ([#355](https://github.com/jazzband/django-auditlog/pull/355))
 
