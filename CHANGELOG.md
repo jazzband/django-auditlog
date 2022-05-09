@@ -7,6 +7,7 @@
 ## 2.0.0 (2022-05-09)
 
 #### Improvements
+- feat: Add register model from settings ([#368](https://github.com/jazzband/django-auditlog/pull/368))
 - feat: enable use of replica database (delegating the choice to `DATABASES_ROUTER`) ([#359](https://github.com/jazzband/django-auditlog/pull/359))
 - Add `mask_fields` argument in `register` to mask sensitive information when logging ([#310](https://github.com/jazzband/django-auditlog/pull/310))
 - Django: Drop 2.2 support. `django_jsonfield_backport` is not required anymore ([#370](https://github.com/jazzband/django-auditlog/pull/370))
