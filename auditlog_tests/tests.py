@@ -1038,3 +1038,23 @@ class JSONModelTest(TestCase):
             0,
             msg="There is no log entry",
         )
+
+
+class ModelInstanceDiffTest(TestCase):
+    def test_update_with_no_changes(self):
+        """No changes are logged."""
+        first = SimpleModel(boolean=True)
+        second = SimpleModel()
+
+        # then boolean should be False, as we use the default value
+        # specified inside the model
+        del second.boolean
+
+        changes = model_instance_diff(first, second)
+
+        # Check for log entries
+        self.assertEqual(
+            changes,
+            '{"boolean": ("True", "False")}',
+            msg="ObjectDoesNotExist should be handled",
+        )
