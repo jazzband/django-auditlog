@@ -1041,8 +1041,8 @@ class JSONModelTest(TestCase):
 
 
 class ModelInstanceDiffTest(TestCase):
-    def test_update_with_no_changes(self):
-        """No changes are logged."""
+    def test_when_field_doesnt_exit(self):
+        """No error is raised and the default is returned."""
         first = SimpleModel(boolean=True)
         second = SimpleModel()
 
