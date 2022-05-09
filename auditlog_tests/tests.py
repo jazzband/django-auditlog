@@ -1005,29 +1005,34 @@ class JSONModelTest(TestCase):
 
     def test_update_with_no_changes(self):
         """No changes are logged."""
-        obj = JSONModel.objects.create(
-            json={
-                "quantity": "1814.4348944665",
-                "tax_rate": "17.06",
-                "unit_price": "144.9156",
-                "description": "Method form.",
-                "discount_rate": "42.8375",
-                "unit_of_measure": "bytes",
-            }
-        )
+        first_json = {
+            "quantity": "1814",
+            "tax_rate": "17",
+            "unit_price": "144",
+            "description": "Method form.",
+            "discount_rate": "42",
+            "unit_of_measure": "bytes",
+        }
+        obj = JSONModel.objects.create(json=first_json)
 
         # Change the order of the keys but not the values
-        obj.json = {
-            "tax_rate": "17.06",
+        second_json = {
+            "tax_rate": "17",
             "description": "Method form.",
-            "quantity": "1814.4348944665",
+            "quantity": "1814",
             "unit_of_measure": "bytes",
-            "unit_price": "144.9156",
-            "discount_rate": "42.8375",
+            "unit_price": "144",
+            "discount_rate": "42",
         }
+        obj.json = second_json
         obj.save()
 
         # Check for log entries
+        self.assertEqual(
+            first_json,
+            second_json,
+            msg="dicts are the same",
+        )
         self.assertEqual(
             obj.history.filter(action=LogEntry.Action.UPDATE).count(),
             0,
