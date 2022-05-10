@@ -230,6 +230,12 @@ class NoDeleteHistoryModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class JSONModel(models.Model):
+    json = models.JSONField(default=dict)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -244,3 +250,4 @@ auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
+auditlog.register(JSONModel)

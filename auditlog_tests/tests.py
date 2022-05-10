@@ -22,6 +22,7 @@ from auditlog_tests.models import (
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
+    JSONModel,
     ManyRelatedModel,
     NoDeleteHistoryModel,
     PostgresArrayFieldModel,
@@ -969,4 +970,91 @@ class NoDeleteHistoryTest(TestCase):
         self.assertEqual(
             list(entries.values_list("action", flat=True)),
             [LogEntry.Action.CREATE, LogEntry.Action.UPDATE, LogEntry.Action.DELETE],
+        )
+
+
+class JSONModelTest(TestCase):
+    def setUp(self):
+        self.obj = JSONModel.objects.create()
+
+    def test_update(self):
+        """Changes on a JSONField are logged correctly."""
+        # Get the object to work with
+        obj = self.obj
+
+        # Change something
+        obj.json = {
+            "quantity": "1",
+        }
+        obj.save()
+
+        # Check for log entries
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            1,
+            msg="There is one log entry for 'UPDATE'",
+        )
+
+        history = obj.history.get(action=LogEntry.Action.UPDATE)
+
+        self.assertJSONEqual(
+            history.changes,
+            '{"json": ["{}", "{\'quantity\': \'1\'}"]}',
+            msg="The change is correctly logged",
+        )
+
+    def test_update_with_no_changes(self):
+        """No changes are logged."""
+        first_json = {
+            "quantity": "1814",
+            "tax_rate": "17",
+            "unit_price": "144",
+            "description": "Method form.",
+            "discount_rate": "42",
+            "unit_of_measure": "bytes",
+        }
+        obj = JSONModel.objects.create(json=first_json)
+
+        # Change the order of the keys but not the values
+        second_json = {
+            "tax_rate": "17",
+            "description": "Method form.",
+            "quantity": "1814",
+            "unit_of_measure": "bytes",
+            "unit_price": "144",
+            "discount_rate": "42",
+        }
+        obj.json = second_json
+        obj.save()
+
+        # Check for log entries
+        self.assertEqual(
+            first_json,
+            second_json,
+            msg="dicts are the same",
+        )
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
+            msg="There is no log entry",
+        )
+
+
+class ModelInstanceDiffTest(TestCase):
+    def test_when_field_doesnt_exit(self):
+        """No error is raised and the default is returned."""
+        first = SimpleModel(boolean=True)
+        second = SimpleModel()
+
+        # then boolean should be False, as we use the default value
+        # specified inside the model
+        del second.boolean
+
+        changes = model_instance_diff(first, second)
+
+        # Check for log entries
+        self.assertEqual(
+            changes,
+            {"boolean": ("True", "False")},
+            msg="ObjectDoesNotExist should be handled",
         )
