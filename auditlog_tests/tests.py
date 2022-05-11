@@ -11,20 +11,13 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import ValidationError
 from django.db.models.signals import pre_save
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils import dateformat, formats, timezone
 
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from auditlog.registry import (
-    AuditlogModelRegistry,
-    _auditlog_register_models,
-    _get_model_classes,
-    auditlog,
-    auditlog_register,
-    get_exclude_models,
-)
+from auditlog.registry import AuditlogModelRegistry, auditlog
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -801,7 +794,7 @@ class UnregisterTest(TestCase):
         self.assertEqual(LogEntry.objects.count(), 0, msg="There are no log entries")
 
 
-class RegisterAllModels(TestCase):
+class RegisterModelSettingsTest(TestCase):
     def setUp(self):
         self.test_auditlog = AuditlogModelRegistry()
 
@@ -809,129 +802,145 @@ class RegisterAllModels(TestCase):
         for model in self.test_auditlog.get_models():
             self.test_auditlog.unregister(model)
 
-    def test_auditlog_register_models(self):
-        value = "no list"
-        with self.assertRaisesMessage(
-            TypeError, f"models'({type(value)}) is not an list or tuple"
-        ):
-            _auditlog_register_models(self.test_auditlog, "no list")
+    def test_get_model_classes(self):
+        self.assertEqual(
+            len(list(self.test_auditlog._get_model_classes("auditlog"))),
+            len(list(apps.get_app_config("auditlog").get_models())),
+        )
+        self.assertEqual([], self.test_auditlog._get_model_classes("fake_model"))
 
-        value = {}
-        with self.assertRaisesMessage(
-            TypeError, f"models'({type(value)}) is not an list or tuple"
-        ):
-            _auditlog_register_models(self.test_auditlog, {})
+    def test_get_exclude_models(self):
+        # By default it returns DEFAULT_EXCLUDE_MODELS
+        self.assertEqual(len(self.test_auditlog._get_exclude_models(())), 2)
 
-        with self.assertRaisesMessage(ValueError, "item must contain 'model' key"):
-            # must include the model key.
-            _auditlog_register_models(
-                self.test_auditlog,
-                (
-                    "<appname>.<model1>",
-                    {
-                        # "model": "<appname>.<model1>",
-                    },
-                ),
+        # Exclude just one model
+        self.assertTrue(
+            SimpleExcludeModel
+            in self.test_auditlog._get_exclude_models(
+                ("auditlog_tests.SimpleExcludeModel",)
             )
+        )
 
-        with self.assertRaisesMessage(
-            ValueError,
-            "model with options must be in the format <app_name>.<model_name>",
-        ):
-            # It should take the format `<app_name>.< model_name>``
-            _auditlog_register_models(
-                self.test_auditlog,
-                (
-                    "<appname>.<model1>",
-                    {
-                        "model": "<appname>",
-                    },
-                ),
+        # Exclude all model of an app
+        self.assertTrue(
+            SimpleExcludeModel
+            in self.test_auditlog._get_exclude_models(("auditlog_tests",))
+        )
+
+    def test_register_models_no_models(self):
+        self.test_auditlog._register_models(())
+
+        self.assertEqual(self.test_auditlog._registry, {})
+
+    def test_register_models_register_single_model(self):
+        self.test_auditlog._register_models(("auditlog_tests.SimpleExcludeModel",))
+
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertEqual(len(self.test_auditlog._registry), 1)
+
+    def test_register_models_register_app(self):
+        self.test_auditlog._register_models(("auditlog_tests",))
+
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
+        self.assertEqual(len(self.test_auditlog.get_models()), 17)
+
+    def test_register_models_register_model_with_attrs(self):
+        self.test_auditlog._register_models(
+            (
+                {
+                    "model": "auditlog_tests.SimpleExcludeModel",
+                    "include_fields": ["label"],
+                    "exclude_fields": [
+                        "text",
+                    ],
+                },
             )
-
-        with self.assertRaisesMessage(TypeError, "item must be a dict or str"):
-            # models item must be a dict or str
-            _auditlog_register_models(self.test_auditlog, (1, 2, 3, 4))
-
-    def test_given_app_label(self):
-        count = len(list(_get_model_classes("auditlog")))
-        auditlog_models_count = len(
-            list(apps.get_app_config("auditlog").get_models(include_auto_created=True))
-        )
-        self.assertEqual(count, auditlog_models_count)
-
-    def test_return_empty_when_given_wrong_model_name(self):
-        self.assertEqual([], _get_model_classes("fake_model"))
-
-    def test_check_register_all_models(self):
-        exclude_models = get_exclude_models()
-
-        all_models = [
-            model
-            for model in apps.get_models(include_auto_created=True)
-            if not model in exclude_models
-        ]
-
-        auditlog_register(
-            self.test_auditlog, include_all_models=True, include_auto_created=True
         )
 
-        self.assertEqual(len(all_models), len(self.test_auditlog.get_models()))
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        fields = self.test_auditlog.get_model_fields(SimpleExcludeModel)
+        self.assertEqual(fields["include_fields"], ["label"])
+        self.assertEqual(fields["exclude_fields"], ["text"])
 
-        for model in all_models:
-            self.assertEqual(True, self.test_auditlog.contains(model))
+    def test_register_from_settings_invalid_settings(self):
+        with override_settings(AUDITLOG_INCLUDE_ALL_MODELS="str"):
+            with self.assertRaisesMessage(
+                TypeError, "Setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be a boolean"
+            ):
+                self.test_auditlog.register_from_settings()
 
+        with override_settings(AUDITLOG_EXCLUDE_TRACKING_MODELS="str"):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS' must be a list or tuple",
+            ):
+                self.test_auditlog.register_from_settings()
 
-class RegisterBySettingsTest(TestCase):
-    def setUp(self):
-        auditlog.unregister(SimpleModel)
-        auditlog.unregister(SimpleExcludeModel)
-        auditlog.unregister(SimpleIncludeModel)
-        auditlog.unregister(SimpleMappingModel)
-        auditlog.unregister(SimpleMaskedModel)
+        with override_settings(AUDITLOG_EXCLUDE_TRACKING_MODELS=("app1.model1",)):
+            with self.assertRaisesMessage(
+                ValueError,
+                "In order to use setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS', "
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must set to 'True'",
+            ):
+                self.test_auditlog.register_from_settings()
 
-        # Re-register models in `AUDITLOG_INCLUDE_TRACKING_MODELS`
-        auditlog_register(auditlog)
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS="str"):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' must be a list or tuple",
+            ):
+                self.test_auditlog.register_from_settings()
 
-    def test_register_contains(self):
-        """Creation is not logged after unregistering."""
-        self.assertEqual(
-            True, auditlog.contains(SimpleModel), msg="The model must be registered"
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=(1, 2)):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' items must be str or dict",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"test": "test"},)):
+            with self.assertRaisesMessage(
+                ValueError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' dict items must contain 'model' key",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "test"},)):
+            with self.assertRaisesMessage(
+                ValueError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the format <app_name>.<model_name>",
+            ):
+                self.test_auditlog.register_from_settings()
+
+    @override_settings(
+        AUDITLOG_INCLUDE_ALL_MODELS=True,
+        AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
+    )
+    def test_register_from_settings_register_all_models_with_exclude_models(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertFalse(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
+
+    @override_settings(
+        AUDITLOG_INCLUDE_TRACKING_MODELS=(
+            {
+                "model": "auditlog_tests.SimpleExcludeModel",
+                "include_fields": ["label"],
+                "exclude_fields": [
+                    "text",
+                ],
+            },
         )
+    )
+    def test_register_from_settings_register_models(self):
+        self.test_auditlog.register_from_settings()
 
-        auditlog.unregister(SimpleModel)
-        self.assertEqual(
-            False,
-            auditlog.contains(SimpleModel),
-            msg="The model must not be registered",
-        )
-        auditlog.register(SimpleModel)
-
-    def test_register_by_settings(self):
-
-        self.assertEqual(
-            True, auditlog.contains(SimpleModel), msg="The model must be registered"
-        )
-        self.assertEqual(
-            True,
-            auditlog.contains(SimpleExcludeModel),
-            msg="The model must be registered",
-        )
-        self.assertEqual(
-            True,
-            auditlog.contains(SimpleIncludeModel),
-            msg="The model must be registered",
-        )
-        self.assertEqual(
-            True,
-            auditlog.contains(SimpleMappingModel),
-            msg="The model must be registered",
-        )
-        self.assertEqual(
-            True,
-            auditlog.contains(SimpleMaskedModel),
-            msg="The model must be registered",
-        )
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        fields = self.test_auditlog.get_model_fields(SimpleExcludeModel)
+        self.assertEqual(fields["include_fields"], ["label"])
+        self.assertEqual(fields["exclude_fields"], ["text"])
 
 
 class ChoicesFieldModelTest(TestCase):

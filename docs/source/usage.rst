@@ -91,27 +91,44 @@ For example, to mask the field ``address``, use::
 
     Masking fields
 
+
 Settings
 --------
 
-You can register a model using Django settings variables in `settings.py`, as the following example
-
 **AUDITLOG_INCLUDE_ALL_MODELS**
+
+You can use this setting to register all your models:
 
 .. code-block:: python
 
-    # Django project settings.py
-
-    # register all models.
     AUDITLOG_INCLUDE_ALL_MODELS=True
+
+.. versionadded:: 2.1.0
+
+**AUDITLOG_EXCLUDE_TRACKING_MODELS**
+
+You can use this setting to exclude models in registration process.
+It will be considered when ``AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
+
+.. code-block:: python
+
+    AUDITLOG_EXCLUDE_TRACKING_MODELS = (
+        "<app_name>",
+        "<app_name>.<model>"
+    )
+
+.. versionadded:: 2.1.0
 
 **AUDITLOG_INCLUDE_TRACKING_MODELS**
 
+You can use this setting to configure your models registration and other behaviours.
+It must be a list or tuple. Each item in this setting can be a:
+
+* ``str``: To register a model.
+* ``dict``: To register a model and define its logging behaviour. e.g. include_fields, exclude_fields.
+
 .. code-block:: python
 
-    # Django project settings.py
-
-    # assign models to register. this has the same behavior as auditlog.register()
     AUDITLOG_INCLUDE_TRACKING_MODELS = (
         "<appname>.<model1>",
         {
@@ -126,19 +143,7 @@ You can register a model using Django settings variables in `settings.py`, as th
         "<appname>.<model3>",
     )
 
-**AUDITLOG_EXCLUDE_TRACKING_MODELS**
-
-
-.. code-block:: python
-
-    # Django project settings.py
-
-    # assign models to exclude. this option is executed when
-    # AUDITLOG_INCLUDE_ALL_MODELS value is True.
-    AUDITLOG_EXCLUDE_TRACKING_MODELS = (
-        "<app_name>",
-        "<app_name>.<model>"
-    )
+.. versionadded:: 2.1.0
 
 Actors
 ------
