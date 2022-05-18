@@ -3,6 +3,7 @@
 #### Fixes
 
 - Fix inconsistent changes with JSONField ([#355](https://github.com/jazzband/django-auditlog/pull/355))
+- Disable `add` button in admin ui ([#378](https://github.com/jazzband/django-auditlog/pull/378))
 
 ## 2.0.0 (2022-05-09)
 
