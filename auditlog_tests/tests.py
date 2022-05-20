@@ -1,5 +1,6 @@
 import datetime
 import itertools
+import json
 from unittest import mock
 
 from dateutil.tz import gettz
@@ -12,6 +13,7 @@ from django.test import RequestFactory, TestCase
 from django.utils import dateformat, formats, timezone
 
 from auditlog.context import set_actor
+from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
@@ -22,6 +24,7 @@ from auditlog_tests.models import (
     ChoicesFieldModel,
     DateTimeFieldModel,
     FirstManyRelatedModel,
+    JSONModel,
     ManyRelatedModel,
     NoDeleteHistoryModel,
     OtherManyRelatedModel,
@@ -31,6 +34,7 @@ from auditlog_tests.models import (
     SimpleExcludeModel,
     SimpleIncludeModel,
     SimpleMappingModel,
+    SimpleMaskedModel,
     SimpleModel,
     UUIDPrimaryKeyModel,
 )
@@ -116,8 +120,9 @@ class SimpleModelTest(TestCase):
         obj.boolean = True
         obj.save(update_fields=[])
 
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
             msg="There is no log entries created",
         )
         obj.refresh_from_db()
@@ -160,6 +165,24 @@ class SimpleModelTest(TestCase):
         self.obj.delete()
         self.setUp()
         self.test_create()
+
+    def test_create_log_to_object_from_other_database(self):
+        msg = "The log should not try to write to the same database as the object"
+
+        instance = self.obj
+        # simulate object obtained from a different database (read only)
+        instance._state.db = "replica"
+
+        changes = model_instance_diff(None, instance)
+
+        log_entry = LogEntry.objects.log_create(
+            instance,
+            action=LogEntry.Action.CREATE,
+            changes=json.dumps(changes),
+        )
+        self.assertEqual(
+            log_entry._state.db, "default", msg=msg
+        )  # must be created in default database
 
 
 class NoActorMixin:
@@ -426,8 +449,9 @@ class SimpleIncludeModelTest(TestCase):
         obj.text = "New text"
         obj.save(update_fields=["text"])
 
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
             msg="Text change was not logged, even when passed explicitly",
         )
 
@@ -465,8 +489,9 @@ class SimpleExcludeModelTest(TestCase):
         obj.text = "New text"
         obj.save(update_fields=["text"])
 
-        self.assertTrue(
-            obj.history.filter(action=LogEntry.Action.UPDATE).count() == 0,
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
             msg="Text change was not logged, even when passed explicitly",
         )
 
@@ -524,6 +549,19 @@ class SimpleMappingModelTest(TestCase):
                 "The diff function uses the django default verbose name for 'not_mapped'"
                 " and can be retrieved."
             ),
+        )
+
+
+class SimpeMaskedFieldsModelTest(TestCase):
+    """Log masked changes for fields in mask_fields"""
+
+    def test_register_mask_fields(self):
+        smm = SimpleMaskedModel(address="Sensitive data", text="Looong text")
+        smm.save()
+        self.assertEqual(
+            smm.history.latest().changes_dict["address"][1],
+            "*******ve data",
+            msg="The diff function masks 'address' field.",
         )
 
 
@@ -944,7 +982,7 @@ class CharfieldTextfieldModelTest(TestCase):
     def test_changes_display_dict_longchar(self):
         self.assertEqual(
             self.obj.history.latest().changes_display_dict["longchar"][1],
-            "{}...".format(self.PLACEHOLDER_LONGCHAR[:140]),
+            f"{self.PLACEHOLDER_LONGCHAR[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
         SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGCHAR[:139]
@@ -959,7 +997,7 @@ class CharfieldTextfieldModelTest(TestCase):
     def test_changes_display_dict_longtextfield(self):
         self.assertEqual(
             self.obj.history.latest().changes_display_dict["longtextfield"][1],
-            "{}...".format(self.PLACEHOLDER_LONGTEXTFIELD[:140]),
+            f"{self.PLACEHOLDER_LONGTEXTFIELD[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
         SHORTENED_PLACEHOLDER = self.PLACEHOLDER_LONGTEXTFIELD[:139]
@@ -1000,7 +1038,9 @@ class PostgresArrayFieldModelTest(TestCase):
         self.obj.arrayfield = []
         self.obj.save()
         self.assertEqual(
-            self.latest_array_change, "", msg="The human readable text '' is displayed."
+            self.latest_array_change,
+            "",
+            msg="The human readable text '' is displayed.",
         )
         self.obj.arrayfield = [PostgresArrayFieldModel.GREEN]
         self.obj.save()
@@ -1067,4 +1107,91 @@ class NoDeleteHistoryTest(TestCase):
         self.assertEqual(
             list(entries.values_list("action", flat=True)),
             [LogEntry.Action.CREATE, LogEntry.Action.UPDATE, LogEntry.Action.DELETE],
+        )
+
+
+class JSONModelTest(TestCase):
+    def setUp(self):
+        self.obj = JSONModel.objects.create()
+
+    def test_update(self):
+        """Changes on a JSONField are logged correctly."""
+        # Get the object to work with
+        obj = self.obj
+
+        # Change something
+        obj.json = {
+            "quantity": "1",
+        }
+        obj.save()
+
+        # Check for log entries
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            1,
+            msg="There is one log entry for 'UPDATE'",
+        )
+
+        history = obj.history.get(action=LogEntry.Action.UPDATE)
+
+        self.assertJSONEqual(
+            history.changes,
+            '{"json": ["{}", "{\'quantity\': \'1\'}"]}',
+            msg="The change is correctly logged",
+        )
+
+    def test_update_with_no_changes(self):
+        """No changes are logged."""
+        first_json = {
+            "quantity": "1814",
+            "tax_rate": "17",
+            "unit_price": "144",
+            "description": "Method form.",
+            "discount_rate": "42",
+            "unit_of_measure": "bytes",
+        }
+        obj = JSONModel.objects.create(json=first_json)
+
+        # Change the order of the keys but not the values
+        second_json = {
+            "tax_rate": "17",
+            "description": "Method form.",
+            "quantity": "1814",
+            "unit_of_measure": "bytes",
+            "unit_price": "144",
+            "discount_rate": "42",
+        }
+        obj.json = second_json
+        obj.save()
+
+        # Check for log entries
+        self.assertEqual(
+            first_json,
+            second_json,
+            msg="dicts are the same",
+        )
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            0,
+            msg="There is no log entry",
+        )
+
+
+class ModelInstanceDiffTest(TestCase):
+    def test_when_field_doesnt_exit(self):
+        """No error is raised and the default is returned."""
+        first = SimpleModel(boolean=True)
+        second = SimpleModel()
+
+        # then boolean should be False, as we use the default value
+        # specified inside the model
+        del second.boolean
+
+        changes = model_instance_diff(first, second)
+
+        # Check for log entries
+        self.assertEqual(
+            changes,
+            {"boolean": ("True", "False")},
+            msg="ObjectDoesNotExist should be handled",
         )

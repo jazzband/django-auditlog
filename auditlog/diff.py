@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import NOT_PROVIDED, DateTimeField, Model
+from django.db.models import NOT_PROVIDED, DateTimeField, JSONField, Model
 from django.utils import timezone
 from django.utils.encoding import smart_str
 
@@ -58,22 +58,34 @@ def get_field_value(obj, field):
     :return: The value of the field as a string.
     :rtype: str
     """
-    if isinstance(field, DateTimeField):
-        # DateTimeFields are timezone-aware, so we need to convert the field
-        # to its naive form before we can accurately compare them for changes.
-        try:
+    try:
+        if isinstance(field, DateTimeField):
+            # DateTimeFields are timezone-aware, so we need to convert the field
+            # to its naive form before we can accurately compare them for changes.
             value = field.to_python(getattr(obj, field.name, None))
             if value is not None and settings.USE_TZ and not timezone.is_naive(value):
                 value = timezone.make_naive(value, timezone=timezone.utc)
-        except ObjectDoesNotExist:
-            value = field.default if field.default is not NOT_PROVIDED else None
-    else:
-        try:
+        elif isinstance(field, JSONField):
+            value = field.to_python(getattr(obj, field.name, None))
+        else:
             value = smart_str(getattr(obj, field.name, None))
-        except ObjectDoesNotExist:
-            value = field.default if field.default is not NOT_PROVIDED else None
+    except ObjectDoesNotExist:
+        value = field.default if field.default is not NOT_PROVIDED else None
 
     return value
+
+
+def mask_str(value: str) -> str:
+    """
+    Masks the first half of the input string to remove sensitive data.
+
+    :param value: The value to mask.
+    :type value: str
+    :return: The masked version of the string.
+    :rtype: str
+    """
+    mask_limit = int(len(value) / 2)
+    return "*" * mask_limit + value[mask_limit:]
 
 
 def model_instance_diff(old, new, fields_to_check=None):
@@ -145,7 +157,13 @@ def model_instance_diff(old, new, fields_to_check=None):
         new_value = get_field_value(new, field)
 
         if old_value != new_value:
-            diff[field.name] = (smart_str(old_value), smart_str(new_value))
+            if model_fields and field.name in model_fields["mask_fields"]:
+                diff[field.name] = (
+                    mask_str(smart_str(old_value)),
+                    mask_str(smart_str(new_value)),
+                )
+            else:
+                diff[field.name] = (smart_str(old_value), smart_str(new_value))
 
     if len(diff) == 0:
         diff = None

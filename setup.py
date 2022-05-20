@@ -30,7 +30,6 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=[
         "django-admin-rangefilter>=0.8.0",
-        "django-jsonfield-backport>=1.0.0",
         "python-dateutil>=2.6.0",
     ],
     zip_safe=False,
@@ -41,7 +40,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Framework :: Django",
-        "Framework :: Django :: 2.2",
         "Framework :: Django :: 3.2",
         "Framework :: Django :: 4.0",
         "License :: OSI Approved :: MIT License",

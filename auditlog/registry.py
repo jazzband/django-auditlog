@@ -50,6 +50,7 @@ class AuditlogModelRegistry:
         include_fields: Optional[List[str]] = None,
         exclude_fields: Optional[List[str]] = None,
         mapping_fields: Optional[Dict[str, str]] = None,
+        mask_fields: Optional[List[str]] = None,
         m2m_fields: Optional[Collection[str]] = None,
     ):
         """
@@ -59,6 +60,7 @@ class AuditlogModelRegistry:
         :param include_fields: The fields to include. Implicitly excludes all other fields.
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
         :param mapping_fields: Mapping from field names to strings in diff.
+        :param mask_fields: The fields to mask for sensitive info.
         :param m2m_fields: The fields to map as many to many.
 
         """
@@ -69,6 +71,8 @@ class AuditlogModelRegistry:
             exclude_fields = []
         if mapping_fields is None:
             mapping_fields = {}
+        if mask_fields is None:
+            mask_fields = []
         if m2m_fields is None:
             m2m_fields = set()
 
@@ -81,6 +85,7 @@ class AuditlogModelRegistry:
                 "include_fields": include_fields,
                 "exclude_fields": exclude_fields,
                 "mapping_fields": mapping_fields,
+                "mask_fields": mask_fields,
                 "m2m_fields": m2m_fields,
             }
             self._connect_signals(cls)
@@ -130,6 +135,7 @@ class AuditlogModelRegistry:
             "include_fields": list(self._registry[model]["include_fields"]),
             "exclude_fields": list(self._registry[model]["exclude_fields"]),
             "mapping_fields": dict(self._registry[model]["mapping_fields"]),
+            "mask_fields": list(self._registry[model]["mask_fields"]),
         }
 
     def _connect_signals(self, model):
