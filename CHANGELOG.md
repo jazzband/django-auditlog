@@ -3,6 +3,7 @@
 #### Improvements
 
 - feat: Add register model from settings ([#368](https://github.com/jazzband/django-auditlog/pull/368))
+- Context manager set_actor() for use in Celery tasks ([#262](https://github.com/jazzband/django-auditlog/pull/262))
 
 #### Fixes
 
