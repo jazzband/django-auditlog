@@ -1,5 +1,9 @@
 # Changes
 
+#### Improvements
+
+- feat: Add register model from settings ([#368](https://github.com/jazzband/django-auditlog/pull/368))
+
 #### Fixes
 
 - Fix inconsistent changes with JSONField ([#355](https://github.com/jazzband/django-auditlog/pull/355))
