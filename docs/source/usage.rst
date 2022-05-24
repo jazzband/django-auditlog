@@ -148,6 +148,9 @@ It must be a list or tuple. Each item in this setting can be a:
 Actors
 ------
 
+Middleware
+**********
+
 When using automatic logging, the actor is empty by default. However, auditlog can set the actor from the current
 request automatically. This does not need any custom code, adding a middleware class is enough. When an actor is logged
 the remote address of that actor will be logged as well.
@@ -168,6 +171,22 @@ It is recommended to keep all middleware that alters the request loaded before A
     Please keep in mind that every object change in a request that gets logged automatically will have the current request's
     user as actor. To only have some object changes to be logged with the current request's user as actor manual logging is
     required.
+
+Context manager
+***************
+
+.. versionadded:: 2.1.0
+
+To enable the automatic logging of the actors outside of request context (e.g. in a Celery task), you can use a context
+manager::
+
+    from auditlog.context import set_actor
+
+    def do_stuff(actor_id: int):
+        actor = get_user(actor_id)
+        with set_actor(actor):
+            # if your code here leads to creation of LogEntry instances, these will have the actor set
+            ...
 
 Object history
 --------------
