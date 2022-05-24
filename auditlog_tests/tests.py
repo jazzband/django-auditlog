@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import json
+import warnings
 from unittest import mock
 
 from dateutil.tz import gettz
@@ -599,6 +600,18 @@ class DateTimeFieldModelTest(TestCase):
 
     utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
     now = timezone.now()
+
+    def setUp(self):
+        super().setUp()
+        self._context = warnings.catch_warnings()
+        self._context.__enter__()
+        warnings.filterwarnings(
+            "ignore", message=".*naive datetime", category=RuntimeWarning
+        )
+
+    def tearDown(self):
+        self._context.__exit__()
+        super().tearDown()
 
     def test_model_with_same_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
