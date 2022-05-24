@@ -10,7 +10,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import pre_save
-from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from django.utils import dateformat, formats, timezone
 
@@ -369,9 +368,6 @@ class MiddlewareTest(TestCase):
     """
 
     def setUp(self):
-        def get_response(request):
-            return HttpResponse()
-
         self.get_response_mock = mock.Mock()
         self.response_mock = mock.Mock()
         self.middleware = AuditlogMiddleware(get_response=self.get_response_mock)
