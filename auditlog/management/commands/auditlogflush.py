@@ -8,7 +8,8 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "-y, --yes",
+            "-y",
+            "--yes",
             action="store_true",
             default=None,
             help="Continue without asking confirmation.",
