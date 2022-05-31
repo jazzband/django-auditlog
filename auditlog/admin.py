@@ -26,5 +26,9 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         # As audit admin doesn't allow log creation from admin
         return False
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request).select_related("content_type", "actor")
+        return queryset
+
 
 admin.site.register(LogEntry, LogEntryAdmin)
