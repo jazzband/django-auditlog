@@ -6,6 +6,7 @@ from auditlog.models import LogEntry
 
 
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
+    list_select_related = ["content_type", "actor"]
     list_display = ["created", "resource_url", "action", "msg_short", "user_url"]
     search_fields = [
         "timestamp",
@@ -25,10 +26,6 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     def has_add_permission(self, request):
         # As audit admin doesn't allow log creation from admin
         return False
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request).select_related("content_type", "actor")
-        return queryset
 
 
 admin.site.register(LogEntry, LogEntryAdmin)
