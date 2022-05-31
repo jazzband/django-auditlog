@@ -27,4 +27,5 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         # As audit admin doesn't allow log creation from admin
         return False
 
+
 admin.site.register(LogEntry, LogEntryAdmin)
