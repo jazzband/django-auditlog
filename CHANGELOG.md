@@ -2,6 +2,7 @@
 
 #### Improvements
 
+- feat: Add `--before-date` option to `auditlogflush` to support retention windows ([#365](https://github.com/jazzband/django-auditlog/pull/365))
 - feat: Add db_index to the `LogEntry.timestamp` column ([#364](https://github.com/jazzband/django-auditlog/pull/364))
 - feat: Add register model from settings ([#368](https://github.com/jazzband/django-auditlog/pull/368))
 - Context manager set_actor() for use in Celery tasks ([#262](https://github.com/jazzband/django-auditlog/pull/262))
@@ -15,12 +16,14 @@
 ## 2.0.0 (2022-05-09)
 
 #### Improvements
+
 - feat: enable use of replica database (delegating the choice to `DATABASES_ROUTER`) ([#359](https://github.com/jazzband/django-auditlog/pull/359))
 - Add `mask_fields` argument in `register` to mask sensitive information when logging ([#310](https://github.com/jazzband/django-auditlog/pull/310))
 - Django: Drop 2.2 support. `django_jsonfield_backport` is not required anymore ([#370](https://github.com/jazzband/django-auditlog/pull/370))
 - Remove `default_app_config` configuration ([#372](https://github.com/jazzband/django-auditlog/pull/372))
 
 #### Important notes
+
 - LogEntry no longer save to same database instance is using
 
 ## 1.0.0 (2022-01-24)
@@ -54,7 +57,6 @@
 - Support Django's save method `update_fields` kwarg ([#336](https://github.com/jazzband/django-auditlog/pull/336))
 - Fix invalid escape sequence on Python 3.7
 
-
 ### Alpha 1 (1.0a1, 2020-09-07)
 
 #### Improvements
@@ -69,13 +71,11 @@
 - Fix field choices diff
 - Allow higher versions of python-dateutil than 2.6.0
 
-
 ## 0.4.8 (2019-11-12)
 
 ### Improvements
 
 - Add support for PostgreSQL 10
-
 
 ## 0.4.7 (2019-12-19)
 
@@ -84,7 +84,6 @@
 - Improve support multiple database (PostgreSQL, MySQL)
 - Django: add 2.1 and 2.2 support, drop < 1.11 versions
 - Python: add 3.7 support
-
 
 ## 0.4.6 (2018-09-18)
 
@@ -102,13 +101,11 @@
 - Fix the rendering of the `msg` field with Django 2.0 ([#166](https://github.com/jazzband/django-auditlog/pull/166))
 - Mark `LogEntryAdminMixin` methods output as safe where required ([#167](https://github.com/jazzband/django-auditlog/pull/167))
 
-
 ## 0.4.5 (2018-01-12)
 
 ### Improvements
 
 Added support for Django 2.0, along with a number of bug fixes.
-
 
 ## 0.4.4 (2017-11-17)
 
@@ -126,13 +123,11 @@ Added support for Django 2.0, along with a number of bug fixes.
 - Add management commands package to setup.py ([#130](https://github.com/jazzband/django-auditlog/pull/130))
 - Add `changes_display_dict` property to `LogEntry` model to display diff in a more human readable format ([#94](https://github.com/jazzband/django-auditlog/pull/94))
 
-
 ## 0.4.3 (2017-02-16)
 
 ### Fixes
 
 - Fixes cricital bug in admin mixin making the library only usable on Django 1.11
-
 
 ## 0.4.2 (2017-02-16)
 
@@ -147,7 +142,6 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 - A lot, yes, [_really_ a lot](https://github.com/jjkester/django-auditlog/milestone/8?closed=1), of fixes for the admin integration
 - Flush command fixed for Django 1.10
 
-
 ## 0.4.1 (2016-12-27)
 
 ### Improvements
@@ -157,7 +151,6 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 ### Fixes
 
 - Fixed multithreading issue where the wrong user was written to the log
-
 
 ## 0.4.0 (2016-08-17)
 
@@ -179,7 +172,6 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 
 - Solved migration error for MySQL users
 
-
 ## 0.3.3 (2016-01-23)
 
 ### Fixes
@@ -192,7 +184,6 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 
 - The `object_pk` field is now limited to 255 chars
 
-
 ## 0.3.2 (2015-10-19)
 
 ### New functionality
@@ -203,13 +194,11 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 
 - Enhanced performance for non-integer primary key lookups
 
-
 ## 0.3.1 (2015-07-29)
 
 ### Fixes
 
 - Auditlog data is now correctly stored in the thread.
-
 
 ## 0.3.0 (2015-07-22)
 
@@ -231,13 +220,11 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 - Better documentation
 - Compatibility with [django-polymorphic](https://pypi.org/project/django-polymorphic/)
 
-
 ## 0.2.1 (2014-07-08)
 
 ### New functionality
 
 - South compatibility for `AuditlogHistoryField`
-
 
 ## 0.2.0 (2014-03-08)
 
@@ -249,7 +236,6 @@ Although this release contains mostly bugfixes, the improvements were significan
 - Model diffs use unicode strings instead of regular strings
 - Tests on middleware
 
-
 ## 0.1.1 (2013-12-12)
 
 ### New functionality
@@ -260,7 +246,6 @@ Although this release contains mostly bugfixes, the improvements were significan
 
 - Only save a new log entry if there are actual changes
 - Better way of loading the user model in the middleware
-
 
 ## 0.1.0 (2013-10-21)
 
