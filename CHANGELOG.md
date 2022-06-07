@@ -6,6 +6,7 @@
 - feat: Add db_index to the `LogEntry.timestamp` column ([#364](https://github.com/jazzband/django-auditlog/pull/364))
 - feat: Add register model from settings ([#368](https://github.com/jazzband/django-auditlog/pull/368))
 - Context manager set_actor() for use in Celery tasks ([#262](https://github.com/jazzband/django-auditlog/pull/262))
+- Tracking of changes in many-to-many fields ([#309](https://github.com/jazzband/django-auditlog/pull/309))
 
 #### Fixes
 
