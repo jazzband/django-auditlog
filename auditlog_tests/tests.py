@@ -989,6 +989,21 @@ class RegisterModelSettingsTest(TestCase):
         self.assertEqual(fields["include_fields"], ["label"])
         self.assertEqual(fields["exclude_fields"], ["text"])
 
+    def test_register_models_register_model_with_m2m_fields(self):
+        self.test_auditlog._register_models(
+            (
+                {
+                    "model": "auditlog_tests.ManyRelatedModel",
+                    "m2m_fields": {"related"},
+                },
+            )
+        )
+
+        self.assertTrue(self.test_auditlog.contains(ManyRelatedModel))
+        self.assertEqual(
+            self.test_auditlog._registry[ManyRelatedModel]["m2m_fields"], {"related"}
+        )
+
     def test_register_from_settings_invalid_settings(self):
         with override_settings(AUDITLOG_INCLUDE_ALL_MODELS="str"):
             with self.assertRaisesMessage(

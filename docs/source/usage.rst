@@ -154,6 +154,7 @@ It must be a list or tuple. Each item in this setting can be a:
                 "field1": "FIELD",
             },
             "mask_fields": ["field5", "field6"],
+            "m2m_fields": ["field7", "field8"],
         },
         "<appname>.<model3>",
     )
