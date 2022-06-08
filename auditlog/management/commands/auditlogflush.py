@@ -45,7 +45,7 @@ class Command(BaseCommand):
         if answer:
             entries = LogEntry.objects.all()
             if before is not None:
-                entries = entries.filter(timestamp__lt=before)
+                entries = entries.filter(timestamp__date__lt=before)
             count, _ = entries.delete()
             self.stdout.write("Deleted %d objects." % count)
         else:
