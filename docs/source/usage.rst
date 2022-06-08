@@ -11,6 +11,8 @@ even more convenience, :py:class:`LogEntryManager` provides a number of methods 
 
 See :doc:`internals` for all details.
 
+.. _Automatically logging changes:
+
 Automatically logging changes
 -----------------------------
 
@@ -91,6 +93,19 @@ For example, to mask the field ``address``, use::
 
     Masking fields
 
+**Many-to-many fields**
+
+Changes to many-to-many fields are not tracked by default. If you want to enable tracking of a many-to-many field on a model, pass ``m2m_fields`` to the ``register`` method:
+
+.. code-block:: python
+
+    auditlog.register(MyModel, m2m_fields={"tags", "contacts"})
+
+This functionality is based on the ``m2m_changed`` signal sent by the ``through`` model of the relationship.
+
+Note that when the user changes multiple many-to-many fields on the same object through the admin, both adding and removing some objects from each, this code will generate multiple log entries: each log entry will represent a single operation (add or delete) of a single field, e.g. if you both add and delete values from 2 fields on the same form in the same request, you'll get 4 log entries.
+
+.. versionadded:: 2.1.0
 
 Settings
 --------
@@ -139,6 +154,7 @@ It must be a list or tuple. Each item in this setting can be a:
                 "field1": "FIELD",
             },
             "mask_fields": ["field5", "field6"],
+            "m2m_fields": ["field7", "field8"],
         },
         "<appname>.<model3>",
     )
@@ -250,10 +266,9 @@ Many-to-many relationships
 
 .. versionadded:: 0.3.0
 
-.. warning::
+.. note::
 
-    To-many relations are not officially supported. However, this section shows a workaround which can be used for now.
-    In the future, this workaround may be used in an official API or a completly different strategy might be chosen.
+    This section shows a workaround which can be used to track many-to-many relationships on older versions of django-auditlog. For versions 2.1.0 and onwards, please see the many-to-many fields section of :ref:`Automatically logging changes`.
     **Do not rely on the workaround here to be stable across releases.**
 
 By default, many-to-many relationships are not tracked by Auditlog.

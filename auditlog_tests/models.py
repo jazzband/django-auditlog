@@ -4,7 +4,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from auditlog.models import AuditlogHistoryField
-from auditlog.registry import auditlog
+from auditlog.registry import AuditlogModelRegistry, auditlog
+
+m2m_only_auditlog = AuditlogModelRegistry(create=False, update=False, delete=False)
 
 
 @auditlog.register()
@@ -81,10 +83,23 @@ class RelatedModel(RelatedModelParent):
 
 class ManyRelatedModel(models.Model):
     """
-    A model with a many to many relation.
+    A model with many-to-many relations.
     """
 
-    related = models.ManyToManyField("self")
+    recursive = models.ManyToManyField("self")
+    related = models.ManyToManyField("ManyRelatedOtherModel", related_name="related")
+
+    history = AuditlogHistoryField()
+
+    def get_additional_data(self):
+        related = self.related.first()
+        return {"related_model_id": related.id if related else None}
+
+
+class ManyRelatedOtherModel(models.Model):
+    """
+    A model related to ManyRelatedModel as many-to-many.
+    """
 
     history = AuditlogHistoryField()
 
@@ -250,7 +265,8 @@ auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
-auditlog.register(ManyRelatedModel.related.through)
+auditlog.register(ManyRelatedModel.recursive.through)
+m2m_only_auditlog.register(ManyRelatedModel, m2m_fields={"related"})
 auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)
