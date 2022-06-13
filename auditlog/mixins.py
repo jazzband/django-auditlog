@@ -99,14 +99,14 @@ class LogEntryAdminMixin:
             msg.append(self._format_header("#", "Relationship", "Action", "Objects"))
             for i, (field, change) in enumerate(sorted(m2m_changes.items()), 1):
                 change_html = format_html_join(
-                    mark_safe("</br>"),
+                    mark_safe("<br>"),
                     "{}",
                     [(value,) for value in change["objects"]],
                 )
 
                 msg.append(
                     format_html(
-                        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td>",
+                        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
                         i,
                         field,
                         change["operation"],

@@ -11,6 +11,8 @@ even more convenience, :py:class:`LogEntryManager` provides a number of methods 
 
 See :doc:`internals` for all details.
 
+.. _Automatically logging changes:
+
 Automatically logging changes
 -----------------------------
 
@@ -56,15 +58,15 @@ If you have field names on your models that aren't intuitive or user friendly yo
 during the `register()` call.
 
 .. code-block:: python
-    
+
     class MyModel(modelsModel):
         sku = models.CharField(max_length=20)
         version = models.CharField(max_length=5)
         product = models.CharField(max_length=50, verbose_name='Product Name')
         history = AuditlogHistoryField()
-        
+
     auditlog.register(MyModel, mapping_fields={'sku': 'Product No.', 'version': 'Product Revision'})
-    
+
 .. code-block:: python
 
     log = MyModel.objects.first().history.latest()
@@ -91,8 +93,79 @@ For example, to mask the field ``address``, use::
 
     Masking fields
 
+**Many-to-many fields**
+
+Changes to many-to-many fields are not tracked by default. If you want to enable tracking of a many-to-many field on a model, pass ``m2m_fields`` to the ``register`` method:
+
+.. code-block:: python
+
+    auditlog.register(MyModel, m2m_fields={"tags", "contacts"})
+
+This functionality is based on the ``m2m_changed`` signal sent by the ``through`` model of the relationship.
+
+Note that when the user changes multiple many-to-many fields on the same object through the admin, both adding and removing some objects from each, this code will generate multiple log entries: each log entry will represent a single operation (add or delete) of a single field, e.g. if you both add and delete values from 2 fields on the same form in the same request, you'll get 4 log entries.
+
+.. versionadded:: 2.1.0
+
+Settings
+--------
+
+**AUDITLOG_INCLUDE_ALL_MODELS**
+
+You can use this setting to register all your models:
+
+.. code-block:: python
+
+    AUDITLOG_INCLUDE_ALL_MODELS=True
+
+.. versionadded:: 2.1.0
+
+**AUDITLOG_EXCLUDE_TRACKING_MODELS**
+
+You can use this setting to exclude models in registration process.
+It will be considered when ``AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
+
+.. code-block:: python
+
+    AUDITLOG_EXCLUDE_TRACKING_MODELS = (
+        "<app_name>",
+        "<app_name>.<model>"
+    )
+
+.. versionadded:: 2.1.0
+
+**AUDITLOG_INCLUDE_TRACKING_MODELS**
+
+You can use this setting to configure your models registration and other behaviours.
+It must be a list or tuple. Each item in this setting can be a:
+
+* ``str``: To register a model.
+* ``dict``: To register a model and define its logging behaviour. e.g. include_fields, exclude_fields.
+
+.. code-block:: python
+
+    AUDITLOG_INCLUDE_TRACKING_MODELS = (
+        "<appname>.<model1>",
+        {
+            "model": "<appname>.<model1>",
+            "include_fields": ["field1", "field2"],
+            "exclude_fields": ["field3", "field4"],
+            "mapping_fields": {
+                "field1": "FIELD",
+            },
+            "mask_fields": ["field5", "field6"],
+            "m2m_fields": ["field7", "field8"],
+        },
+        "<appname>.<model3>",
+    )
+
+.. versionadded:: 2.1.0
+
 Actors
 ------
+
+Middleware
+**********
 
 When using automatic logging, the actor is empty by default. However, auditlog can set the actor from the current
 request automatically. This does not need any custom code, adding a middleware class is enough. When an actor is logged
@@ -114,6 +187,22 @@ It is recommended to keep all middleware that alters the request loaded before A
     Please keep in mind that every object change in a request that gets logged automatically will have the current request's
     user as actor. To only have some object changes to be logged with the current request's user as actor manual logging is
     required.
+
+Context manager
+***************
+
+.. versionadded:: 2.1.0
+
+To enable the automatic logging of the actors outside of request context (e.g. in a Celery task), you can use a context
+manager::
+
+    from auditlog.context import set_actor
+
+    def do_stuff(actor_id: int):
+        actor = get_user(actor_id)
+        with set_actor(actor):
+            # if your code here leads to creation of LogEntry instances, these will have the actor set
+            ...
 
 Object history
 --------------
@@ -177,10 +266,9 @@ Many-to-many relationships
 
 .. versionadded:: 0.3.0
 
-.. warning::
+.. note::
 
-    To-many relations are not officially supported. However, this section shows a workaround which can be used for now.
-    In the future, this workaround may be used in an official API or a completly different strategy might be chosen.
+    This section shows a workaround which can be used to track many-to-many relationships on older versions of django-auditlog. For versions 2.1.0 and onwards, please see the many-to-many fields section of :ref:`Automatically logging changes`.
     **Do not rely on the workaround here to be stable across releases.**
 
 By default, many-to-many relationships are not tracked by Auditlog.
@@ -206,12 +294,17 @@ Management commands
 
 Auditlog provides the ``auditlogflush`` management command to clear all log entries from the database.
 
-By default, the command asks for confirmation. It is possible to run the command with the `-y` or `--yes` flag to skip
+By default, the command asks for confirmation. It is possible to run the command with the ``-y`` or ``--yes`` flag to skip
 confirmation and immediately delete all entries.
+
+You may also specify a date using the ``-b`` or ``--before-date`` option in ISO 8601 format (YYYY-mm-dd) to delete all
+log entries prior to a given date. This may be used to implement time based retention windows.
+
+.. versionadded:: 2.1.0
 
 .. warning::
 
-    Using the ``auditlogflush`` command deletes all log entries permanently and irreversibly from the database.
+    Using the ``auditlogflush`` command deletes log entries permanently and irreversibly from the database.
 
 Django Admin integration
 ------------------------

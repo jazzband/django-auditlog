@@ -74,10 +74,14 @@ class LogEntryManager(models.Manager):
     ):
         """Create a new "changed" log entry from m2m record.
 
+        :param changed_queryset: The added or removed related objects.
+        :type changed_queryset: QuerySet
         :param instance: The model instance to log a change for.
         :type instance: Model
         :param operation: "add" or "delete".
         :type action: str
+        :param field_name: The name of the changed m2m field.
+        :type field_name: str
         :param kwargs: Field overrides for the :py:class:`LogEntry` object.
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
@@ -109,12 +113,7 @@ class LogEntryManager(models.Manager):
                     }
                 }
             )
-            db = instance._state.db
-            return (
-                self.create(**kwargs)
-                if db is None or db == ""
-                else self.using(db).create(**kwargs)
-            )
+            return self.create(**kwargs)
 
         return None
 
@@ -269,7 +268,9 @@ class LogEntry(models.Model):
     remote_addr = models.GenericIPAddressField(
         blank=True, null=True, verbose_name=_("remote address")
     )
-    timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_("timestamp"))
+    timestamp = models.DateTimeField(
+        db_index=True, auto_now_add=True, verbose_name=_("timestamp")
+    )
     additional_data = models.JSONField(
         blank=True, null=True, verbose_name=_("additional data")
     )

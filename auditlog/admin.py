@@ -52,5 +52,9 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     show_full_result_count = False
     paginator = TimeLimitedPaginator
 
+    def has_add_permission(self, request):
+        # As audit admin doesn't allow log creation from admin
+        return False
+
 
 admin.site.register(LogEntry, LogEntryAdmin)

@@ -4,30 +4,32 @@ import json
 from unittest import mock
 
 from dateutil.tz import gettz
+from django.apps import apps
 from django.conf import settings
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import pre_save
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils import dateformat, formats, timezone
 
+from auditlog.admin import LogEntryAdmin
 from auditlog.context import set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from auditlog.registry import auditlog
+from auditlog.registry import AuditlogModelRegistry, auditlog
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
-    FirstManyRelatedModel,
     JSONModel,
     ManyRelatedModel,
+    ManyRelatedOtherModel,
     NoDeleteHistoryModel,
-    OtherManyRelatedModel,
     PostgresArrayFieldModel,
     ProxyModel,
     RelatedModel,
@@ -300,77 +302,66 @@ class ProxyModelWithActorTest(WithActorMixin, ProxyModelBase):
 
 class ManyRelatedModelTest(TestCase):
     """
-    Test the behaviour of a default many-to-many relationship.
+    Test the behaviour of many-to-many relationships.
     """
 
     def setUp(self):
         self.obj = ManyRelatedModel.objects.create()
-        self.rel_obj = ManyRelatedModel.objects.create()
-        self.obj.related.add(self.rel_obj)
+        self.recursive = ManyRelatedModel.objects.create()
+        self.related = ManyRelatedOtherModel.objects.create()
+        self.base_log_entry_count = (
+            LogEntry.objects.count()
+        )  # created by the create() calls above
 
-    def test_related(self):
+    def test_recursive(self):
+        self.obj.recursive.add(self.recursive)
         self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
+            LogEntry.objects.get_for_objects(self.obj.recursive.all()).first(),
+            self.recursive.history.first(),
         )
-        self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
-        )
-
-
-class FirstManyRelatedModelTest(TestCase):
-    """
-    Test the behaviour of a many-to-many relationship.
-    """
-
-    def setUp(self):
-        self.obj = FirstManyRelatedModel.objects.create()
-        self.rel_obj = OtherManyRelatedModel.objects.create()
 
     def test_related_add_from_first_side(self):
-        self.obj.related.add(self.rel_obj)
-        self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
-        )
+        self.obj.related.add(self.related)
         self.assertEqual(
             LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
+            self.related.history.first(),
         )
-        self.assertEqual(LogEntry.objects.count(), 1)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 1)
 
     def test_related_add_from_other_side(self):
-        self.rel_obj.related.add(self.obj)
-        self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
-        )
+        self.related.related.add(self.obj)
         self.assertEqual(
             LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
+            self.related.history.first(),
         )
-        self.assertEqual(LogEntry.objects.count(), 1)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 1)
 
     def test_related_remove_from_first_side(self):
-        self.obj.related.add(self.rel_obj)
-        self.obj.related.remove(self.rel_obj)
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.obj.related.add(self.related)
+        self.obj.related.remove(self.related)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
 
     def test_related_remove_from_other_side(self):
-        self.rel_obj.related.add(self.obj)
-        self.rel_obj.related.remove(self.obj)
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.related.related.add(self.obj)
+        self.related.related.remove(self.obj)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
 
     def test_related_clear_from_first_side(self):
-        self.obj.related.add(self.rel_obj)
+        self.obj.related.add(self.related)
         self.obj.related.clear()
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
 
     def test_related_clear_from_other_side(self):
-        self.rel_obj.related.add(self.obj)
-        self.rel_obj.related.clear()
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.related.related.add(self.obj)
+        self.related.related.clear()
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
+
+    def test_additional_data(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.additional_data, {"related_model_id": self.related.id}
+        )
 
 
 class MiddlewareTest(TestCase):
@@ -929,6 +920,170 @@ class UnregisterTest(TestCase):
         self.assertEqual(LogEntry.objects.count(), 0, msg="There are no log entries")
 
 
+class RegisterModelSettingsTest(TestCase):
+    def setUp(self):
+        self.test_auditlog = AuditlogModelRegistry()
+
+    def tearDown(self):
+        for model in self.test_auditlog.get_models():
+            self.test_auditlog.unregister(model)
+
+    def test_get_model_classes(self):
+        self.assertEqual(
+            len(list(self.test_auditlog._get_model_classes("auditlog"))),
+            len(list(apps.get_app_config("auditlog").get_models())),
+        )
+        self.assertEqual([], self.test_auditlog._get_model_classes("fake_model"))
+
+    def test_get_exclude_models(self):
+        # By default it returns DEFAULT_EXCLUDE_MODELS
+        self.assertEqual(len(self.test_auditlog._get_exclude_models(())), 2)
+
+        # Exclude just one model
+        self.assertTrue(
+            SimpleExcludeModel
+            in self.test_auditlog._get_exclude_models(
+                ("auditlog_tests.SimpleExcludeModel",)
+            )
+        )
+
+        # Exclude all model of an app
+        self.assertTrue(
+            SimpleExcludeModel
+            in self.test_auditlog._get_exclude_models(("auditlog_tests",))
+        )
+
+    def test_register_models_no_models(self):
+        self.test_auditlog._register_models(())
+
+        self.assertEqual(self.test_auditlog._registry, {})
+
+    def test_register_models_register_single_model(self):
+        self.test_auditlog._register_models(("auditlog_tests.SimpleExcludeModel",))
+
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertEqual(len(self.test_auditlog._registry), 1)
+
+    def test_register_models_register_app(self):
+        self.test_auditlog._register_models(("auditlog_tests",))
+
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
+        self.assertEqual(len(self.test_auditlog.get_models()), 19)
+
+    def test_register_models_register_model_with_attrs(self):
+        self.test_auditlog._register_models(
+            (
+                {
+                    "model": "auditlog_tests.SimpleExcludeModel",
+                    "include_fields": ["label"],
+                    "exclude_fields": [
+                        "text",
+                    ],
+                },
+            )
+        )
+
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        fields = self.test_auditlog.get_model_fields(SimpleExcludeModel)
+        self.assertEqual(fields["include_fields"], ["label"])
+        self.assertEqual(fields["exclude_fields"], ["text"])
+
+    def test_register_models_register_model_with_m2m_fields(self):
+        self.test_auditlog._register_models(
+            (
+                {
+                    "model": "auditlog_tests.ManyRelatedModel",
+                    "m2m_fields": {"related"},
+                },
+            )
+        )
+
+        self.assertTrue(self.test_auditlog.contains(ManyRelatedModel))
+        self.assertEqual(
+            self.test_auditlog._registry[ManyRelatedModel]["m2m_fields"], {"related"}
+        )
+
+    def test_register_from_settings_invalid_settings(self):
+        with override_settings(AUDITLOG_INCLUDE_ALL_MODELS="str"):
+            with self.assertRaisesMessage(
+                TypeError, "Setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be a boolean"
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_EXCLUDE_TRACKING_MODELS="str"):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS' must be a list or tuple",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_EXCLUDE_TRACKING_MODELS=("app1.model1",)):
+            with self.assertRaisesMessage(
+                ValueError,
+                "In order to use setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS', "
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must set to 'True'",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS="str"):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' must be a list or tuple",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=(1, 2)):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' items must be str or dict",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"test": "test"},)):
+            with self.assertRaisesMessage(
+                ValueError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' dict items must contain 'model' key",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "test"},)):
+            with self.assertRaisesMessage(
+                ValueError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the format <app_name>.<model_name>",
+            ):
+                self.test_auditlog.register_from_settings()
+
+    @override_settings(
+        AUDITLOG_INCLUDE_ALL_MODELS=True,
+        AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
+    )
+    def test_register_from_settings_register_all_models_with_exclude_models(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertFalse(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
+
+    @override_settings(
+        AUDITLOG_INCLUDE_TRACKING_MODELS=(
+            {
+                "model": "auditlog_tests.SimpleExcludeModel",
+                "include_fields": ["label"],
+                "exclude_fields": [
+                    "text",
+                ],
+            },
+        )
+    )
+    def test_register_from_settings_register_models(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
+        fields = self.test_auditlog.get_model_fields(SimpleExcludeModel)
+        self.assertEqual(fields["include_fields"], ["label"])
+        self.assertEqual(fields["exclude_fields"], ["text"])
+
+
 class ChoicesFieldModelTest(TestCase):
     def setUp(self):
         self.obj = ChoicesFieldModel.objects.create(
@@ -1070,13 +1225,94 @@ class AdminPanelTest(TestCase):
         res = self.client.get("/admin/auditlog/logentry/")
         assert res.status_code == 200
         res = self.client.get("/admin/auditlog/logentry/add/")
-        assert res.status_code == 200
+        assert res.status_code == 403
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
         assert res.status_code == 200
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
         assert res.status_code == 200
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
         assert res.status_code == 200
+
+
+class DiffMsgTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.site = AdminSite()
+        self.admin = LogEntryAdmin(LogEntry, self.site)
+
+    def _create_log_entry(self, action, changes):
+        return LogEntry.objects.log_create(
+            SimpleModel.objects.create(),  # doesn't affect anything
+            action=action,
+            changes=json.dumps(changes),
+        )
+
+    def test_changes_msg__delete(self):
+        log_entry = self._create_log_entry(LogEntry.Action.DELETE, {})
+
+        self.assertEqual(self.admin.msg(log_entry), "")
+
+    def test_changes_msg__create(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {
+                "field two": [None, 11],
+                "field one": [None, "a value"],
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>field one</td><td>None</td><td>a value</td></tr>"
+                "<tr><td>2</td><td>field two</td><td>None</td><td>11</td></tr>"
+                "</table>"
+            ),
+        )
+
+    def test_changes_msg__update(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.UPDATE,
+            {
+                "field two": [11, 42],
+                "field one": ["old value of field one", "new value of field one"],
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>field one</td><td>old value of field one</td><td>new value of field one</td></tr>"
+                "<tr><td>2</td><td>field two</td><td>11</td><td>42</td></tr>"
+                "</table>"
+            ),
+        )
+
+    def test_changes_msg__m2m(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.UPDATE,
+            {  # mimicking the format used by log_m2m_changes
+                "some_m2m_field": {
+                    "type": "m2m",
+                    "operation": "add",
+                    "objects": ["Example User (user 1)", "Illustration (user 42)"],
+                },
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Relationship</th><th>Action</th><th>Objects</th></tr>"
+                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)<br>Illustration (user 42)</td></tr>"
+                "</table>"
+            ),
+        )
 
 
 class NoDeleteHistoryTest(TestCase):
@@ -1178,7 +1414,39 @@ class JSONModelTest(TestCase):
 
 
 class ModelInstanceDiffTest(TestCase):
-    def test_when_field_doesnt_exit(self):
+    def test_diff_models_with_related_fields(self):
+        """No error is raised when comparing models with related fields."""
+
+        # This tests that track_field() does indeed ignore related fields.
+
+        # a model without reverse relations
+        simple1 = SimpleModel()
+        simple1.save()
+
+        # a model with reverse relations
+        simple2 = SimpleModel()
+        simple2.save()
+        related = RelatedModel(related=simple2, one_to_one=simple2)
+        related.save()
+
+        # Demonstrate that simple1 can have DoesNotExist on reverse
+        # OneToOne relation.
+        with self.assertRaises(
+            SimpleModel.reverse_one_to_one.RelatedObjectDoesNotExist
+        ):
+            simple1.reverse_one_to_one  # equals None
+
+        # accessing relatedmodel_set won't trigger DoesNotExist.
+        self.assertEqual(simple1.relatedmodel_set.count(), 0)
+
+        # simple2 DOES have these relations
+        self.assertEqual(simple2.reverse_one_to_one, related)
+        self.assertEqual(simple2.relatedmodel_set.count(), 1)
+
+        model_instance_diff(simple2, simple1)
+        model_instance_diff(simple1, simple2)
+
+    def test_when_field_doesnt_exist(self):
         """No error is raised and the default is returned."""
         first = SimpleModel(boolean=True)
         second = SimpleModel()
