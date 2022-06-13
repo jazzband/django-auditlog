@@ -33,7 +33,6 @@ def set_actor(actor, remote_addr=None):
 
     try:
         yield
-
     finally:
         try:
             auditlog = threadlocal.auditlog
