@@ -56,15 +56,15 @@ If you have field names on your models that aren't intuitive or user friendly yo
 during the `register()` call.
 
 .. code-block:: python
-    
+
     class MyModel(modelsModel):
         sku = models.CharField(max_length=20)
         version = models.CharField(max_length=5)
         product = models.CharField(max_length=50, verbose_name='Product Name')
         history = AuditlogHistoryField()
-        
+
     auditlog.register(MyModel, mapping_fields={'sku': 'Product No.', 'version': 'Product Revision'})
-    
+
 .. code-block:: python
 
     log = MyModel.objects.first().history.latest()
@@ -279,12 +279,17 @@ Management commands
 
 Auditlog provides the ``auditlogflush`` management command to clear all log entries from the database.
 
-By default, the command asks for confirmation. It is possible to run the command with the `-y` or `--yes` flag to skip
+By default, the command asks for confirmation. It is possible to run the command with the ``-y`` or ``--yes`` flag to skip
 confirmation and immediately delete all entries.
+
+You may also specify a date using the ``-b`` or ``--before-date`` option in ISO 8601 format (YYYY-mm-dd) to delete all
+log entries prior to a given date. This may be used to implement time based retention windows.
+
+.. versionadded:: 2.1.0
 
 .. warning::
 
-    Using the ``auditlogflush`` command deletes all log entries permanently and irreversibly from the database.
+    Using the ``auditlogflush`` command deletes log entries permanently and irreversibly from the database.
 
 Django Admin integration
 ------------------------
