@@ -6,6 +6,7 @@ from unittest import mock
 from dateutil.tz import gettz
 from django.apps import apps
 from django.conf import settings
+from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
@@ -13,6 +14,7 @@ from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
 from django.utils import dateformat, formats, timezone
 
+from auditlog.admin import LogEntryAdmin
 from auditlog.context import set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
@@ -24,11 +26,10 @@ from auditlog_tests.models import (
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
-    FirstManyRelatedModel,
     JSONModel,
     ManyRelatedModel,
+    ManyRelatedOtherModel,
     NoDeleteHistoryModel,
-    OtherManyRelatedModel,
     PostgresArrayFieldModel,
     ProxyModel,
     RelatedModel,
@@ -301,77 +302,66 @@ class ProxyModelWithActorTest(WithActorMixin, ProxyModelBase):
 
 class ManyRelatedModelTest(TestCase):
     """
-    Test the behaviour of a default many-to-many relationship.
+    Test the behaviour of many-to-many relationships.
     """
 
     def setUp(self):
         self.obj = ManyRelatedModel.objects.create()
-        self.rel_obj = ManyRelatedModel.objects.create()
-        self.obj.related.add(self.rel_obj)
+        self.recursive = ManyRelatedModel.objects.create()
+        self.related = ManyRelatedOtherModel.objects.create()
+        self.base_log_entry_count = (
+            LogEntry.objects.count()
+        )  # created by the create() calls above
 
-    def test_related(self):
+    def test_recursive(self):
+        self.obj.recursive.add(self.recursive)
         self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
+            LogEntry.objects.get_for_objects(self.obj.recursive.all()).first(),
+            self.recursive.history.first(),
         )
-        self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
-        )
-
-
-class FirstManyRelatedModelTest(TestCase):
-    """
-    Test the behaviour of a many-to-many relationship.
-    """
-
-    def setUp(self):
-        self.obj = FirstManyRelatedModel.objects.create()
-        self.rel_obj = OtherManyRelatedModel.objects.create()
 
     def test_related_add_from_first_side(self):
-        self.obj.related.add(self.rel_obj)
-        self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
-        )
+        self.obj.related.add(self.related)
         self.assertEqual(
             LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
+            self.related.history.first(),
         )
-        self.assertEqual(LogEntry.objects.count(), 1)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 1)
 
     def test_related_add_from_other_side(self):
-        self.rel_obj.related.add(self.obj)
-        self.assertEqual(
-            LogEntry.objects.get_for_objects(self.obj.related.all()).count(),
-            self.rel_obj.history.count(),
-        )
+        self.related.related.add(self.obj)
         self.assertEqual(
             LogEntry.objects.get_for_objects(self.obj.related.all()).first(),
-            self.rel_obj.history.first(),
+            self.related.history.first(),
         )
-        self.assertEqual(LogEntry.objects.count(), 1)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 1)
 
     def test_related_remove_from_first_side(self):
-        self.obj.related.add(self.rel_obj)
-        self.obj.related.remove(self.rel_obj)
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.obj.related.add(self.related)
+        self.obj.related.remove(self.related)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
 
     def test_related_remove_from_other_side(self):
-        self.rel_obj.related.add(self.obj)
-        self.rel_obj.related.remove(self.obj)
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.related.related.add(self.obj)
+        self.related.related.remove(self.obj)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
 
     def test_related_clear_from_first_side(self):
-        self.obj.related.add(self.rel_obj)
+        self.obj.related.add(self.related)
         self.obj.related.clear()
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
 
     def test_related_clear_from_other_side(self):
-        self.rel_obj.related.add(self.obj)
-        self.rel_obj.related.clear()
-        self.assertEqual(LogEntry.objects.count(), 2)
+        self.related.related.add(self.obj)
+        self.related.related.clear()
+        self.assertEqual(LogEntry.objects.count(), self.base_log_entry_count + 2)
+
+    def test_additional_data(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.additional_data, {"related_model_id": self.related.id}
+        )
 
 
 class MiddlewareTest(TestCase):
@@ -979,7 +969,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 20)
+        self.assertEqual(len(self.test_auditlog.get_models()), 19)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -998,6 +988,21 @@ class RegisterModelSettingsTest(TestCase):
         fields = self.test_auditlog.get_model_fields(SimpleExcludeModel)
         self.assertEqual(fields["include_fields"], ["label"])
         self.assertEqual(fields["exclude_fields"], ["text"])
+
+    def test_register_models_register_model_with_m2m_fields(self):
+        self.test_auditlog._register_models(
+            (
+                {
+                    "model": "auditlog_tests.ManyRelatedModel",
+                    "m2m_fields": {"related"},
+                },
+            )
+        )
+
+        self.assertTrue(self.test_auditlog.contains(ManyRelatedModel))
+        self.assertEqual(
+            self.test_auditlog._registry[ManyRelatedModel]["m2m_fields"], {"related"}
+        )
 
     def test_register_from_settings_invalid_settings(self):
         with override_settings(AUDITLOG_INCLUDE_ALL_MODELS="str"):
@@ -1227,6 +1232,87 @@ class AdminPanelTest(TestCase):
         assert res.status_code == 200
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
         assert res.status_code == 200
+
+
+class DiffMsgTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.site = AdminSite()
+        self.admin = LogEntryAdmin(LogEntry, self.site)
+
+    def _create_log_entry(self, action, changes):
+        return LogEntry.objects.log_create(
+            SimpleModel.objects.create(),  # doesn't affect anything
+            action=action,
+            changes=json.dumps(changes),
+        )
+
+    def test_changes_msg__delete(self):
+        log_entry = self._create_log_entry(LogEntry.Action.DELETE, {})
+
+        self.assertEqual(self.admin.msg(log_entry), "")
+
+    def test_changes_msg__create(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {
+                "field two": [None, 11],
+                "field one": [None, "a value"],
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>field one</td><td>None</td><td>a value</td></tr>"
+                "<tr><td>2</td><td>field two</td><td>None</td><td>11</td></tr>"
+                "</table>"
+            ),
+        )
+
+    def test_changes_msg__update(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.UPDATE,
+            {
+                "field two": [11, 42],
+                "field one": ["old value of field one", "new value of field one"],
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>field one</td><td>old value of field one</td><td>new value of field one</td></tr>"
+                "<tr><td>2</td><td>field two</td><td>11</td><td>42</td></tr>"
+                "</table>"
+            ),
+        )
+
+    def test_changes_msg__m2m(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.UPDATE,
+            {  # mimicking the format used by log_m2m_changes
+                "some_m2m_field": {
+                    "type": "m2m",
+                    "operation": "add",
+                    "objects": ["Example User (user 1)", "Illustration (user 42)"],
+                },
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Relationship</th><th>Action</th><th>Objects</th></tr>"
+                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)<br>Illustration (user 42)</td></tr>"
+                "</table>"
+            ),
+        )
 
 
 class NoDeleteHistoryTest(TestCase):

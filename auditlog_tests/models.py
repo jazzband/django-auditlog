@@ -83,27 +83,22 @@ class RelatedModel(RelatedModelParent):
 
 class ManyRelatedModel(models.Model):
     """
-    A model with a many to many relation.
+    A model with many-to-many relations.
     """
 
-    related = models.ManyToManyField("self")
+    recursive = models.ManyToManyField("self")
+    related = models.ManyToManyField("ManyRelatedOtherModel", related_name="related")
 
     history = AuditlogHistoryField()
 
+    def get_additional_data(self):
+        related = self.related.first()
+        return {"related_model_id": related.id if related else None}
 
-class FirstManyRelatedModel(models.Model):
+
+class ManyRelatedOtherModel(models.Model):
     """
-    A model with a many to many relation to another model similar.
-    """
-
-    related = models.ManyToManyField("OtherManyRelatedModel", related_name="related")
-
-    history = AuditlogHistoryField()
-
-
-class OtherManyRelatedModel(models.Model):
-    """
-    A model that 'receives' the other side of the many to many relation from 'FirstManyRelatedModel'.
+    A model related to ManyRelatedModel as many-to-many.
     """
 
     history = AuditlogHistoryField()
@@ -270,10 +265,8 @@ auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
-auditlog.register(ManyRelatedModel.related.through)
-m2m_only_auditlog.register(
-    FirstManyRelatedModel, include_fields=["pk", "history"], m2m_fields={"related"}
-)
+auditlog.register(ManyRelatedModel.recursive.through)
+m2m_only_auditlog.register(ManyRelatedModel, m2m_fields={"related"})
 auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)

@@ -77,7 +77,7 @@ class AuditlogModelRegistry:
         :param exclude_fields: The fields to exclude. Overrides the fields to include.
         :param mapping_fields: Mapping from field names to strings in diff.
         :param mask_fields: The fields to mask for sensitive info.
-        :param m2m_fields: The fields to map as many to many.
+        :param m2m_fields: The fields to handle as many to many.
 
         """
 
