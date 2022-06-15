@@ -205,10 +205,10 @@ class WithActorMixin:
     sequence = itertools.count()
 
     def setUp(self):
-        username = "actor_{}".format(next(self.sequence))
+        username = f"actor_{next(self.sequence)}"
         self.user = get_user_model().objects.create(
             username=username,
-            email="{}@example.com".format(username),
+            email=f"{username}@example.com",
             password="secret",
         )
         super().setUp()
