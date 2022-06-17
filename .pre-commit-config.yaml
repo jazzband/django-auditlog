@@ -8,6 +8,11 @@ repos:
         args:
           - "--target-version"
           - "py37"
+  - repo: https://github.com/PyCQA/flake8
+    rev: "4.0.1"
+    hooks:
+      - id: flake8
+        args: ["--max-line-length", "110"]
   - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
     hooks:

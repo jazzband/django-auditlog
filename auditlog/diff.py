@@ -34,8 +34,8 @@ def track_field(field):
 
 def get_fields_in_model(instance):
     """
-    Returns the list of fields in the given model instance. Checks whether to use the official _meta API or use the raw
-    data. This method excludes many to many fields.
+    Returns the list of fields in the given model instance. Checks whether to use the official
+    _meta API or use the raw data. This method excludes many to many fields.
 
     :param instance: The model instance to get the fields for
     :type instance: Model
@@ -90,8 +90,9 @@ def mask_str(value: str) -> str:
 
 def model_instance_diff(old, new, fields_to_check=None):
     """
-    Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
-    created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
+    Calculates the differences between two model instances. One of the instances may be ``None``
+    (i.e., a newly created model or deleted model). This will cause all fields with a value to have
+    changed (from ``None``).
 
     :param old: The old state of the model instance.
     :type old: Model
@@ -100,8 +101,8 @@ def model_instance_diff(old, new, fields_to_check=None):
     :param fields_to_check: An iterable of the field names to restrict the diff to, while ignoring the rest of
         the model's fields. This is used to pass the `update_fields` kwarg from the model's `save` method.
     :type fields_to_check: Iterable
-    :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
-             as value.
+    :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new
+            field values as value.
     :rtype: dict
     """
     from auditlog.registry import auditlog

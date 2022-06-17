@@ -73,7 +73,10 @@ class AuditlogFlushTest(TestCase):
         out, err = self.call_command("--before-date=2000-01-01")
         self.assertEqual(
             out,
-            "This action will clear all log entries before 2000-01-01 from the database.\nAborted.",
+            (
+                "This action will clear all log entries before "
+                "2000-01-01 from the database.\nAborted."
+            ),
             msg="Output shows warning with date and then aborted.",
         )
         self.assertEqual(err, "", msg="No stderr")

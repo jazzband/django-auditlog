@@ -270,7 +270,8 @@ class AuditlogModelRegistry:
                     )
                 if "." not in item["model"]:
                     raise ValueError(
-                        "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the format <app_name>.<model_name>"
+                        "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the "
+                        "format <app_name>.<model_name>"
                     )
 
         if settings.AUDITLOG_INCLUDE_ALL_MODELS:
