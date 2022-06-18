@@ -108,13 +108,17 @@ class SimpleModelTest(TestCase):
         self.assertJSONEqual(
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
             '{"boolean": ["False", "True"]}',
-            msg="Object modifications that are not saved to DB are not logged when using the `update_fields`.",
+            msg=(
+                "Object modifications that are not saved to DB are not logged "
+                "when using the `update_fields`."
+            ),
         )
 
     def test_django_update_fields_edge_cases(self):
         """
-        The test ensures that if Django's `update_fields` behavior ever changes for special values `(None, [])`, the
-        package should too. https://docs.djangoproject.com/en/3.2/ref/models/instances/#specifying-which-fields-to-save
+        The test ensures that if Django's `update_fields` behavior ever changes for special
+        values `(None, [])`, the package should too.
+        https://docs.djangoproject.com/en/3.2/ref/models/instances/#specifying-which-fields-to-save
         """
         obj = self.obj
 
@@ -1050,7 +1054,10 @@ class RegisterModelSettingsTest(TestCase):
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "test"},)):
             with self.assertRaisesMessage(
                 ValueError,
-                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the format <app_name>.<model_name>",
+                (
+                    "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the "
+                    "format <app_name>.<model_name>"
+                ),
             ):
                 self.test_auditlog.register_from_settings()
 
@@ -1286,7 +1293,8 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>old value of field one</td><td>new value of field one</td></tr>"
+                "<tr><td>1</td><td>field one</td><td>old value of field one</td>"
+                "<td>new value of field one</td></tr>"
                 "<tr><td>2</td><td>field two</td><td>11</td><td>42</td></tr>"
                 "</table>"
             ),
@@ -1309,7 +1317,8 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Relationship</th><th>Action</th><th>Objects</th></tr>"
-                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)<br>Illustration (user 42)</td></tr>"
+                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)"
+                "<br>Illustration (user 42)</td></tr>"
                 "</table>"
             ),
         )

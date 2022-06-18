@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.abspath("../../"))
 
 # Setup Django for autodoc
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "auditlog_tests.test_settings")
-import django
+import django  # noqa: E402
 
 django.setup()
 
