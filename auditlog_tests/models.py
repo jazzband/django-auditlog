@@ -73,7 +73,9 @@ class RelatedModel(RelatedModelParent):
     A model with a foreign key.
     """
 
-    related = models.ForeignKey(to="SimpleModel", on_delete=models.CASCADE)
+    related = models.ForeignKey(
+        "SimpleModel", related_name="related_models", on_delete=models.CASCADE
+    )
     one_to_one = models.OneToOneField(
         to="SimpleModel", on_delete=models.CASCADE, related_name="reverse_one_to_one"
     )
