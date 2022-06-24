@@ -1131,6 +1131,12 @@ class ChoicesFieldModelTest(TestCase):
             msg="The human readable text 'Red' is displayed.",
         )
 
+    def test_changes_display_dict_many_to_one_relation(self):
+        obj = SimpleModel()
+        obj.save()
+        history = obj.history.get()
+        assert "related_models" in history.changes_display_dict
+
 
 class CharfieldTextfieldModelTest(TestCase):
     def setUp(self):
@@ -1446,11 +1452,11 @@ class ModelInstanceDiffTest(TestCase):
             simple1.reverse_one_to_one  # equals None
 
         # accessing relatedmodel_set won't trigger DoesNotExist.
-        self.assertEqual(simple1.relatedmodel_set.count(), 0)
+        self.assertEqual(simple1.related_models.count(), 0)
 
         # simple2 DOES have these relations
         self.assertEqual(simple2.reverse_one_to_one, related)
-        self.assertEqual(simple2.relatedmodel_set.count(), 1)
+        self.assertEqual(simple2.related_models.count(), 1)
 
         model_instance_diff(simple2, simple1)
         model_instance_diff(simple1, simple2)
