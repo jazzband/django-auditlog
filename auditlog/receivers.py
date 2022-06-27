@@ -13,7 +13,7 @@ def log_create(sender, instance, created, **kwargs):
     if created:
         changes = model_instance_diff(None, instance)
 
-        log_entry = LogEntry.objects.log_create(
+        LogEntry.objects.log_create(
             instance,
             action=LogEntry.Action.CREATE,
             changes=json.dumps(changes),
@@ -38,7 +38,7 @@ def log_update(sender, instance, **kwargs):
 
             # Log an entry only if there are changes
             if changes:
-                log_entry = LogEntry.objects.log_create(
+                LogEntry.objects.log_create(
                     instance,
                     action=LogEntry.Action.UPDATE,
                     changes=json.dumps(changes),
@@ -54,7 +54,7 @@ def log_delete(sender, instance, **kwargs):
     if instance.pk is not None:
         changes = model_instance_diff(instance, None)
 
-        log_entry = LogEntry.objects.log_create(
+        LogEntry.objects.log_create(
             instance,
             action=LogEntry.Action.DELETE,
             changes=json.dumps(changes),

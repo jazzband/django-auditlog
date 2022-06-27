@@ -108,13 +108,17 @@ class SimpleModelTest(TestCase):
         self.assertJSONEqual(
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
             '{"boolean": ["False", "True"]}',
-            msg="Object modifications that are not saved to DB are not logged when using the `update_fields`.",
+            msg=(
+                "Object modifications that are not saved to DB are not logged "
+                "when using the `update_fields`."
+            ),
         )
 
     def test_django_update_fields_edge_cases(self):
         """
-        The test ensures that if Django's `update_fields` behavior ever changes for special values `(None, [])`, the
-        package should too. https://docs.djangoproject.com/en/3.2/ref/models/instances/#specifying-which-fields-to-save
+        The test ensures that if Django's `update_fields` behavior ever changes for special
+        values `(None, [])`, the package should too.
+        https://docs.djangoproject.com/en/3.2/ref/models/instances/#specifying-which-fields-to-save
         """
         obj = self.obj
 
@@ -205,10 +209,10 @@ class WithActorMixin:
     sequence = itertools.count()
 
     def setUp(self):
-        username = "actor_{}".format(next(self.sequence))
+        username = f"actor_{next(self.sequence)}"
         self.user = get_user_model().objects.create(
             username=username,
-            email="{}@example.com".format(username),
+            email=f"{username}@example.com",
             password="secret",
         )
         super().setUp()
@@ -1050,7 +1054,10 @@ class RegisterModelSettingsTest(TestCase):
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "test"},)):
             with self.assertRaisesMessage(
                 ValueError,
-                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the format <app_name>.<model_name>",
+                (
+                    "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the "
+                    "format <app_name>.<model_name>"
+                ),
             ):
                 self.test_auditlog.register_from_settings()
 
@@ -1123,6 +1130,12 @@ class ChoicesFieldModelTest(TestCase):
             "Red",
             msg="The human readable text 'Red' is displayed.",
         )
+
+    def test_changes_display_dict_many_to_one_relation(self):
+        obj = SimpleModel()
+        obj.save()
+        history = obj.history.get()
+        assert "related_models" in history.changes_display_dict
 
 
 class CharfieldTextfieldModelTest(TestCase):
@@ -1286,7 +1299,8 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>old value of field one</td><td>new value of field one</td></tr>"
+                "<tr><td>1</td><td>field one</td><td>old value of field one</td>"
+                "<td>new value of field one</td></tr>"
                 "<tr><td>2</td><td>field two</td><td>11</td><td>42</td></tr>"
                 "</table>"
             ),
@@ -1309,7 +1323,8 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Relationship</th><th>Action</th><th>Objects</th></tr>"
-                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)<br>Illustration (user 42)</td></tr>"
+                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)"
+                "<br>Illustration (user 42)</td></tr>"
                 "</table>"
             ),
         )
@@ -1437,11 +1452,11 @@ class ModelInstanceDiffTest(TestCase):
             simple1.reverse_one_to_one  # equals None
 
         # accessing relatedmodel_set won't trigger DoesNotExist.
-        self.assertEqual(simple1.relatedmodel_set.count(), 0)
+        self.assertEqual(simple1.related_models.count(), 0)
 
         # simple2 DOES have these relations
         self.assertEqual(simple2.reverse_one_to_one, related)
-        self.assertEqual(simple2.relatedmodel_set.count(), 1)
+        self.assertEqual(simple2.related_models.count(), 1)
 
         model_instance_diff(simple2, simple1)
         model_instance_diff(simple1, simple2)
