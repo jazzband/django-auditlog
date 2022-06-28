@@ -1273,12 +1273,12 @@ class DiffMsgTest(TestCase):
             changes=json.dumps(changes),
         )
 
-    def test_changes_msg__delete(self):
+    def test_changes_msg_delete(self):
         log_entry = self._create_log_entry(LogEntry.Action.DELETE, {})
 
         self.assertEqual(self.admin.msg(log_entry), "")
 
-    def test_changes_msg__create(self):
+    def test_changes_msg_create(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.CREATE,
             {
@@ -1298,7 +1298,7 @@ class DiffMsgTest(TestCase):
             ),
         )
 
-    def test_changes_msg__update(self):
+    def test_changes_msg_update(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.UPDATE,
             {
@@ -1319,7 +1319,7 @@ class DiffMsgTest(TestCase):
             ),
         )
 
-    def test_changes_msg__m2m(self):
+    def test_changes_msg_m2m(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.UPDATE,
             {  # mimicking the format used by log_m2m_changes
