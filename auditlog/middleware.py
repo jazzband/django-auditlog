@@ -20,9 +20,7 @@ class AuditlogMiddleware:
         else:
             remote_addr = request.META.get("REMOTE_ADDR")
 
-        if hasattr(request, "user") and getattr(
-            request.user, "is_authenticated", False
-        ):
+        if hasattr(request, "user") and request.user.is_authenticated:
             context = set_actor(actor=request.user, remote_addr=remote_addr)
         else:
             context = contextlib.nullcontext()
