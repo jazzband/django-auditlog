@@ -1,5 +1,7 @@
 # Changes
 
+## 2.1.0 (2022-06-27)
+
 #### Improvements
 
 - feat: Add `--before-date` option to `auditlogflush` to support retention windows ([#365](https://github.com/jazzband/django-auditlog/pull/365))

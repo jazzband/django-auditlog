@@ -1,6 +1,7 @@
 import datetime
 import itertools
 import json
+import warnings
 from unittest import mock
 
 from dateutil.tz import gettz
@@ -599,6 +600,18 @@ class DateTimeFieldModelTest(TestCase):
 
     utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
     now = timezone.now()
+
+    def setUp(self):
+        super().setUp()
+        self._context = warnings.catch_warnings()
+        self._context.__enter__()
+        warnings.filterwarnings(
+            "ignore", message=".*naive datetime", category=RuntimeWarning
+        )
+
+    def tearDown(self):
+        self._context.__exit__()
+        super().tearDown()
 
     def test_model_with_same_time(self):
         timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
@@ -1260,12 +1273,12 @@ class DiffMsgTest(TestCase):
             changes=json.dumps(changes),
         )
 
-    def test_changes_msg__delete(self):
+    def test_changes_msg_delete(self):
         log_entry = self._create_log_entry(LogEntry.Action.DELETE, {})
 
         self.assertEqual(self.admin.msg(log_entry), "")
 
-    def test_changes_msg__create(self):
+    def test_changes_msg_create(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.CREATE,
             {
@@ -1285,7 +1298,7 @@ class DiffMsgTest(TestCase):
             ),
         )
 
-    def test_changes_msg__update(self):
+    def test_changes_msg_update(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.UPDATE,
             {
@@ -1306,7 +1319,7 @@ class DiffMsgTest(TestCase):
             ),
         )
 
-    def test_changes_msg__m2m(self):
+    def test_changes_msg_m2m(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.UPDATE,
             {  # mimicking the format used by log_m2m_changes
