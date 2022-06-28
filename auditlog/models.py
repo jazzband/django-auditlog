@@ -456,15 +456,3 @@ class AuditlogHistoryField(GenericRelation):
         # method.  However, because we don't want to delete these related
         # objects, we simply return an empty list.
         return []
-
-
-# South compatibility for AuditlogHistoryField
-try:
-    from south.modelsinspector import add_introspection_rules
-
-    add_introspection_rules([], [r"^auditlog\.models\.AuditlogHistoryField"])
-    raise DeprecationWarning(
-        "South support will be dropped in django-auditlog 0.4.0 or later."
-    )
-except ImportError:
-    pass
