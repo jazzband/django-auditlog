@@ -21,8 +21,11 @@ your models to Auditlog is even easier than using signals.
 
 Registering your model for logging can be done with a single line of code, as the following example illustrates::
 
-    from auditlog.registry import auditlog
+.. code-block:: python
+
     from django.db import models
+
+    from auditlog.registry import auditlog
 
     class MyModel(models.Model):
         pass
@@ -59,7 +62,12 @@ during the `register()` call.
 
 .. code-block:: python
 
-    class MyModel(modelsModel):
+    from django.db import models
+
+    from auditlog.models import AuditlogHistoryField
+    from auditlog.registry import auditlog
+
+    class MyModel(models.Model):
         sku = models.CharField(max_length=20)
         version = models.CharField(max_length=5)
         product = models.CharField(max_length=50, verbose_name='Product Name')
@@ -211,9 +219,10 @@ Auditlog ships with a custom field that enables you to easily get the log entrie
 functionality is built on Django's content types framework (:py:mod:`django.contrib.contenttypes`). Using this field in
 your models is equally easy as any other field::
 
+    from django.db import models
+
     from auditlog.models import AuditlogHistoryField
     from auditlog.registry import auditlog
-    from django.db import models
 
     class MyModel(models.Model):
         history = AuditlogHistoryField()
