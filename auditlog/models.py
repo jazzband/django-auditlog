@@ -8,7 +8,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
-from django.db.models import Field, Q, QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
@@ -353,14 +353,9 @@ class LogEntry(models.Model):
             values_display = []
             # handle choices fields and Postgres ArrayField to get human readable version
             choices_dict = None
-            if getattr(field, "choices", None) and len(field.choices) > 0:
+            if getattr(field, "choices", []):
                 choices_dict = dict(field.choices)
-            if (
-                hasattr(field, "base_field")
-                and isinstance(field.base_field, Field)
-                and getattr(field.base_field, "choices")
-                and len(field.base_field.choices) > 0
-            ):
+            if getattr(getattr(field, "base_field", None), "choices", []):
                 choices_dict = dict(field.base_field.choices)
 
             if choices_dict:
