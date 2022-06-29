@@ -60,8 +60,6 @@ class LogEntryAdminMixin:
     msg_short.short_description = "Changes"
 
     def msg(self, obj):
-        if obj.action == LogEntry.Action.DELETE:
-            return ""  # delete
         changes = json.loads(obj.changes)
 
         atom_changes = {}

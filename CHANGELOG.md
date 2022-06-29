@@ -1,5 +1,9 @@
 # Changes
 
+#### Improvements
+
+- feat: Display the diff for deleted objects in the admin ([#396](https://github.com/jazzband/django-auditlog/pull/396))
+
 ## 2.1.0 (2022-06-27)
 
 #### Improvements
