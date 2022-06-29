@@ -1274,9 +1274,21 @@ class DiffMsgTest(TestCase):
         )
 
     def test_changes_msg_delete(self):
-        log_entry = self._create_log_entry(LogEntry.Action.DELETE, {})
+        log_entry = self._create_log_entry(
+            LogEntry.Action.DELETE,
+            {"field one": ["value before deletion", None], "field two": [11, None]},
+        )
 
-        self.assertEqual(self.admin.msg(log_entry), "")
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>field one</td><td>value before deletion</td><td>None</td></tr>"
+                "<tr><td>2</td><td>field two</td><td>11</td><td>None</td></tr>"
+                "</table>"
+            ),
+        )
 
     def test_changes_msg_create(self):
         log_entry = self._create_log_entry(
