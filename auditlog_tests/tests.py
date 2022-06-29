@@ -1279,6 +1279,7 @@ class DiffMsgTest(TestCase):
             {"field one": ["value before deletion", None], "field two": [11, None]},
         )
 
+        self.assertEqual(self.admin.msg_short(log_entry), "")
         self.assertEqual(
             self.admin.msg(log_entry),
             (
@@ -1300,6 +1301,9 @@ class DiffMsgTest(TestCase):
         )
 
         self.assertEqual(
+            self.admin.msg_short(log_entry), "2 changes: field two, field one"
+        )
+        self.assertEqual(
             self.admin.msg(log_entry),
             (
                 "<table>"
@@ -1319,6 +1323,9 @@ class DiffMsgTest(TestCase):
             },
         )
 
+        self.assertEqual(
+            self.admin.msg_short(log_entry), "2 changes: field two, field one"
+        )
         self.assertEqual(
             self.admin.msg(log_entry),
             (
@@ -1343,6 +1350,7 @@ class DiffMsgTest(TestCase):
             },
         )
 
+        self.assertEqual(self.admin.msg_short(log_entry), "1 change: some_m2m_field")
         self.assertEqual(
             self.admin.msg(log_entry),
             (
