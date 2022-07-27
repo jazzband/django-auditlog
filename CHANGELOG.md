@@ -4,6 +4,10 @@
 
 - feat: Display the diff for deleted objects in the admin ([#396](https://github.com/jazzband/django-auditlog/pull/396))
 
+#### Fixes
+
+- fix: Pin `python-dateutil` to 2.7.0 or higher for compatibility with Python 3.10 ([#401](https://github.com/jazzband/django-auditlog/pull/401))
+
 ## 2.1.0 (2022-06-27)
 
 #### Improvements
