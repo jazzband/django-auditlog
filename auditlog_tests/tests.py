@@ -4,6 +4,7 @@ import json
 import warnings
 from unittest import mock
 
+import freezegun
 from dateutil.tz import gettz
 from django.apps import apps
 from django.conf import settings
@@ -1233,31 +1234,40 @@ class PostgresArrayFieldModelTest(TestCase):
 
 
 class AdminPanelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.username = "test_admin"
-        cls.password = User.objects.make_random_password()
-        cls.user, created = User.objects.get_or_create(username=cls.username)
-        cls.user.set_password(cls.password)
-        cls.user.is_staff = True
-        cls.user.is_superuser = True
-        cls.user.is_active = True
-        cls.user.save()
-        cls.obj = SimpleModel.objects.create(text="For admin logentry test")
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="test_admin", is_staff=True, is_superuser=True, is_active=True
+        )
+        self.site = AdminSite()
+        self.admin = LogEntryAdmin(LogEntry, self.site)
+        with freezegun.freeze_time("2022-08-01 12:00:00Z"):
+            self.obj = SimpleModel.objects.create(text="For admin logentry test")
 
     def test_auditlog_admin(self):
-        self.client.login(username=self.username, password=self.password)
+        self.client.force_login(self.user)
         log_pk = self.obj.history.latest().pk
         res = self.client.get("/admin/auditlog/logentry/")
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
         res = self.client.get("/admin/auditlog/logentry/add/")
-        assert res.status_code == 403
+        self.assertEqual(res.status_code, 403)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
+
+    def test_created_timezone(self):
+        log_entry = self.obj.history.latest()
+
+        for tz, timestamp in [
+            ("UTC", "2022-08-01 12:00:00"),
+            ("Asia/Tbilisi", "2022-08-01 16:00:00"),
+            ("America/Buenos_Aires", "2022-08-01 09:00:00"),
+            ("Asia/Kathmandu", "2022-08-01 17:45:00"),
+        ]:
+            with self.settings(TIME_ZONE=tz):
+                self.assertEqual(self.admin.created(log_entry), timestamp)
 
 
 class DiffMsgTest(TestCase):
