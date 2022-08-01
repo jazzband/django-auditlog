@@ -5,6 +5,7 @@ from django.conf import settings
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
+from django.utils.timezone import localtime
 
 from auditlog.models import LogEntry
 
@@ -13,7 +14,7 @@ MAX = 75
 
 class LogEntryAdminMixin:
     def created(self, obj):
-        return obj.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+        return localtime(obj.timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
     created.short_description = "Created"
 
