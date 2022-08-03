@@ -350,7 +350,7 @@ class LogEntry(models.Model):
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
-    changes = models.TextField(blank=True, verbose_name=_("change message"))
+    changes = models.JSONField(null=True, verbose_name=_("change message"))
     actor = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -399,10 +399,7 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry as a dictionary object.
         """
-        try:
-            return json.loads(self.changes) or {}
-        except ValueError:
-            return {}
+        return self.changes or {}
 
     @property
     def changes_str(self, colon=": ", arrow=" \u2192 ", separator="; "):

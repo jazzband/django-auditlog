@@ -1,4 +1,3 @@
-import json
 from functools import wraps
 
 from django.conf import settings
@@ -115,7 +114,7 @@ def _create_log_entry(
             LogEntry.objects.log_create(
                 instance,
                 action=action,
-                changes=json.dumps(changes),
+                changes=changes,
             )
     except BaseException as e:
         error = e
