@@ -9,6 +9,7 @@
 #### Improvements
 
 - feat: Display the diff for deleted objects in the admin ([#396](https://github.com/jazzband/django-auditlog/pull/396))
+- Django: Confirm Django 4.1 support ([#406](https://github.com/jazzband/django-auditlog/pull/406))
 
 #### Fixes
 
