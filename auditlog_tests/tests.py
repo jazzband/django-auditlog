@@ -1398,6 +1398,26 @@ class DiffMsgTest(TestCase):
             changes=changes,
         )
 
+    def test_change_msg_create_when_exceeds_max_len(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {
+                "Camelopardalis": [None, "Giraffe"],
+                "Capricornus": [None, "Sea goat"],
+                "Equuleus": [None, "Little horse"],
+                "Horologium": [None, "Clock"],
+                "Microscopium": [None, "Microscope"],
+                "Reticulum": [None, "Net"],
+                "Telescopium": [None, "Telescope"],
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg_short(log_entry),
+            "7 changes: Camelopardalis, Capricornus, Equuleus, Horologium, "
+            "Microscopium, ..",
+        )
+
     def test_changes_msg_delete(self):
         log_entry = self._create_log_entry(
             LogEntry.Action.DELETE,
