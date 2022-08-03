@@ -12,7 +12,10 @@ from django.db.models import Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
+from decouple import config
+from elasticsearch import AuthenticationException, Elasticsearch
 
+from sary_helpers.request_helpers import get_request_meta
 
 class LogEntryManager(models.Manager):
     """
@@ -66,8 +69,46 @@ class LogEntryManager(models.Manager):
                         content_type=kwargs.get("content_type"),
                         object_pk=kwargs.get("object_pk", ""),
                     ).delete()
-            return self.create(**kwargs)
+            log_entry =  self.create(**kwargs)
+            self.log_on_elk(log_entry, instance)
+            return log_entry
         return None
+
+    def _get_client(self):
+        _client = None
+        ELASTIC_USER = config("ELASTIC_USER", None)
+        ELASTIC_PASSWORD = config("ELASTIC_PASSWORD", None)
+        CLOUD_ID = config("CLOUD_ID", None)
+
+        if ELASTIC_USER and ELASTIC_PASSWORD and CLOUD_ID:
+            try:
+                _client = Elasticsearch(cloud_id=CLOUD_ID, basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD))
+                _client.info()
+            except AuthenticationException:
+                _client = None
+        return _client
+
+    def log_on_elk(self, log_entry, instance):
+        """
+        Logs registed model changes to elasticsearch
+
+        :param instance: The registered model instance.
+        :param log_entry: 
+        """
+        log_actions = {
+            0: 'create',
+            1: 'update',
+            2: 'delete'
+        }
+
+        log_doc = {
+            'user': log_entry.actor if log_entry.actor else 'system',
+            'changes': log_entry.changes,
+            'id': log_entry.object_id,
+            'action': log_actions[log_entry.action]
+        }
+        _client = self._get_client()
+        _client.index(index=instance._meta.model.__name__.lower() + 'log', document=log_doc)
 
     def log_m2m_changes(
         self, changed_queryset, instance, operation, field_name, **kwargs
