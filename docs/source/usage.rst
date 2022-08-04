@@ -19,7 +19,7 @@ Automatically logging changes
 Auditlog can automatically log changes to objects for you. This functionality is based on Django's signals, but linking
 your models to Auditlog is even easier than using signals.
 
-Registering your model for logging can be done with a single line of code, as the following example illustrates::
+Registering your model for logging can be done with a single line of code, as the following example illustrates:
 
 .. code-block:: python
 
