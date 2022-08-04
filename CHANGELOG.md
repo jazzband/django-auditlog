@@ -1,4 +1,5 @@
 # Changes
+
 #### Improvements
 
 - Updates `change` field on `LogEntry` model to be a json rather than a text field ([#407](https://github.com/jazzband/django-auditlog/pull/407))
