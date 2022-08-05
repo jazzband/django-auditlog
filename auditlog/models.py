@@ -6,6 +6,7 @@ from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core import serializers
 from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
@@ -39,6 +40,9 @@ class LogEntryManager(models.Manager):
             )
             kwargs.setdefault("object_pk", pk)
             kwargs.setdefault("object_repr", smart_str(instance))
+            kwargs.setdefault(
+                "serialized_data", self._get_serialized_data_or_none(instance)
+            )
 
             if isinstance(pk, int):
                 kwargs.setdefault("object_id", pk)
@@ -208,6 +212,18 @@ class LogEntryManager(models.Manager):
             pk = self._get_pk_value(pk)
         return pk
 
+    def _get_serialized_data_or_none(self, instance):
+        from .registry import auditlog
+
+        registry_opts = auditlog.get_model_fields(instance.__class__)
+        if not registry_opts["serialize_data"]:
+            return None
+
+        kwargs = registry_opts.get("serialize_kwargs", {})
+        kwargs.setdefault("fields", [x.name for x in instance._meta.fields])
+        data = json.loads(serializers.serialize("json", (instance,), **kwargs))
+        return next(iter(data), None)
+
 
 class LogEntry(models.Model):
     """
@@ -253,6 +269,7 @@ class LogEntry(models.Model):
         blank=True, db_index=True, null=True, verbose_name=_("object id")
     )
     object_repr = models.TextField(verbose_name=_("object representation"))
+    serialized_data = models.JSONField(null=True)
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
