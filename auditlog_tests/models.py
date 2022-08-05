@@ -262,6 +262,34 @@ class JSONModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class SerializeThisModel(models.Model):
+    label = models.CharField(max_length=24, unique=True)
+    timestamp = models.DateTimeField(auto_now=True)
+    nullable = models.IntegerField(null=True)
+    nested = models.JSONField()
+
+    history = AuditlogHistoryField(delete_related=False)
+
+    def natural_key(self):
+        return self.label
+
+
+class SerializePrimaryKeyRelatedModel(models.Model):
+    serialize_this = models.ForeignKey(to=SerializeThisModel, on_delete=models.CASCADE)
+    subheading = models.CharField(max_length=255)
+    value = models.IntegerField()
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
+class SerializeNaturalKeyRelatedModel(models.Model):
+    serialize_this = models.ForeignKey(to=SerializeThisModel, on_delete=models.CASCADE)
+    subheading = models.CharField(max_length=255)
+    value = models.IntegerField()
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -278,3 +306,10 @@ auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
 auditlog.register(JSONModel)
+auditlog.register(SerializeThisModel, serialize_data=True)
+auditlog.register(SerializePrimaryKeyRelatedModel, serialize_data=True)
+auditlog.register(
+    SerializeNaturalKeyRelatedModel,
+    serialize_data=True,
+    serialize_kwargs={"use_natural_foreign_keys": True},
+)
