@@ -22,3 +22,8 @@ repos:
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.7.0
+    hooks:
+    - id: django-upgrade
+      args: [--target-version, "3.2"]
