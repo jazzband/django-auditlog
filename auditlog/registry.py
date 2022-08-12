@@ -85,7 +85,7 @@ class AuditlogModelRegistry:
         :param mask_fields: The fields to mask for sensitive info.
         :param m2m_fields: The fields to handle as many to many.
         :param serialize_data: Option to include a dictionary of the objects state in the auditlog.
-        :param serialize_kwargs: Optional kwargs to pass to django serializer
+        :param serialize_kwargs: Optional kwargs to pass to Django serializer
         """
 
         if include_fields is None:
