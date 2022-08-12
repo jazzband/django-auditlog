@@ -1108,7 +1108,11 @@ class RegisterModelSettingsTest(TestCase):
         self.assertEqual(fields["exclude_fields"], ["text"])
 
     def test_registration_error_if_bad_serialize_params(self):
-        with self.assertRaises(AuditLogRegistrationError):
+        with self.assertRaisesMessage(
+            AuditLogRegistrationError,
+            "Serializer kwargs were given but the 'serialize_data' option is not "
+            "set. Did you forget to set serialized_data to True?"
+        ):
             register = AuditlogModelRegistry()
             register.register(
                 SimpleModel, serialize_kwargs={"fields": ["text", "integer"]}
