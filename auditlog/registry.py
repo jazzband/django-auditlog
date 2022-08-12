@@ -73,7 +73,7 @@ class AuditlogModelRegistry:
         mask_fields: Optional[List[str]] = None,
         m2m_fields: Optional[Collection[str]] = None,
         serialize_data: bool = False,
-        serialize_kwargs: Optional[dict] = None,
+        serialize_kwargs: Optional[Dict[str, Any]] = None,
     ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
