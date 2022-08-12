@@ -168,6 +168,10 @@ class AuditlogModelRegistry:
             "exclude_fields": list(self._registry[model]["exclude_fields"]),
             "mapping_fields": dict(self._registry[model]["mapping_fields"]),
             "mask_fields": list(self._registry[model]["mask_fields"]),
+        }
+
+    def get_serialize_options(self, model: ModelBase):
+        return {
             "serialize_data": bool(self._registry[model]["serialize_data"]),
             "serialize_kwargs": dict(self._registry[model]["serialize_kwargs"]),
         }

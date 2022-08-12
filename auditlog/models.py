@@ -215,11 +215,11 @@ class LogEntryManager(models.Manager):
     def _get_serialized_data_or_none(self, instance):
         from .registry import auditlog
 
-        registry_opts = auditlog.get_model_fields(instance.__class__)
-        if not registry_opts["serialize_data"]:
+        opts = auditlog.get_serialize_options(instance.__class__)
+        if not opts["serialize_data"]:
             return None
 
-        kwargs = registry_opts.get("serialize_kwargs", {})
+        kwargs = opts.get("serialize_kwargs", {})
         kwargs.setdefault("fields", [x.name for x in instance._meta.fields])
         data = json.loads(serializers.serialize("json", (instance,), **kwargs))
         return next(iter(data), None)
