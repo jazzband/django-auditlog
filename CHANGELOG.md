@@ -2,7 +2,7 @@
 
 #### Improvements
 
-- feat: Add `serialized_data` field on `LogEntry` model. ([412](https://github.com/jazzband/django-auditlog/pull/412))
+- feat: Add `serialized_data` field on `LogEntry` model. ([#412](https://github.com/jazzband/django-auditlog/pull/412))
 
 #### Fixes
 
