@@ -231,7 +231,7 @@ class LogEntryManager(models.Manager):
 
         sanitized_data = data.copy()
         fields = dict(sanitized_data.pop("fields"))
-        sanitized_data["fields"] = MaskedDictionary(fields, mask_fields).mask_it()
+        sanitized_data["fields"] = MaskedDictionary(mask_fields).mask_it(fields)
         return sanitized_data
 
 

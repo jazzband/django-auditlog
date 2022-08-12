@@ -1,4 +1,3 @@
-from functools import cached_property
 from typing import Any, Dict, List, Union
 
 from django.conf import settings
@@ -94,30 +93,26 @@ def mask_str(value: str) -> str:
 class MaskedDictionary:
     """Mask a dictionary's string values that relate to key paths."""
 
-    def __init__(self, data: Dict[str, Any], mask_fields: List[str]):
+    def __init__(self, mask_fields: List[str]):
         """
         Constructor.
 
-        :param data: The dictionary with values to be masked
         :param mask_fields: A list of field names which require their values masked
         """
-        self.data = data
-        self._mask_fields = mask_fields
 
-    def mask_it(self) -> Dict[str, Any]:
+        unpacked = []
+        for field in mask_fields:
+            unpacked += [[x for x in field.split("__") if x]]
+        self._unpacked_mask_fields: List[List[str]] = unpacked
+
+    def mask_it(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generates a new masked dictionary.
 
+        :param data: The dictionary with values to be masked
         :rtype: dict
         """
-        return self._mask_dict(dictionary=self.data.copy(), parent_key_path=[])
-
-    @cached_property
-    def _unpacked_mask_fields(self) -> List[List[str]]:
-        unpacked = []
-        for field in self._mask_fields:
-            unpacked += [[x for x in field.split("__") if x]]
-        return unpacked
+        return self._mask_dict(dictionary=data.copy(), parent_key_path=[])
 
     def _get_masked_keys_at_depth(self, parent_key_path: List[str]) -> List[str]:
         masked_keys = []

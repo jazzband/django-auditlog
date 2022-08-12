@@ -1707,7 +1707,7 @@ class TestModelSerialization(TestCase):
         )
 
 
-class TestMaskDictValues(TestCase):
+class TestMaskedDictionary(TestCase):
     test_dict = {
         "first_name": "Joy",
         "last_name": "Johnson",
@@ -1777,14 +1777,12 @@ class TestMaskDictValues(TestCase):
         },
     }
 
-    def test_mask_dict_values(self):
-        observed_dict = MaskedDictionary(
-            self.test_dict,
-            [
-                "residents__addresses__city",
-                "residents__addresses__state",
-                "last_name",
-                "aliases",
-            ],
-        ).mask_it()
+    def test_mask_it(self):
+        mask_fields = [
+            "residents__addresses__city",
+            "residents__addresses__state",
+            "last_name",
+            "aliases",
+        ]
+        observed_dict = MaskedDictionary(mask_fields).mask_it(self.test_dict)
         self.assertDictEqual(observed_dict, self.expected_dict)
