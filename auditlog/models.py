@@ -14,6 +14,8 @@ from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
+from .diff import MaskedDictionary
+
 
 class LogEntryManager(models.Manager):
     """
@@ -220,9 +222,17 @@ class LogEntryManager(models.Manager):
             return None
 
         kwargs = opts.get("serialize_kwargs", {})
-        kwargs.setdefault("fields", [x.name for x in instance._meta.fields])
-        data = json.loads(serializers.serialize("json", (instance,), **kwargs))
-        return next(iter(data), None)
+        kwargs.setdefault("fields", None)
+        data = dict(json.loads(serializers.serialize("json", (instance,), **kwargs))[0])
+
+        mask_fields = auditlog.get_model_fields(instance.__class__)["mask_fields"]
+        if not mask_fields:
+            return data
+
+        sanitized_data = data.copy()
+        fields = dict(sanitized_data.pop("fields"))
+        sanitized_data["fields"] = MaskedDictionary(fields, mask_fields).mask_it()
+        return sanitized_data
 
 
 class LogEntry(models.Model):

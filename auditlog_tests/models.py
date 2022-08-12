@@ -267,7 +267,7 @@ class SerializeThisModel(models.Model):
     timestamp = models.DateTimeField(auto_now=True)
     nullable = models.IntegerField(null=True)
     nested = models.JSONField()
-
+    mask_me = models.CharField(max_length=255, null=True)
     history = AuditlogHistoryField(delete_related=False)
 
     def natural_key(self):
@@ -306,7 +306,11 @@ auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
 auditlog.register(JSONModel)
-auditlog.register(SerializeThisModel, serialize_data=True)
+auditlog.register(
+    SerializeThisModel,
+    serialize_data=True,
+    mask_fields=["mask_me", "nested__first_name", "nested__last_name"],
+)
 auditlog.register(SerializePrimaryKeyRelatedModel, serialize_data=True)
 auditlog.register(
     SerializeNaturalKeyRelatedModel,

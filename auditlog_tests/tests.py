@@ -18,7 +18,7 @@ from django.utils import dateformat, formats, timezone
 
 from auditlog.admin import LogEntryAdmin
 from auditlog.context import set_actor
-from auditlog.diff import model_instance_diff
+from auditlog.diff import MaskedDictionary, model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
@@ -1111,7 +1111,7 @@ class RegisterModelSettingsTest(TestCase):
         with self.assertRaisesMessage(
             AuditLogRegistrationError,
             "Serializer kwargs were given but the 'serialize_data' option is not "
-            "set. Did you forget to set serialized_data to True?"
+            "set. Did you forget to set serialized_data to True?",
         ):
             register = AuditlogModelRegistry()
             register.register(
@@ -1571,6 +1571,7 @@ class TestModelSerialization(TestCase):
                 "timestamp": self.test_date_string,
                 "nullable": 4,
                 "nested": {"foo": True, "bar": False},
+                "mask_me": None,
             },
         )
 
@@ -1597,6 +1598,7 @@ class TestModelSerialization(TestCase):
                 "timestamp": self.test_date_string,
                 "nullable": 4,
                 "nested": {"foo": True, "bar": False},
+                "mask_me": None,
             },
         )
 
@@ -1623,6 +1625,38 @@ class TestModelSerialization(TestCase):
                 "timestamp": self.test_date_string,
                 "nullable": 4,
                 "nested": {"foo": True, "bar": False},
+                "mask_me": None,
+            },
+        )
+
+    def test_serialize_nested_mask_fields(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeThisModel.objects.create(
+                label="test label",
+                nullable=4,
+                nested={
+                    "first_name": "Bobby",
+                    "last_name": "Bobberson",
+                    "state": "California",
+                },
+                mask_me="confidential",
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "label": "test label",
+                "timestamp": self.test_date_string,
+                "nullable": 4,
+                "nested": {
+                    "first_name": "**bby",
+                    "last_name": "****erson",
+                    "state": "California",
+                },
+                "mask_me": "******ential",
             },
         )
 
@@ -1671,3 +1705,86 @@ class TestModelSerialization(TestCase):
                 "value": 11,
             },
         )
+
+
+class TestMaskDictValues(TestCase):
+    test_dict = {
+        "first_name": "Joy",
+        "last_name": "Johnson",
+        "aliases": ["Tawny", "Jane", [1988, 1978]],
+        "age_in_years": 33,
+        "residents": {
+            "quantity": 2,
+            "addresses": [
+                {
+                    "street": "123 Main",
+                    "city": "Hillsboro",
+                    "state": "Oregon",
+                    "zip": 12345,
+                },
+                {
+                    "street": "43 West Avenue",
+                    "city": "Camdenshire",
+                    "state": "California",
+                    "zip": 56789,
+                },
+            ],
+        },
+        "emergency_contacts": {
+            "quantity": 1,
+            "addresses": [
+                {
+                    "street": "89 South Blvd.",
+                    "city": "St. Charles",
+                    "state": "Mississippi",
+                    "zip": 98765,
+                }
+            ],
+        },
+    }
+    expected_dict = {
+        "first_name": "Joy",
+        "last_name": "***nson",
+        "aliases": ["**wny", "**ne", [1988, 1978]],
+        "age_in_years": 33,
+        "residents": {
+            "quantity": 2,
+            "addresses": [
+                {
+                    "street": "123 Main",
+                    "city": "****sboro",
+                    "state": "***gon",
+                    "zip": 12345,
+                },
+                {
+                    "street": "43 West Avenue",
+                    "city": "*****nshire",
+                    "state": "*****ornia",
+                    "zip": 56789,
+                },
+            ],
+        },
+        "emergency_contacts": {
+            "quantity": 1,
+            "addresses": [
+                {
+                    "street": "89 South Blvd.",
+                    "city": "St. Charles",
+                    "state": "Mississippi",
+                    "zip": 98765,
+                }
+            ],
+        },
+    }
+
+    def test_mask_dict_values(self):
+        observed_dict = MaskedDictionary(
+            self.test_dict,
+            [
+                "residents__addresses__city",
+                "residents__addresses__state",
+                "last_name",
+                "aliases",
+            ],
+        ).mask_it()
+        self.assertDictEqual(observed_dict, self.expected_dict)
