@@ -117,7 +117,7 @@ Note that when the user changes multiple many-to-many fields on the same object 
 
 **Serialized Data**
 
-The state of an object following a change action may be optionally serialized and persisted in the ``LogEntry.serialized_data`` JSONField.  To enable this feature for a registered model, add ``serialize_data=True`` to the kwargs on the ``auditlog.register(...)`` method. Object serialization will not occur unless this kwarg is set.
+The state of an object following a change action may be optionally serialized and persisted in the ``LogEntry.serialized_data`` JSONField. To enable this feature for a registered model, add ``serialize_data=True`` to the kwargs on the ``auditlog.register(...)`` method. Object serialization will not occur unless this kwarg is set.
 
 .. code-block:: python
 

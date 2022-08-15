@@ -222,39 +222,35 @@ class LogEntryManager(models.Manager):
         if not opts["serialize_data"]:
             return None
 
-        kwargs = opts.get("serialize_kwargs", {})
-        kwargs.setdefault("fields", None)
-        data = dict(json.loads(serializers.serialize("json", (instance,), **kwargs))[0])
         model_fields = auditlog.get_model_fields(instance.__class__)
+        kwargs = opts.get("serialize_kwargs", {})
 
         if opts["serialize_auditlog_fields_only"]:
-            data = self._filter_serialized_fields_to_eligible(data, model_fields)
+            kwargs.setdefault(
+                "fields", self._get_applicable_model_fields(instance, model_fields)
+            )
+
+        data = dict(json.loads(serializers.serialize("json", (instance,), **kwargs))[0])
+
         if model_fields["mask_fields"]:
             data = self._mask_serialized_fields(data, model_fields)
 
         return data
 
-    def _filter_serialized_fields_to_eligible(
-        self, data: Dict[str, Any], model_fields: Dict[str, List[str]]
-    ) -> Dict[str, Any]:
+    def _get_applicable_model_fields(
+        self, instance, model_fields: Dict[str, List[str]]
+    ) -> List[str]:
         include_fields = model_fields["include_fields"]
         exclude_fields = model_fields["exclude_fields"]
+        all_field_names = [field.name for field in instance._meta.fields]
 
-        filtered_data = data.copy()
-        all_field_data = dict(filtered_data.pop("fields"))
-        all_field_names = set(all_field_data.keys())
+        if not include_fields and not exclude_fields:
+            return all_field_names
 
-        include_fields = include_fields or all_field_data
-        filtered_field_names = all_field_names.intersection(include_fields)
+        include_fields = include_fields or all_field_names
+        filtered_field_names = set(all_field_names).intersection(include_fields)
         filtered_field_names = filtered_field_names.difference(exclude_fields)
-
-        filtered_field_data = {}
-        for key, value in all_field_data.items():
-            if key in filtered_field_names:
-                filtered_field_data[key] = value
-
-        filtered_data["fields"] = filtered_field_data
-        return filtered_data
+        return list(filtered_field_names)
 
     def _mask_serialized_fields(
         self, data: Dict[str, Any], model_fields: Dict[str, List[str]]
