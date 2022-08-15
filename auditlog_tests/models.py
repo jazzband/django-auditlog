@@ -274,6 +274,13 @@ class SerializeThisModel(models.Model):
         return self.label
 
 
+class SerializeOnlySomeOfThisModel(models.Model):
+    this = models.CharField(max_length=24)
+    not_this = models.CharField(max_length=24)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 class SerializePrimaryKeyRelatedModel(models.Model):
     serialize_this = models.ForeignKey(to=SerializeThisModel, on_delete=models.CASCADE)
     subheading = models.CharField(max_length=255)
@@ -309,7 +316,13 @@ auditlog.register(JSONModel)
 auditlog.register(
     SerializeThisModel,
     serialize_data=True,
-    mask_fields=["mask_me", "nested__first_name", "nested__last_name"],
+    mask_fields=["mask_me"],
+)
+auditlog.register(
+    SerializeOnlySomeOfThisModel,
+    serialize_data=True,
+    serialize_auditlog_fields_only=True,
+    exclude_fields=["not_this"],
 )
 auditlog.register(SerializePrimaryKeyRelatedModel, serialize_data=True)
 auditlog.register(

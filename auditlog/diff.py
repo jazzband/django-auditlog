@@ -1,5 +1,3 @@
-from typing import Any, Dict, List, Union
-
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import NOT_PROVIDED, DateTimeField, JSONField, Model
@@ -88,87 +86,6 @@ def mask_str(value: str) -> str:
     """
     mask_limit = int(len(value) / 2)
     return "*" * mask_limit + value[mask_limit:]
-
-
-class MaskedDictionary:
-    """Mask a dictionary's string values that relate to key paths."""
-
-    def __init__(self, mask_fields: List[str]):
-        """
-        Constructor.
-
-        :param mask_fields: A list of field names which require their values masked
-        """
-
-        unpacked = []
-        for field in mask_fields:
-            unpacked += [[x for x in field.split("__") if x]]
-        self._unpacked_mask_fields: List[List[str]] = unpacked
-
-    def mask_it(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generates a new masked dictionary.
-
-        :param data: The dictionary with values to be masked
-        :rtype: dict
-        """
-        return self._mask_dict(dictionary=data.copy(), parent_key_path=[])
-
-    def _get_masked_keys_at_depth(self, parent_key_path: List[str]) -> List[str]:
-        masked_keys = []
-        depth = len(parent_key_path)
-        if depth == 0:
-            return [x[0] for x in self._unpacked_mask_fields]
-
-        applicable_paths = [x for x in self._unpacked_mask_fields if len(x) > depth]
-        for key_path in applicable_paths:
-            if key_path[:depth] == parent_key_path:
-                masked_keys.append(key_path[depth])
-
-        return masked_keys
-
-    def _mask_iterable(
-        self,
-        iterable: Union[tuple, set, list],
-        parent_key_path: List[str],
-        this_key: str,
-    ) -> Union[tuple, set, list]:
-        masked_keys = self._get_masked_keys_at_depth(parent_key_path)
-        is_masked_field = bool(this_key in masked_keys)
-        sanitized_iterable = []
-
-        for item in iterable:
-            if isinstance(item, str):
-                sanitized_iterable.append(mask_str(item) if is_masked_field else item)
-            elif isinstance(item, dict):
-                sanitized_iterable.append(
-                    self._mask_dict(item, [*parent_key_path, this_key])
-                )
-            elif hasattr(item, "__iter__"):
-                sanitized_iterable.append(
-                    self._mask_iterable(item, parent_key_path, this_key)
-                )
-            else:
-                sanitized_iterable.append(item)
-
-        return sanitized_iterable
-
-    def _mask_dict(self, dictionary: Dict[str, Any], parent_key_path: List[str]):
-        masked_keys = self._get_masked_keys_at_depth(parent_key_path)
-        sanitized_dict = {}
-
-        for key, value in dictionary.items():
-            is_masked_field = bool(key in masked_keys)
-            if isinstance(value, str):
-                sanitized_dict[key] = mask_str(value) if is_masked_field else value
-            elif isinstance(value, dict):
-                sanitized_dict[key] = self._mask_dict(value, [*parent_key_path, key])
-            elif hasattr(value, "__iter__"):
-                sanitized_dict[key] = self._mask_iterable(value, parent_key_path, key)
-            else:
-                sanitized_dict[key] = value
-
-        return sanitized_dict
 
 
 def model_instance_diff(old, new, fields_to_check=None):

@@ -74,6 +74,7 @@ class AuditlogModelRegistry:
         m2m_fields: Optional[Collection[str]] = None,
         serialize_data: bool = False,
         serialize_kwargs: Optional[Dict[str, Any]] = None,
+        serialize_auditlog_fields_only: bool = False,
     ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
@@ -86,6 +87,7 @@ class AuditlogModelRegistry:
         :param m2m_fields: The fields to handle as many to many.
         :param serialize_data: Option to include a dictionary of the objects state in the auditlog.
         :param serialize_kwargs: Optional kwargs to pass to Django serializer
+        :param serialize_auditlog_fields_only: Only fields being considered in changes will be serialized.
         """
 
         if include_fields is None:
@@ -101,9 +103,9 @@ class AuditlogModelRegistry:
         if serialize_kwargs is None:
             serialize_kwargs = {}
 
-        if serialize_kwargs and not serialize_data:
+        if (serialize_kwargs or serialize_auditlog_fields_only) and not serialize_data:
             raise AuditLogRegistrationError(
-                "Serializer kwargs were given but the 'serialize_data' option is not "
+                "Serializer options were given but the 'serialize_data' option is not "
                 "set. Did you forget to set serialized_data to True?"
             )
 
@@ -120,6 +122,7 @@ class AuditlogModelRegistry:
                 "m2m_fields": m2m_fields,
                 "serialize_data": serialize_data,
                 "serialize_kwargs": serialize_kwargs,
+                "serialize_auditlog_fields_only": serialize_auditlog_fields_only,
             }
             self._connect_signals(cls)
 
@@ -174,6 +177,9 @@ class AuditlogModelRegistry:
         return {
             "serialize_data": bool(self._registry[model]["serialize_data"]),
             "serialize_kwargs": dict(self._registry[model]["serialize_kwargs"]),
+            "serialize_auditlog_fields_only": bool(
+                self._registry[model]["serialize_auditlog_fields_only"]
+            ),
         }
 
     def _connect_signals(self, model):

@@ -133,24 +133,18 @@ Objects are serialized using the Django core serializer. Keyword arguments may b
         serialize_kwargs={"fields": ["foo", "bar", "biz", "baz"]}
     )
 
-Note that all fields on the object will be serialized unless restricted to an inclusive field list set in the ``serialize_kwargs`` registration option (as shown above). 
-
-Field masking is supported in object serialization. Any value belonging to a field whose name is found in the ``mask_fields`` list will be masked in the serialized object data. Masked values are obfuscated with asterisks in the same way as they are in the ``LogEntry.changes`` field. Additionally, the ``mask_fields`` list for serialized objects supports listing keys that may be found within the contents of a JSONField. Key's that should have their values masked within a JSONField can be accessed using double underscore notation.
+Note that all fields on the object will be serialized unless restricted with one or more configurations. The `serialize_kwargs` option contains a `fields` argument and this may be given an inclusive list of field names to serialize (as shown above). Alternatively, one may set ``serialize_auditlog_fields_only`` to ``True`` when registering a model with ``exclude_fields`` and ``include_fields`` set (as shown below). This will cause the data persisted in ``LogEntry.serialized_data`` to be limited to the same scope that is persisted within the ``LogEntry.changes`` field.
 
 .. code-block:: python
 
     auditlog.register(
         MyModel,
+        exclude_fields=["ssn", "confidential"]
         serialize_data=True,
-        mask_fields=[
-            "last_name",
-            "payload__contact_info__phone_number",
-            "payload__contact_info__email",
-            "payload__identity__ssn"
-        ]
+        serialize_auditlog_fields_only=True
     )
 
-
+Field masking is supported in object serialization. Any value belonging to a field whose name is found in the ``mask_fields`` list will be masked in the serialized object data. Masked values are obfuscated with asterisks in the same way as they are in the ``LogEntry.changes`` field. 
 
 
 Settings

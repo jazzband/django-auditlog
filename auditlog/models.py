@@ -1,5 +1,6 @@
 import ast
 import json
+from typing import Any, Dict, List
 
 from dateutil import parser
 from dateutil.tz import gettz
@@ -14,7 +15,7 @@ from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
-from .diff import MaskedDictionary
+from .diff import mask_str
 
 
 class LogEntryManager(models.Manager):
@@ -224,15 +225,54 @@ class LogEntryManager(models.Manager):
         kwargs = opts.get("serialize_kwargs", {})
         kwargs.setdefault("fields", None)
         data = dict(json.loads(serializers.serialize("json", (instance,), **kwargs))[0])
+        model_fields = auditlog.get_model_fields(instance.__class__)
 
-        mask_fields = auditlog.get_model_fields(instance.__class__)["mask_fields"]
-        if not mask_fields:
-            return data
+        if opts["serialize_auditlog_fields_only"]:
+            data = self._filter_serialized_fields_to_eligible(data, model_fields)
+        if model_fields["mask_fields"]:
+            data = self._mask_serialized_fields(data, model_fields)
 
-        sanitized_data = data.copy()
-        fields = dict(sanitized_data.pop("fields"))
-        sanitized_data["fields"] = MaskedDictionary(mask_fields).mask_it(fields)
-        return sanitized_data
+        return data
+
+    def _filter_serialized_fields_to_eligible(
+        self, data: Dict[str, Any], model_fields: Dict[str, List[str]]
+    ) -> Dict[str, Any]:
+        include_fields = model_fields["include_fields"]
+        exclude_fields = model_fields["exclude_fields"]
+
+        filtered_data = data.copy()
+        all_field_data = dict(filtered_data.pop("fields"))
+        all_field_names = set(all_field_data.keys())
+
+        include_fields = include_fields or all_field_data
+        filtered_field_names = all_field_names.intersection(include_fields)
+        filtered_field_names = filtered_field_names.difference(exclude_fields)
+
+        filtered_field_data = {}
+        for key, value in all_field_data.items():
+            if key in filtered_field_names:
+                filtered_field_data[key] = value
+
+        filtered_data["fields"] = filtered_field_data
+        return filtered_data
+
+    def _mask_serialized_fields(
+        self, data: Dict[str, Any], model_fields: Dict[str, List[str]]
+    ) -> Dict[str, Any]:
+        mask_fields = model_fields["mask_fields"]
+
+        masked_data = data.copy()
+        all_field_data = dict(masked_data.pop("fields"))
+
+        masked_field_data = {}
+        for key, value in all_field_data.items():
+            if isinstance(value, str) and key in mask_fields:
+                masked_field_data[key] = mask_str(value)
+            else:
+                masked_field_data[key] = value
+
+        masked_data["fields"] = masked_field_data
+        return masked_data
 
 
 class LogEntry(models.Model):
