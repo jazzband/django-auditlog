@@ -1,7 +1,11 @@
 import json
+from itertools import chain
 
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
+
+from django.conf import settings
+from django.db.models import ForeignKey, OneToOneField, OneToOneRel
 
 
 def log_create(sender, instance, created, **kwargs):
@@ -27,13 +31,21 @@ def log_update(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
+        update_fields = kwargs.get("update_fields", None)
         try:
-            old = sender.objects.get(pk=instance.pk)
+            if settings.AUDITLOG_SELECT_RELATED_FIELDS:
+                fk_fields = []
+                for field in chain(sender._meta.fields, sender._meta.related_objects):
+                    if isinstance(field, (ForeignKey, OneToOneField, OneToOneRel)):
+                        if not update_fields or (update_fields and field.name in update_fields):
+                            fk_fields.append(field.name)
+                old = sender.objects.select_related(*fk_fields).get(pk=instance.pk)
+            else:
+                old = sender.objects.get(pk=instance.pk)
         except sender.DoesNotExist:
             pass
         else:
             new = instance
-            update_fields = kwargs.get("update_fields", None)
             changes = model_instance_diff(old, new, fields_to_check=update_fields)
 
             # Log an entry only if there are changes
