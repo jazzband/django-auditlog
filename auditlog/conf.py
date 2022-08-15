@@ -15,3 +15,8 @@ settings.AUDITLOG_EXCLUDE_TRACKING_MODELS = getattr(
 settings.AUDITLOG_INCLUDE_TRACKING_MODELS = getattr(
     settings, "AUDITLOG_INCLUDE_TRACKING_MODELS", ()
 )
+
+# Do select_related on related fields to eliminate unnecessary queries
+settings.AUDITLOG_SELECT_RELATED_FIELDS = getattr(
+    settings, "AUDITLOG_SELECT_RELATED_FIELDS", False
+)
