@@ -247,10 +247,7 @@ class LogEntryManager(models.Manager):
         if not include_fields and not exclude_fields:
             return all_field_names
 
-        include_fields = include_fields or all_field_names
-        filtered_field_names = set(all_field_names).intersection(include_fields)
-        filtered_field_names = filtered_field_names.difference(exclude_fields)
-        return list(filtered_field_names)
+        return list(set(include_fields or all_field_names).difference(exclude_fields))
 
     def _mask_serialized_fields(
         self, data: Dict[str, Any], model_fields: Dict[str, List[str]]
