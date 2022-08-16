@@ -15,7 +15,7 @@ from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
-from .diff import mask_str
+from auditlog.diff import mask_str
 
 
 class LogEntryManager(models.Manager):
@@ -232,8 +232,9 @@ class LogEntryManager(models.Manager):
 
         data = dict(json.loads(serializers.serialize("json", (instance,), **kwargs))[0])
 
-        if model_fields["mask_fields"]:
-            data = self._mask_serialized_fields(data, model_fields)
+        mask_fields = model_fields["mask_fields"]
+        if mask_fields:
+            data = self._mask_serialized_fields(data, mask_fields)
 
         return data
 
@@ -250,10 +251,8 @@ class LogEntryManager(models.Manager):
         return list(set(include_fields or all_field_names).difference(exclude_fields))
 
     def _mask_serialized_fields(
-        self, data: Dict[str, Any], model_fields: Dict[str, List[str]]
+        self, data: Dict[str, Any], mask_fields: List[str]
     ) -> Dict[str, Any]:
-        mask_fields = model_fields["mask_fields"]
-
         masked_data = data.copy()
         all_field_data = dict(masked_data.pop("fields"))
 
