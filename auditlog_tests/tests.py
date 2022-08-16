@@ -437,6 +437,19 @@ class MiddlewareTest(TestCase):
 
         self.assert_no_listeners()
 
+    def test_get_remote_addr(self):
+        tests = [  # (headers, expected_remote_addr)
+            ({}, "127.0.0.1"),
+            ({"HTTP_X_FORWARDED_FOR": "127.0.0.2"}, "127.0.0.2"),
+            ({"HTTP_X_FORWARDED_FOR": "127.0.0.3:1234"}, "127.0.0.3"),
+        ]
+        for headers, expected_remote_addr in tests:
+            with self.subTest(headers=headers):
+                request = self.factory.get("/", **headers)
+                self.assertEqual(
+                    self.middleware._get_remote_addr(request), expected_remote_addr
+                )
+
 
 class SimpleIncludeModelTest(TestCase):
     """Log only changes in include_fields"""
