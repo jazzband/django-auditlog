@@ -217,7 +217,7 @@ class LogEntryManager(models.Manager):
         return pk
 
     def _get_serialized_data_or_none(self, instance):
-        from .registry import auditlog
+        from auditlog.registry import auditlog
 
         opts = auditlog.get_serialize_options(instance.__class__)
         if not opts["serialize_data"]:
@@ -277,8 +277,7 @@ class LogEntryManager(models.Manager):
     def _mask_serialized_fields(
         self, data: Dict[str, Any], mask_fields: List[str]
     ) -> Dict[str, Any]:
-        masked_data = data.copy()
-        all_field_data = dict(masked_data.pop("fields"))
+        all_field_data = data.pop("fields")
 
         masked_field_data = {}
         for key, value in all_field_data.items():
@@ -287,8 +286,8 @@ class LogEntryManager(models.Manager):
             else:
                 masked_field_data[key] = value
 
-        masked_data["fields"] = masked_field_data
-        return masked_data
+        data["fields"] = masked_field_data
+        return data
 
 
 class LogEntry(models.Model):
