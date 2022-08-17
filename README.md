@@ -42,4 +42,3 @@ Releases
 5. As a project lead, once the PR is merged, create and push a tag `vX.Y.Z`: this will trigger the release build and a notification will be sent from Jazzband of the availability of two packages (tgz and wheel)
 6. Test the install
 7. Publish the release to PyPI
-9. Update the CHANGELOG with the future version
