@@ -1,5 +1,6 @@
 import ast
 import json
+from copy import deepcopy
 from typing import Any, Dict, List
 
 from dateutil import parser
@@ -230,13 +231,36 @@ class LogEntryManager(models.Manager):
                 "fields", self._get_applicable_model_fields(instance, model_fields)
             )
 
-        data = dict(json.loads(serializers.serialize("json", (instance,), **kwargs))[0])
+        instance_copy = self._get_copy_with_python_typed_fields(instance)
+        data = dict(
+            json.loads(serializers.serialize("json", (instance_copy,), **kwargs))[0]
+        )
 
         mask_fields = model_fields["mask_fields"]
         if mask_fields:
             data = self._mask_serialized_fields(data, mask_fields)
 
         return data
+
+    def _get_copy_with_python_typed_fields(self, instance):
+        """
+        Attempt to create copy of instance and coerce types on instance fields
+
+        The Django core serializer assumes that the values on object fields are
+        correctly typed to their respective fields. Updates made to an object's
+        in-memory state may not meet this assumption. To prevent this violation, values
+        are typed by calling `to_python` from the field object, the result is set on a
+        copy of the instance and the copy is sent to the serializer.
+        """
+        try:
+            instance_copy = deepcopy(instance)
+        except TypeError:
+            instance_copy = instance
+        for field in instance_copy._meta.fields:
+            value = getattr(instance_copy, field.name)
+            if not issubclass(type(value), models.Model):
+                setattr(instance_copy, field.name, field.to_python(value))
+        return instance_copy
 
     def _get_applicable_model_fields(
         self, instance, model_fields: Dict[str, List[str]]

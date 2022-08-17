@@ -264,10 +264,13 @@ class JSONModel(models.Model):
 
 class SerializeThisModel(models.Model):
     label = models.CharField(max_length=24, unique=True)
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField()
     nullable = models.IntegerField(null=True)
     nested = models.JSONField()
     mask_me = models.CharField(max_length=255, null=True)
+    code = models.UUIDField(null=True)
+    date = models.DateField(null=True)
+
     history = AuditlogHistoryField(delete_related=False)
 
     def natural_key(self):
