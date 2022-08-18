@@ -257,8 +257,8 @@ class LogEntryManager(models.Manager):
         except TypeError:
             instance_copy = instance
         for field in instance_copy._meta.fields:
-            value = getattr(instance_copy, field.name)
-            if not issubclass(type(value), models.Model):
+            if not field.is_relation:
+                value = getattr(instance_copy, field.name)
                 setattr(instance_copy, field.name, field.to_python(value))
         return instance_copy
 
