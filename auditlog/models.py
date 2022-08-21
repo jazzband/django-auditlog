@@ -1,17 +1,22 @@
 import ast
 import json
+from copy import deepcopy
+from typing import Any, Dict, List
 
 from dateutil import parser
 from dateutil.tz import gettz
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core import serializers
 from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
+
+from auditlog.diff import mask_str
 
 
 class LogEntryManager(models.Manager):
@@ -39,6 +44,9 @@ class LogEntryManager(models.Manager):
             )
             kwargs.setdefault("object_pk", pk)
             kwargs.setdefault("object_repr", smart_str(instance))
+            kwargs.setdefault(
+                "serialized_data", self._get_serialized_data_or_none(instance)
+            )
 
             if isinstance(pk, int):
                 kwargs.setdefault("object_id", pk)
@@ -208,6 +216,79 @@ class LogEntryManager(models.Manager):
             pk = self._get_pk_value(pk)
         return pk
 
+    def _get_serialized_data_or_none(self, instance):
+        from auditlog.registry import auditlog
+
+        opts = auditlog.get_serialize_options(instance.__class__)
+        if not opts["serialize_data"]:
+            return None
+
+        model_fields = auditlog.get_model_fields(instance.__class__)
+        kwargs = opts.get("serialize_kwargs", {})
+
+        if opts["serialize_auditlog_fields_only"]:
+            kwargs.setdefault(
+                "fields", self._get_applicable_model_fields(instance, model_fields)
+            )
+
+        instance_copy = self._get_copy_with_python_typed_fields(instance)
+        data = dict(
+            json.loads(serializers.serialize("json", (instance_copy,), **kwargs))[0]
+        )
+
+        mask_fields = model_fields["mask_fields"]
+        if mask_fields:
+            data = self._mask_serialized_fields(data, mask_fields)
+
+        return data
+
+    def _get_copy_with_python_typed_fields(self, instance):
+        """
+        Attempt to create copy of instance and coerce types on instance fields
+
+        The Django core serializer assumes that the values on object fields are
+        correctly typed to their respective fields. Updates made to an object's
+        in-memory state may not meet this assumption. To prevent this violation, values
+        are typed by calling `to_python` from the field object, the result is set on a
+        copy of the instance and the copy is sent to the serializer.
+        """
+        try:
+            instance_copy = deepcopy(instance)
+        except TypeError:
+            instance_copy = instance
+        for field in instance_copy._meta.fields:
+            if not field.is_relation:
+                value = getattr(instance_copy, field.name)
+                setattr(instance_copy, field.name, field.to_python(value))
+        return instance_copy
+
+    def _get_applicable_model_fields(
+        self, instance, model_fields: Dict[str, List[str]]
+    ) -> List[str]:
+        include_fields = model_fields["include_fields"]
+        exclude_fields = model_fields["exclude_fields"]
+        all_field_names = [field.name for field in instance._meta.fields]
+
+        if not include_fields and not exclude_fields:
+            return all_field_names
+
+        return list(set(include_fields or all_field_names).difference(exclude_fields))
+
+    def _mask_serialized_fields(
+        self, data: Dict[str, Any], mask_fields: List[str]
+    ) -> Dict[str, Any]:
+        all_field_data = data.pop("fields")
+
+        masked_field_data = {}
+        for key, value in all_field_data.items():
+            if isinstance(value, str) and key in mask_fields:
+                masked_field_data[key] = mask_str(value)
+            else:
+                masked_field_data[key] = value
+
+        data["fields"] = masked_field_data
+        return data
+
 
 class LogEntry(models.Model):
     """
@@ -253,6 +334,7 @@ class LogEntry(models.Model):
         blank=True, db_index=True, null=True, verbose_name=_("object id")
     )
     object_repr = models.TextField(verbose_name=_("object representation"))
+    serialized_data = models.JSONField(null=True)
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )

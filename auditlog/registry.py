@@ -28,6 +28,10 @@ from auditlog.conf import settings
 DispatchUID = Tuple[int, int, int]
 
 
+class AuditLogRegistrationError(Exception):
+    pass
+
+
 class AuditlogModelRegistry:
     """
     A registry that keeps track of the models that use Auditlog to track changes.
@@ -68,6 +72,9 @@ class AuditlogModelRegistry:
         mapping_fields: Optional[Dict[str, str]] = None,
         mask_fields: Optional[List[str]] = None,
         m2m_fields: Optional[Collection[str]] = None,
+        serialize_data: bool = False,
+        serialize_kwargs: Optional[Dict[str, Any]] = None,
+        serialize_auditlog_fields_only: bool = False,
     ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
@@ -78,7 +85,9 @@ class AuditlogModelRegistry:
         :param mapping_fields: Mapping from field names to strings in diff.
         :param mask_fields: The fields to mask for sensitive info.
         :param m2m_fields: The fields to handle as many to many.
-
+        :param serialize_data: Option to include a dictionary of the objects state in the auditlog.
+        :param serialize_kwargs: Optional kwargs to pass to Django serializer
+        :param serialize_auditlog_fields_only: Only fields being considered in changes will be serialized.
         """
 
         if include_fields is None:
@@ -91,6 +100,14 @@ class AuditlogModelRegistry:
             mask_fields = []
         if m2m_fields is None:
             m2m_fields = set()
+        if serialize_kwargs is None:
+            serialize_kwargs = {}
+
+        if (serialize_kwargs or serialize_auditlog_fields_only) and not serialize_data:
+            raise AuditLogRegistrationError(
+                "Serializer options were given but the 'serialize_data' option is not "
+                "set. Did you forget to set serialized_data to True?"
+            )
 
         def registrar(cls):
             """Register models for a given class."""
@@ -103,6 +120,9 @@ class AuditlogModelRegistry:
                 "mapping_fields": mapping_fields,
                 "mask_fields": mask_fields,
                 "m2m_fields": m2m_fields,
+                "serialize_data": serialize_data,
+                "serialize_kwargs": serialize_kwargs,
+                "serialize_auditlog_fields_only": serialize_auditlog_fields_only,
             }
             self._connect_signals(cls)
 
@@ -151,6 +171,15 @@ class AuditlogModelRegistry:
             "exclude_fields": list(self._registry[model]["exclude_fields"]),
             "mapping_fields": dict(self._registry[model]["mapping_fields"]),
             "mask_fields": list(self._registry[model]["mask_fields"]),
+        }
+
+    def get_serialize_options(self, model: ModelBase):
+        return {
+            "serialize_data": bool(self._registry[model]["serialize_data"]),
+            "serialize_kwargs": dict(self._registry[model]["serialize_kwargs"]),
+            "serialize_auditlog_fields_only": bool(
+                self._registry[model]["serialize_auditlog_fields_only"]
+            ),
         }
 
     def _connect_signals(self, model):
