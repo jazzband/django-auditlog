@@ -23,7 +23,7 @@ class SimpleModel(models.Model):
     history = AuditlogHistoryField()
 
     def __str__(self):
-        return f"{self.text} ({self.id})"
+        return self.text
 
 
 class AltPrimaryKeyModel(models.Model):
