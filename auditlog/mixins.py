@@ -81,7 +81,7 @@ class LogEntryAdminMixin:
             msg.append("<table>")
             msg.append(self._format_header("#", "Field", "From", "To"))
             for i, (field, change) in enumerate(sorted(atom_changes.items()), 1):
-                value = [i, field] + (["***", "***"] if field == "password" else change)
+                value = [i, obj.verbose_name(field)] + (["***", "***"] if field == "password" else change)
                 msg.append(self._format_line(*value))
             msg.append("</table>")
 
@@ -99,7 +99,7 @@ class LogEntryAdminMixin:
                     format_html(
                         "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
                         i,
-                        field,
+                        obj.verbose_name(field),
                         change["operation"],
                         change_html,
                     )
