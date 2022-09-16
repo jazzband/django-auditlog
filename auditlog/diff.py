@@ -70,7 +70,11 @@ def get_field_value(obj, field):
         else:
             value = smart_str(getattr(obj, field.name, None))
     except ObjectDoesNotExist:
-        value = field.default if getattr(field, 'default', NOT_PROVIDED) is not NOT_PROVIDED else None
+        value = (
+            field.default
+            if getattr(field, "default", NOT_PROVIDED) is not NOT_PROVIDED
+            else None
+        )
 
     return value
 
