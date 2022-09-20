@@ -1043,53 +1043,53 @@ class RegisterModelSettingsTest(TestCase):
     def test_register_from_settings_invalid_settings(self):
         with override_settings(AUDITLOG_INCLUDE_ALL_MODELS="str"):
             with self.assertRaisesMessage(
-                    TypeError, "Setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be a boolean"
+                TypeError, "Setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be a boolean"
             ):
                 self.test_auditlog.register_from_settings()
 
         with override_settings(AUDITLOG_EXCLUDE_TRACKING_MODELS="str"):
             with self.assertRaisesMessage(
-                    TypeError,
-                    "Setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS' must be a list or tuple",
+                TypeError,
+                "Setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS' must be a list or tuple",
             ):
                 self.test_auditlog.register_from_settings()
 
         with override_settings(AUDITLOG_EXCLUDE_TRACKING_MODELS=("app1.model1",)):
             with self.assertRaisesMessage(
-                    ValueError,
-                    "In order to use setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS', "
-                    "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must set to 'True'",
+                ValueError,
+                "In order to use setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS', "
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must set to 'True'",
             ):
                 self.test_auditlog.register_from_settings()
 
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS="str"):
             with self.assertRaisesMessage(
-                    TypeError,
-                    "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' must be a list or tuple",
+                TypeError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' must be a list or tuple",
             ):
                 self.test_auditlog.register_from_settings()
 
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=(1, 2)):
             with self.assertRaisesMessage(
-                    TypeError,
-                    "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' items must be str or dict",
+                TypeError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' items must be str or dict",
             ):
                 self.test_auditlog.register_from_settings()
 
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"test": "test"},)):
             with self.assertRaisesMessage(
-                    ValueError,
-                    "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' dict items must contain 'model' key",
+                ValueError,
+                "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' dict items must contain 'model' key",
             ):
                 self.test_auditlog.register_from_settings()
 
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "test"},)):
             with self.assertRaisesMessage(
-                    ValueError,
-                    (
-                            "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the "
-                            "format <app_name>.<model_name>"
-                    ),
+                ValueError,
+                (
+                    "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the "
+                    "format <app_name>.<model_name>"
+                ),
             ):
                 self.test_auditlog.register_from_settings()
 
@@ -1105,13 +1105,13 @@ class RegisterModelSettingsTest(TestCase):
 
     @override_settings(
         AUDITLOG_INCLUDE_TRACKING_MODELS=(
-                {
-                    "model": "auditlog_tests.SimpleExcludeModel",
-                    "include_fields": ["label"],
-                    "exclude_fields": [
-                        "text",
-                    ],
-                },
+            {
+                "model": "auditlog_tests.SimpleExcludeModel",
+                "include_fields": ["label"],
+                "exclude_fields": [
+                    "text",
+                ],
+            },
         )
     )
     def test_register_from_settings_register_models(self):
@@ -1124,9 +1124,9 @@ class RegisterModelSettingsTest(TestCase):
 
     def test_registration_error_if_bad_serialize_params(self):
         with self.assertRaisesMessage(
-                AuditLogRegistrationError,
-                "Serializer options were given but the 'serialize_data' option is not "
-                "set. Did you forget to set serialized_data to True?",
+            AuditLogRegistrationError,
+            "Serializer options were given but the 'serialize_data' option is not "
+            "set. Did you forget to set serialized_data to True?",
         ):
             register = AuditlogModelRegistry()
             register.register(
@@ -1518,7 +1518,7 @@ class ModelInstanceDiffTest(TestCase):
         # Demonstrate that simple1 can have DoesNotExist on reverse
         # OneToOne relation.
         with self.assertRaises(
-                SimpleModel.reverse_one_to_one.RelatedObjectDoesNotExist
+            SimpleModel.reverse_one_to_one.RelatedObjectDoesNotExist
         ):
             simple1.reverse_one_to_one  # equals None
 
@@ -1774,10 +1774,11 @@ class TestModelSerialization(TestCase):
 
 
 class PolymorphicModelTest(TestCase):
-
     def setUp(self):
         self.simpleModel = SimpleModel.objects.create(text="I am not difficult.")
-        self.project = ProjectPolymorphicModel.objects.create(topic="test", relation=self.simpleModel)
+        self.project = ProjectPolymorphicModel.objects.create(
+            topic="test", relation=self.simpleModel
+        )
 
     def test_project_model(self):
         log = LogEntry.objects.filter(object_pk=self.project.id)

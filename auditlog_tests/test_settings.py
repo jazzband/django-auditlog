@@ -14,7 +14,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.admin",
     "django.contrib.staticfiles",
-    'polymorphic',
+    "polymorphic",
     "auditlog",
     "auditlog_tests",
 ]

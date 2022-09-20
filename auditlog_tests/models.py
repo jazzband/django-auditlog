@@ -305,8 +305,11 @@ class ProjectPolymorphicModel(PolymorphicModel):
     """
     A polymorphic model
     """
+
     topic = models.CharField(max_length=30)
-    relation = models.ForeignKey(SimpleModel, related_name='parent_poly', on_delete=models.CASCADE)
+    relation = models.ForeignKey(
+        SimpleModel, related_name="parent_poly", on_delete=models.CASCADE
+    )
 
 
 class ArtProjectPolymorphicModel(ProjectPolymorphicModel):
