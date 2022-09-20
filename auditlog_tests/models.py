@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from polymorphic.models import PolymorphicModel
 
 from auditlog.models import AuditlogHistoryField
 from auditlog.registry import AuditlogModelRegistry, auditlog
@@ -300,6 +301,18 @@ class SerializeNaturalKeyRelatedModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class ProjectPolymorphicModel(PolymorphicModel):
+    """
+    A polymorphic model
+    """
+    topic = models.CharField(max_length=30)
+    relation = models.ForeignKey(SimpleModel, related_name='parent_poly', on_delete=models.CASCADE)
+
+
+class ArtProjectPolymorphicModel(ProjectPolymorphicModel):
+    artist = models.CharField(max_length=30)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
@@ -333,3 +346,6 @@ auditlog.register(
     serialize_data=True,
     serialize_kwargs={"use_natural_foreign_keys": True},
 )
+
+auditlog.register(ProjectPolymorphicModel)
+auditlog.register(ArtProjectPolymorphicModel)
