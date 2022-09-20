@@ -494,7 +494,9 @@ class LogEntry(models.Model):
             try:
                 field = model._meta.get_field(field_name)
                 verbose_name = getattr(field, "verbose_name", None)
-                return verbose_name.lstrip().capitalize() if verbose_name else field_name
+                return (
+                    verbose_name.lstrip().capitalize() if verbose_name else field_name
+                )
             except FieldDoesNotExist:
                 pass
         return field_name
