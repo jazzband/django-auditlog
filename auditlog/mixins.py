@@ -2,12 +2,15 @@ import json
 
 from django import urls as urlresolvers
 from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist
+from django.forms.utils import pretty_name
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.timezone import localtime
 
 from auditlog.models import LogEntry
+from auditlog.registry import auditlog
 
 MAX = 75
 
@@ -81,7 +84,7 @@ class LogEntryAdminMixin:
             msg.append("<table>")
             msg.append(self._format_header("#", "Field", "From", "To"))
             for i, (field, change) in enumerate(sorted(atom_changes.items()), 1):
-                value = [i, obj.verbose_name(field)] + (
+                value = [i, self.field_verbose_name(obj, field)] + (
                     ["***", "***"] if field == "password" else change
                 )
                 msg.append(self._format_line(*value))
@@ -101,7 +104,7 @@ class LogEntryAdminMixin:
                     format_html(
                         "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
                         i,
-                        obj.verbose_name(field),
+                        self.field_verbose_name(obj, field),
                         change["operation"],
                         change_html,
                     )
@@ -122,3 +125,19 @@ class LogEntryAdminMixin:
         return format_html(
             "".join(["<tr>", "<td>{}</td>" * len(values), "</tr>"]), *values
         )
+
+    def field_verbose_name(self, obj, field_name: str):
+        model = obj.content_type.model_class()
+        try:
+            model_fields = auditlog.get_model_fields(model._meta.model)
+            mapping_field_name = model_fields["mapping_fields"].get(field_name)
+            if mapping_field_name:
+                return mapping_field_name
+        except KeyError:
+            # Model definition in auditlog was probably removed
+            pass
+        try:
+            field = model._meta.get_field(field_name)
+            return pretty_name(getattr(field, "verbose_name", field_name))
+        except FieldDoesNotExist:
+            return pretty_name(field_name)

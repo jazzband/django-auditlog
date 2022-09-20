@@ -557,7 +557,7 @@ class SimpleMappingModelTest(TestCase):
             ),
         )
         self.assertEqual(
-            smm.history.latest().changes_display_dict["Not mapped"][1],
+            smm.history.latest().changes_display_dict["not mapped"][1],
             "Not mapped",
             msg=(
                 "The diff function uses the django default verbose name for 'not_mapped'"
@@ -779,7 +779,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
         self.assertEqual(
-            dtm.history.latest().changes_display_dict["Timestamp"][1],
+            dtm.history.latest().changes_display_dict["timestamp"][1],
             dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
             msg=(
                 "The datetime should be formatted according to Django's settings for"
@@ -791,7 +791,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
         self.assertEqual(
-            dtm.history.latest().changes_display_dict["Timestamp"][1],
+            dtm.history.latest().changes_display_dict["timestamp"][1],
             dateformat.format(localized_timestamp, settings.DATETIME_FORMAT),
             msg=(
                 "The datetime should be formatted according to Django's settings for"
@@ -802,7 +802,7 @@ class DateTimeFieldModelTest(TestCase):
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE="en-GB"):
             self.assertEqual(
-                dtm.history.latest().changes_display_dict["Timestamp"][1],
+                dtm.history.latest().changes_display_dict["timestamp"][1],
                 formats.localize(localized_timestamp),
                 msg=(
                     "The datetime should be formatted according to Django's settings for"
@@ -823,7 +823,7 @@ class DateTimeFieldModelTest(TestCase):
         )
         dtm.save()
         self.assertEqual(
-            dtm.history.latest().changes_display_dict["Date"][1],
+            dtm.history.latest().changes_display_dict["date"][1],
             dateformat.format(date, settings.DATE_FORMAT),
             msg=(
                 "The date should be formatted according to Django's settings for"
@@ -834,7 +834,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.date = date
         dtm.save()
         self.assertEqual(
-            dtm.history.latest().changes_display_dict["Date"][1],
+            dtm.history.latest().changes_display_dict["date"][1],
             dateformat.format(date, settings.DATE_FORMAT),
             msg=(
                 "The date should be formatted according to Django's settings for"
@@ -845,7 +845,7 @@ class DateTimeFieldModelTest(TestCase):
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE="en-GB"):
             self.assertEqual(
-                dtm.history.latest().changes_display_dict["Date"][1],
+                dtm.history.latest().changes_display_dict["date"][1],
                 formats.localize(date),
                 msg=(
                     "The date should be formatted according to Django's settings for"
@@ -866,7 +866,7 @@ class DateTimeFieldModelTest(TestCase):
         )
         dtm.save()
         self.assertEqual(
-            dtm.history.latest().changes_display_dict["Time"][1],
+            dtm.history.latest().changes_display_dict["time"][1],
             dateformat.format(time, settings.TIME_FORMAT),
             msg=(
                 "The time should be formatted according to Django's settings for"
@@ -877,7 +877,7 @@ class DateTimeFieldModelTest(TestCase):
         dtm.time = time
         dtm.save()
         self.assertEqual(
-            dtm.history.latest().changes_display_dict["Time"][1],
+            dtm.history.latest().changes_display_dict["time"][1],
             dateformat.format(time, settings.TIME_FORMAT),
             msg=(
                 "The time should be formatted according to Django's settings for"
@@ -888,7 +888,7 @@ class DateTimeFieldModelTest(TestCase):
         # Change USE_L10N = True
         with self.settings(USE_L10N=True, LANGUAGE_CODE="en-GB"):
             self.assertEqual(
-                dtm.history.latest().changes_display_dict["Time"][1],
+                dtm.history.latest().changes_display_dict["time"][1],
                 formats.localize(time),
                 msg=(
                     "The time should be formatted according to Django's settings for"
@@ -1147,28 +1147,28 @@ class ChoicesFieldModelTest(TestCase):
     def test_changes_display_dict_single_choice(self):
 
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Status"][1],
+            self.obj.history.latest().changes_display_dict["status"][1],
             "Red",
             msg="The human readable text 'Red' is displayed.",
         )
         self.obj.status = ChoicesFieldModel.GREEN
         self.obj.save()
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Status"][1],
+            self.obj.history.latest().changes_display_dict["status"][1],
             "Green",
             msg="The human readable text 'Green' is displayed.",
         )
 
     def test_changes_display_dict_multiplechoice(self):
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Multiplechoice"][1],
+            self.obj.history.latest().changes_display_dict["multiplechoice"][1],
             "Red, Yellow, Green",
             msg="The human readable text 'Red, Yellow, Green' is displayed.",
         )
         self.obj.multiplechoice = ChoicesFieldModel.RED
         self.obj.save()
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Multiplechoice"][1],
+            self.obj.history.latest().changes_display_dict["multiplechoice"][1],
             "Red",
             msg="The human readable text 'Red' is displayed.",
         )
@@ -1177,7 +1177,7 @@ class ChoicesFieldModelTest(TestCase):
         obj = SimpleModel()
         obj.save()
         history = obj.history.get()
-        assert "Related models" in history.changes_display_dict
+        assert "related_models" in history.changes_display_dict
 
 
 class CharfieldTextfieldModelTest(TestCase):
@@ -1191,7 +1191,7 @@ class CharfieldTextfieldModelTest(TestCase):
 
     def test_changes_display_dict_longchar(self):
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Longchar"][1],
+            self.obj.history.latest().changes_display_dict["longchar"][1],
             f"{self.PLACEHOLDER_LONGCHAR[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
@@ -1199,14 +1199,14 @@ class CharfieldTextfieldModelTest(TestCase):
         self.obj.longchar = SHORTENED_PLACEHOLDER
         self.obj.save()
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Longchar"][1],
+            self.obj.history.latest().changes_display_dict["longchar"][1],
             SHORTENED_PLACEHOLDER,
             msg="The field should display the entire string because it is less than 140 characters",
         )
 
     def test_changes_display_dict_longtextfield(self):
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Longtextfield"][1],
+            self.obj.history.latest().changes_display_dict["longtextfield"][1],
             f"{self.PLACEHOLDER_LONGTEXTFIELD[:140]}...",
             msg="The string should be truncated at 140 characters with an ellipsis at the end.",
         )
@@ -1214,7 +1214,7 @@ class CharfieldTextfieldModelTest(TestCase):
         self.obj.longtextfield = SHORTENED_PLACEHOLDER
         self.obj.save()
         self.assertEqual(
-            self.obj.history.latest().changes_display_dict["Longtextfield"][1],
+            self.obj.history.latest().changes_display_dict["longtextfield"][1],
             SHORTENED_PLACEHOLDER,
             msg="The field should display the entire string because it is less than 140 characters",
         )
@@ -1399,6 +1399,32 @@ class DiffMsgTest(TestCase):
                 "</table>"
             ),
         )
+
+    def test_unregister_after_log(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {
+                "field two": [None, 11],
+                "field one": [None, "a value"],
+            },
+        )
+        # Unregister
+        auditlog.unregister(SimpleModel)
+        self.assertEqual(
+            self.admin.msg_short(log_entry), "2 changes: field two, field one"
+        )
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>Field one</td><td>None</td><td>a value</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>None</td><td>11</td></tr>"
+                "</table>"
+            ),
+        )
+        # Re-register
+        auditlog.register(SimpleModel)
 
 
 class NoDeleteHistoryTest(TestCase):

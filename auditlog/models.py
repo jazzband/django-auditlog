@@ -12,7 +12,6 @@ from django.core import serializers
 from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
-from django.forms.utils import pretty_name
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
@@ -420,8 +419,10 @@ class LogEntry(models.Model):
         :return: The changes recorded in this log entry intended for display to users as a dictionary object.
         """
         # Get the model and model_fields
+        from auditlog.registry import auditlog
 
         model = self.content_type.model_class()
+        model_fields = auditlog.get_model_fields(model._meta.model)
         changes_display_dict = {}
         # grab the changes_dict and iterate through
         for field_name, values in self.changes_dict.items():
@@ -479,27 +480,11 @@ class LogEntry(models.Model):
                         value = f"{value[:140]}..."
 
                     values_display.append(value)
-            verbose_name = self.verbose_name(field_name)
+            verbose_name = model_fields["mapping_fields"].get(
+                field.name, getattr(field, "verbose_name", field.name)
+            )
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
-
-    def verbose_name(self, field_name: str):
-        from auditlog.registry import auditlog
-
-        model = self.content_type.model_class()
-        try:
-            model_fields = auditlog.get_model_fields(model._meta.model)
-            mapping_field_name = model_fields["mapping_fields"].get(field_name)
-            if mapping_field_name:
-                return mapping_field_name
-        except KeyError:
-            # Model definition in auditlog was probably removed
-            pass
-        try:
-            field = model._meta.get_field(field_name)
-            return pretty_name(getattr(field, "verbose_name", field_name))
-        except FieldDoesNotExist:
-            return pretty_name(field_name)
 
 
 class AuditlogHistoryField(GenericRelation):
