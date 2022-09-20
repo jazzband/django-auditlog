@@ -1177,7 +1177,7 @@ class ChoicesFieldModelTest(TestCase):
         obj = SimpleModel()
         obj.save()
         history = obj.history.get()
-        assert "related_models" in history.changes_display_dict
+        assert "Related models" in history.changes_display_dict
 
 
 class CharfieldTextfieldModelTest(TestCase):
@@ -1323,8 +1323,8 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>value before deletion</td><td>None</td></tr>"
-                "<tr><td>2</td><td>field two</td><td>11</td><td>None</td></tr>"
+                "<tr><td>1</td><td>Field one</td><td>value before deletion</td><td>None</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>11</td><td>None</td></tr>"
                 "</table>"
             ),
         )
@@ -1346,8 +1346,8 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>None</td><td>a value</td></tr>"
-                "<tr><td>2</td><td>field two</td><td>None</td><td>11</td></tr>"
+                "<tr><td>1</td><td>Field one</td><td>None</td><td>a value</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>None</td><td>11</td></tr>"
                 "</table>"
             ),
         )
@@ -1369,9 +1369,9 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>old value of field one</td>"
+                "<tr><td>1</td><td>Field one</td><td>old value of field one</td>"
                 "<td>new value of field one</td></tr>"
-                "<tr><td>2</td><td>field two</td><td>11</td><td>42</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>11</td><td>42</td></tr>"
                 "</table>"
             ),
         )
@@ -1394,7 +1394,7 @@ class DiffMsgTest(TestCase):
             (
                 "<table>"
                 "<tr><th>#</th><th>Relationship</th><th>Action</th><th>Objects</th></tr>"
-                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)"
+                "<tr><td>1</td><td>Some m2m field</td><td>add</td><td>Example User (user 1)"
                 "<br>Illustration (user 42)</td></tr>"
                 "</table>"
             ),

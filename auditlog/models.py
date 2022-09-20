@@ -12,6 +12,7 @@ from django.core import serializers
 from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
+from django.forms.utils import pretty_name
 from django.utils import formats, timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
@@ -486,18 +487,19 @@ class LogEntry(models.Model):
         from auditlog.registry import auditlog
 
         model = self.content_type.model_class()
-        model_fields = auditlog.get_model_fields(model._meta.model)
-        mapping_field_name = model_fields["mapping_fields"].get(field_name)
-        if mapping_field_name:
-            return mapping_field_name
-        else:
-            try:
-                field = model._meta.get_field(field_name)
-                verbose_name = getattr(field, "verbose_name", None)
-                return verbose_name.lstrip().capitalize() if verbose_name else field_name
-            except FieldDoesNotExist:
-                pass
-        return field_name
+        try:
+            model_fields = auditlog.get_model_fields(model._meta.model)
+            mapping_field_name = model_fields["mapping_fields"].get(field_name)
+            if mapping_field_name:
+                return mapping_field_name
+        except KeyError:
+            # Model definition in auditlog was probably removed
+            pass
+        try:
+            field = model._meta.get_field(field_name)
+            return pretty_name(getattr(field, "verbose_name", field_name))
+        except FieldDoesNotExist:
+            return pretty_name(field_name)
 
 
 class AuditlogHistoryField(GenericRelation):
