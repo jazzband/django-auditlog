@@ -1230,7 +1230,7 @@ class PostgresArrayFieldModelTest(TestCase):
 
     @property
     def latest_array_change(self):
-        return self.obj.history.latest().changes_display_dict["Arrayfield"][1]
+        return self.obj.history.latest().changes_display_dict["arrayfield"][1]
 
     def test_changes_display_dict_arrayfield(self):
         self.assertEqual(
