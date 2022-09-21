@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 
 from auditlog.filters import ResourceTypeFilter
 from auditlog.mixins import LogEntryAdminMixin
@@ -14,7 +15,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         "changes",
         "actor__first_name",
         "actor__last_name",
-        "actor__username",
+        f"actor__{get_user_model().USERNAME_FIELD}",
     ]
     list_filter = ["action", ResourceTypeFilter]
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
