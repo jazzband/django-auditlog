@@ -33,7 +33,6 @@ from auditlog_tests.models import (
     ManyRelatedOtherModel,
     NoDeleteHistoryModel,
     PostgresArrayFieldModel,
-    ProjectPolymorphicModel,
     ProxyModel,
     RelatedModel,
     SerializeNaturalKeyRelatedModel,
@@ -1005,7 +1004,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 25)
+        self.assertEqual(len(self.test_auditlog.get_models()), 23)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -1771,15 +1770,3 @@ class TestModelSerialization(TestCase):
                 "value": 11,
             },
         )
-
-
-class PolymorphicModelTest(TestCase):
-    def setUp(self):
-        self.simpleModel = SimpleModel.objects.create(text="I am not difficult.")
-        self.project = ProjectPolymorphicModel.objects.create(
-            topic="test", relation=self.simpleModel
-        )
-
-    def test_project_model(self):
-        log = LogEntry.objects.filter(object_pk=self.project.id)
-        self.assertTrue(len(log) >= 1)
