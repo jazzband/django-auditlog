@@ -9,6 +9,7 @@
 
 - fix: Display `created` timestamp in server timezone ([#404](https://github.com/jazzband/django-auditlog/pull/404))
 - fix: Handle port in `remote_addr` ([#417](https://github.com/jazzband/django-auditlog/pull/417))
+- fix: Handle the error with AttributeError: 'OneToOneRel' error occur during a `PolymorphicModel` has relation with other models  ([#429](https://github.com/jazzband/django-auditlog/pull/429))
 
 ## 2.1.1 (2022-07-27)
 

@@ -1145,7 +1145,6 @@ class ChoicesFieldModelTest(TestCase):
         )
 
     def test_changes_display_dict_single_choice(self):
-
         self.assertEqual(
             self.obj.history.latest().changes_display_dict["status"][1],
             "Red",
