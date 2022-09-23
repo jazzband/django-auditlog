@@ -514,7 +514,7 @@ class LogEntry(models.Model):
         self, field: Union[models.ForeignKey, models.OneToOneField], value: Any
     ) -> str:
         """
-        :return: An object display string for a given FK value and the field to which it belongs
+        :return: A string representing a given FK value and the field to which it belongs
         """
         # Return "None" if the FK value is "None".
         if value == "None":
