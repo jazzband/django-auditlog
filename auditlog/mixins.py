@@ -17,7 +17,7 @@ MAX = 75
 
 class LogEntryAdminMixin:
     def created(self, obj):
-        return localtime(obj.timestamp).strftime("%Y-%m-%d %H:%M:%S")
+        return localtime(obj.timestamp)
 
     created.short_description = "Created"
 
