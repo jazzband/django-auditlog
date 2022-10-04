@@ -2,6 +2,7 @@ import json
 
 from django import urls as urlresolvers
 from django.conf import settings
+from django.contrib import admin
 from django.core.exceptions import FieldDoesNotExist
 from django.forms.utils import pretty_name
 from django.urls.exceptions import NoReverseMatch
@@ -16,11 +17,12 @@ MAX = 75
 
 
 class LogEntryAdminMixin:
+    @admin.display(description="Created")
     def created(self, obj):
         return localtime(obj.timestamp)
 
-    created.short_description = "Created"
 
+    @admin.display(description="User")
     def user_url(self, obj):
         if obj.actor:
             app_label, model = settings.AUTH_USER_MODEL.split(".")
@@ -33,8 +35,8 @@ class LogEntryAdminMixin:
 
         return "system"
 
-    user_url.short_description = "User"
 
+    @admin.display(description="Resource")
     def resource_url(self, obj):
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = f"admin:{app_label}_{model}_change"
@@ -48,8 +50,8 @@ class LogEntryAdminMixin:
                 '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
             )
 
-    resource_url.short_description = "Resource"
 
+    @admin.display(description="Changes")
     def msg_short(self, obj):
         if obj.action == LogEntry.Action.DELETE:
             return ""  # delete
@@ -61,8 +63,8 @@ class LogEntryAdminMixin:
             fields = fields[:i] + " .."
         return "%d change%s: %s" % (len(changes), s, fields)
 
-    msg_short.short_description = "Changes"
 
+    @admin.display(description="Changes")
     def msg(self, obj):
         changes = json.loads(obj.changes)
 
@@ -114,7 +116,6 @@ class LogEntryAdminMixin:
 
         return mark_safe("".join(msg))
 
-    msg.short_description = "Changes"
 
     def _format_header(self, *labels):
         return format_html(
