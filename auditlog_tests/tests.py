@@ -1293,8 +1293,9 @@ class AdminPanelTest(TestCase):
             ("America/Buenos_Aires", "2022-08-01 09:00:00"),
             ("Asia/Kathmandu", "2022-08-01 17:45:00"),
         ]:
-            with self.settings(TIME_ZONE=tz):
-                self.assertEqual(self.admin.created(log_entry), timestamp)
+            with self.settings(TIME_ZONE=tz): 
+                created = self.admin.created(log_entry) 
+                self.assertEqual(created.strftime("%Y-%m-%d %H:%M:%S"), timestamp)
 
 
 class DiffMsgTest(TestCase):
