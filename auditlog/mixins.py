@@ -21,7 +21,6 @@ class LogEntryAdminMixin:
     def created(self, obj):
         return localtime(obj.timestamp)
 
-
     @admin.display(description="User")
     def user_url(self, obj):
         if obj.actor:
@@ -34,7 +33,6 @@ class LogEntryAdminMixin:
             return format_html('<a href="{}">{}</a>', link, obj.actor)
 
         return "system"
-
 
     @admin.display(description="Resource")
     def resource_url(self, obj):
@@ -50,7 +48,6 @@ class LogEntryAdminMixin:
                 '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
             )
 
-
     @admin.display(description="Changes")
     def msg_short(self, obj):
         if obj.action == LogEntry.Action.DELETE:
@@ -62,7 +59,6 @@ class LogEntryAdminMixin:
             i = fields.rfind(" ", 0, MAX)
             fields = fields[:i] + " .."
         return "%d change%s: %s" % (len(changes), s, fields)
-
 
     @admin.display(description="Changes")
     def msg(self, obj):
@@ -115,7 +111,6 @@ class LogEntryAdminMixin:
             msg.append("</table>")
 
         return mark_safe("".join(msg))
-
 
     def _format_header(self, *labels):
         return format_html(
