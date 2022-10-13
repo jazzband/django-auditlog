@@ -24,7 +24,7 @@ try:
     from django.db.models import JSONField
 except ImportError:
     # older Django
-    from django.contrib.postgres.fields import JSONField
+    from django.db.models import JSONField
 
 
 class LogEntryManager(models.Manager):
@@ -464,7 +464,7 @@ class LogEntry(models.Model):
                         values_display.append(choices_dict.get(value, "None"))
                     except Exception:
                         if isinstance(value, list):
-                            values_display.append(', '.join(value))
+                            values_display.append(", ".join(value))
                         else:
                             values_display.append(choices_dict.get(value, "None"))
             else:
@@ -490,7 +490,7 @@ class LogEntry(models.Model):
                             pass
                     # check if length is longer than 140 and truncate with ellipsis
                     if auditlog_settings.ENABLE_ELLIPSIS and len(value) > 140:
-                        value = "{}...".format(value[:140])
+                        value = f"{value[:140]}..."
 
                     values_display.append(value)
             verbose_name = model_fields["mapping_fields"].get(
