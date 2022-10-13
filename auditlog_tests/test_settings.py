@@ -18,18 +18,20 @@ INSTALLED_APPS = [
     "auditlog_tests",
 ]
 
-MIDDLEWARE = (
+MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "auditlog.middleware.AuditlogMiddleware",
-)
+]
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("TEST_DB_NAME", "auditlog_tests_db"),
+        "NAME": os.getenv(
+            "TEST_DB_NAME", "auditlog" + os.environ.get("TOX_PARALLEL_ENV", "")
+        ),
         "USER": os.getenv("TEST_DB_USER", "postgres"),
         "PASSWORD": os.getenv("TEST_DB_PASS", ""),
         "HOST": os.getenv("TEST_DB_HOST", "127.0.0.1"),

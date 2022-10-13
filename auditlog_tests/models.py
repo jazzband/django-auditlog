@@ -4,7 +4,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from auditlog.models import AuditlogHistoryField
-from auditlog.registry import auditlog
+from auditlog.registry import AuditlogModelRegistry, auditlog
+
+m2m_only_auditlog = AuditlogModelRegistry(create=False, update=False, delete=False)
 
 
 @auditlog.register()
@@ -60,22 +62,46 @@ class ProxyModel(SimpleModel):
         proxy = True
 
 
-class RelatedModel(models.Model):
+class RelatedModelParent(models.Model):
+    """
+    Use multi table inheritance to make a OneToOneRel field
+    """
+
+
+class RelatedModel(RelatedModelParent):
     """
     A model with a foreign key.
     """
 
-    related = models.ForeignKey(to="self", on_delete=models.CASCADE)
+    related = models.ForeignKey(
+        "SimpleModel", related_name="related_models", on_delete=models.CASCADE
+    )
+    one_to_one = models.OneToOneField(
+        to="SimpleModel", on_delete=models.CASCADE, related_name="reverse_one_to_one"
+    )
 
     history = AuditlogHistoryField()
 
 
 class ManyRelatedModel(models.Model):
     """
-    A model with a many to many relation.
+    A model with many-to-many relations.
     """
 
-    related = models.ManyToManyField("self")
+    recursive = models.ManyToManyField("self")
+    related = models.ManyToManyField("ManyRelatedOtherModel", related_name="related")
+
+    history = AuditlogHistoryField()
+
+    def get_additional_data(self):
+        related = self.related.first()
+        return {"related_model_id": related.id if related else None}
+
+
+class ManyRelatedOtherModel(models.Model):
+    """
+    A model related to ManyRelatedModel as many-to-many.
+    """
 
     history = AuditlogHistoryField()
 
@@ -111,6 +137,18 @@ class SimpleMappingModel(models.Model):
     sku = models.CharField(max_length=100)
     vtxt = models.CharField(verbose_name="Version", max_length=100)
     not_mapped = models.CharField(max_length=100)
+
+    history = AuditlogHistoryField()
+
+
+@auditlog.register(mask_fields=["address"])
+class SimpleMaskedModel(models.Model):
+    """
+    A simple model used for register's mask_fields kwarg
+    """
+
+    address = models.CharField(max_length=100)
+    text = models.TextField()
 
     history = AuditlogHistoryField()
 
@@ -218,12 +256,57 @@ class NoDeleteHistoryModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class JSONModel(models.Model):
+    json = models.JSONField(default=dict)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
+class SerializeThisModel(models.Model):
+    label = models.CharField(max_length=24, unique=True)
+    timestamp = models.DateTimeField()
+    nullable = models.IntegerField(null=True)
+    nested = models.JSONField()
+    mask_me = models.CharField(max_length=255, null=True)
+    code = models.UUIDField(null=True)
+    date = models.DateField(null=True)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+    def natural_key(self):
+        return self.label
+
+
+class SerializeOnlySomeOfThisModel(models.Model):
+    this = models.CharField(max_length=24)
+    not_this = models.CharField(max_length=24)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
+class SerializePrimaryKeyRelatedModel(models.Model):
+    serialize_this = models.ForeignKey(to=SerializeThisModel, on_delete=models.CASCADE)
+    subheading = models.CharField(max_length=255)
+    value = models.IntegerField()
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
+class SerializeNaturalKeyRelatedModel(models.Model):
+    serialize_this = models.ForeignKey(to=SerializeThisModel, on_delete=models.CASCADE)
+    subheading = models.CharField(max_length=255)
+    value = models.IntegerField()
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
-auditlog.register(ManyRelatedModel.related.through)
+auditlog.register(ManyRelatedModel.recursive.through)
+m2m_only_auditlog.register(ManyRelatedModel, m2m_fields={"related"})
 auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)
@@ -232,3 +315,21 @@ auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
+auditlog.register(JSONModel)
+auditlog.register(
+    SerializeThisModel,
+    serialize_data=True,
+    mask_fields=["mask_me"],
+)
+auditlog.register(
+    SerializeOnlySomeOfThisModel,
+    serialize_data=True,
+    serialize_auditlog_fields_only=True,
+    exclude_fields=["not_this"],
+)
+auditlog.register(SerializePrimaryKeyRelatedModel, serialize_data=True)
+auditlog.register(
+    SerializeNaturalKeyRelatedModel,
+    serialize_data=True,
+    serialize_kwargs={"use_natural_foreign_keys": True},
+)

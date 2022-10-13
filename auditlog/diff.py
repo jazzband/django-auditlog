@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db.models import Model, NOT_PROVIDED, DateTimeField
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import NOT_PROVIDED, DateTimeField, JSONField, Model
 from django.utils import timezone
 from django.utils.encoding import smart_str
 
@@ -34,8 +34,8 @@ def track_field(field):
 
 def get_fields_in_model(instance):
     """
-    Returns the list of fields in the given model instance. Checks whether to use the official _meta API or use the raw
-    data. This method excludes many to many fields.
+    Returns the list of fields in the given model instance. Checks whether to use the official
+    _meta API or use the raw data. This method excludes many to many fields.
 
     :param instance: The model instance to get the fields for
     :type instance: Model
@@ -58,40 +58,55 @@ def get_field_value(obj, field):
     :return: The value of the field as a string.
     :rtype: str
     """
-    if isinstance(field, DateTimeField):
-        # DateTimeFields are timezone-aware, so we need to convert the field
-        # to its naive form before we can accurately compare them for changes.
-        try:
+    try:
+        if isinstance(field, DateTimeField):
+            # DateTimeFields are timezone-aware, so we need to convert the field
+            # to its naive form before we can accurately compare them for changes.
             value = field.to_python(getattr(obj, field.name, None))
             if value is not None and settings.USE_TZ and not timezone.is_naive(value):
                 value = timezone.make_naive(value, timezone=timezone.utc)
-        except ObjectDoesNotExist:
-            value = field.default if field.default is not NOT_PROVIDED else None
-    else:
-        try:
-            try:
-                value = field.to_python(getattr(obj, field.name, None))
-            except (ValidationError, AttributeError):
-                value = smart_str(getattr(obj, field.name, None))
-        except ObjectDoesNotExist:
-            value = field.default if field.default is not NOT_PROVIDED else None
+        elif isinstance(field, JSONField):
+            value = field.to_python(getattr(obj, field.name, None))
+        else:
+            value = smart_str(getattr(obj, field.name, None))
+    except ObjectDoesNotExist:
+        value = (
+            field.default
+            if getattr(field, "default", NOT_PROVIDED) is not NOT_PROVIDED
+            else None
+        )
 
     return value
 
 
-def model_instance_diff(old, new, update_fields=None):
+def mask_str(value: str) -> str:
     """
-    Calculates the differences between two model instances. One of the instances may be ``None`` (i.e., a newly
-    created model or deleted model). This will cause all fields with a value to have changed (from ``None``).
+    Masks the first half of the input string to remove sensitive data.
+
+    :param value: The value to mask.
+    :type value: str
+    :return: The masked version of the string.
+    :rtype: str
+    """
+    mask_limit = int(len(value) / 2)
+    return "*" * mask_limit + value[mask_limit:]
+
+
+def model_instance_diff(old, new, fields_to_check=None):
+    """
+    Calculates the differences between two model instances. One of the instances may be ``None``
+    (i.e., a newly created model or deleted model). This will cause all fields with a value to have
+    changed (from ``None``).
 
     :param old: The old state of the model instance.
     :type old: Model
     :param new: The new state of the model instance.
     :type new: Model
-    :param update_fields: The optional list of fields which are going to update their values.
-    :type update_fields: list
-    :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new field values
-             as value.
+    :param fields_to_check: An iterable of the field names to restrict the diff to, while ignoring the rest of
+        the model's fields. This is used to pass the `update_fields` kwarg from the model's `save` method.
+    :type fields_to_check: Iterable
+    :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new
+            field values as value.
     :rtype: dict
     """
     from auditlog.registry import auditlog
@@ -116,6 +131,9 @@ def model_instance_diff(old, new, update_fields=None):
         fields = set()
         model_fields = None
 
+    if fields_to_check:
+        fields = {field for field in fields if field.name in fields_to_check}
+
     # Check if fields must be filtered
     if (
         model_fields
@@ -139,16 +157,18 @@ def model_instance_diff(old, new, update_fields=None):
             ]
         fields = filtered_fields
 
-    if update_fields is not None:
-        filtered_fields = [field for field in fields if field.name in update_fields]
-        fields = filtered_fields
-
     for field in fields:
         old_value = get_field_value(old, field)
         new_value = get_field_value(new, field)
 
         if old_value != new_value:
-            diff[field.name] = (smart_str(old_value), smart_str(new_value))
+            if model_fields and field.name in model_fields["mask_fields"]:
+                diff[field.name] = (
+                    mask_str(smart_str(old_value)),
+                    mask_str(smart_str(new_value)),
+                )
+            else:
+                diff[field.name] = (smart_str(old_value), smart_str(new_value))
 
     if len(diff) == 0:
         diff = None
