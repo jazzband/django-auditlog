@@ -308,17 +308,20 @@ class LogEntry(models.Model):
         action. This may be useful in some cases when comparing actions because the ``__lt``, ``__lte``,
         ``__gt``, ``__gte`` lookup filters can be used in queries.
 
-        The valid actions are :py:attr:`Action.CREATE`, :py:attr:`Action.UPDATE` and :py:attr:`Action.DELETE`.
+        The valid actions are :py:attr:`Action.CREATE`, :py:attr:`Action.UPDATE`,
+        :py:attr:`Action.DELETE` and :py:attr:`Action.ACCESS`.
         """
 
         CREATE = 0
         UPDATE = 1
         DELETE = 2
+        ACCESS = 3
 
         choices = (
             (CREATE, _("create")),
             (UPDATE, _("update")),
             (DELETE, _("delete")),
+            (ACCESS, _("access")),
         )
 
     content_type = models.ForeignKey(

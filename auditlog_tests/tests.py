@@ -14,6 +14,7 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import dateformat, formats, timezone
 
 from auditlog.admin import LogEntryAdmin
@@ -1797,3 +1798,30 @@ class TestModelSerialization(TestCase):
                 "value": 11,
             },
         )
+
+
+class TestAccessLog(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="test_user", is_active=True)
+        self.obj = SimpleModel.objects.create(text="For admin logentry test")
+
+    def test_access_log(self):
+        self.client.force_login(self.user)
+        content_type = ContentType.objects.get_for_model(self.obj.__class__)
+
+        # Check for log entries
+        qs = LogEntry.objects.filter(content_type=content_type, object_pk=self.obj.pk)
+        old_count = qs.count()
+
+        self.client.get(reverse("simplemodel-detail", args=[self.obj.pk]))
+        new_count = qs.count()
+        self.assertEqual(new_count, old_count + 1)
+
+        log_entry = qs.latest()
+        self.assertEqual(int(log_entry.object_pk), self.obj.pk)
+        self.assertEqual(log_entry.actor, self.user)
+        self.assertEqual(log_entry.content_type, content_type)
+        self.assertEqual(
+            log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
+        )
+        self.assertEqual(log_entry.changes, "null")
