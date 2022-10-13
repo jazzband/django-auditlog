@@ -17,11 +17,11 @@ MAX = 75
 
 
 class LogEntryAdminMixin:
-    @admin.display(description="Created")
+    # @admin.display(description="Created")  # uncomment with Django>=3.2
     def created(self, obj):
         return localtime(obj.timestamp)
 
-    @admin.display(description="User")
+    # @admin.display(description="User")  # uncomment with Django>=3.2
     def user_url(self, obj):
         if obj.actor:
             app_label, model = settings.AUTH_USER_MODEL.split(".")
@@ -34,7 +34,7 @@ class LogEntryAdminMixin:
 
         return "system"
 
-    @admin.display(description="Resource")
+    # @admin.display(description="Resource")  # uncomment with Django>=3.2
     def resource_url(self, obj):
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = f"admin:{app_label}_{model}_change"
@@ -48,7 +48,7 @@ class LogEntryAdminMixin:
                 '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
             )
 
-    @admin.display(description="Changes")
+    # @admin.display(description="Changes")  # uncomment with Django>=3.2
     def msg_short(self, obj):
         if obj.action == LogEntry.Action.DELETE:
             return ""  # delete
@@ -60,7 +60,7 @@ class LogEntryAdminMixin:
             fields = fields[:i] + " .."
         return "%d change%s: %s" % (len(changes), s, fields)
 
-    @admin.display(description="Changes")
+    # @admin.display(description="Changes")  # uncomment with Django>=3.2
     def msg(self, obj):
         changes = json.loads(obj.changes)
 
