@@ -1,9 +1,27 @@
 import json
+from functools import wraps
+
+from django.conf import settings
 
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
 
 
+def maybe_disable_on_raw(signal_handler):
+    """
+    Decorator that simply skips running logger in case raw was specified.
+    """
+
+    @wraps(signal_handler)
+    def wrapper(*args, **kwargs):
+        if kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE:
+            return
+        signal_handler(*args, **kwargs)
+
+    return wrapper
+
+
+@maybe_disable_on_raw
 def log_create(sender, instance, created, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is first saved to the database.
@@ -20,6 +38,7 @@ def log_create(sender, instance, created, **kwargs):
         )
 
 
+@maybe_disable_on_raw
 def log_update(sender, instance, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is changed and saved to the database.
@@ -45,6 +64,7 @@ def log_update(sender, instance, **kwargs):
                 )
 
 
+@maybe_disable_on_raw
 def log_delete(sender, instance, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is deleted from the database.
@@ -61,6 +81,7 @@ def log_delete(sender, instance, **kwargs):
         )
 
 
+@maybe_disable_on_raw
 def make_log_m2m_changes(field_name):
     """Return a handler for m2m_changed with field_name enclosed."""
 
