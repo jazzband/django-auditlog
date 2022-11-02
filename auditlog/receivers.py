@@ -3,32 +3,37 @@ from functools import wraps
 
 from django.conf import settings
 
+from auditlog.context import threadlocal
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
 
 
-def maybe_disable_on_raw(signal_handler):
+def check_disable(signal_handler):
     """
-    Decorator that simply skips running logger in case raw was specified.
+    Decorator that passes along disabled in kwargs if any of the following is true:
+    - 'auditlog_disabled' from threadlocal is true
+    - raw = True and AUDITLOG_DISABLE_ON_RAW_SAVE is True
     """
 
     @wraps(signal_handler)
     def wrapper(*args, **kwargs):
-        if kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE:
-            return
+        disable = getattr(threadlocal, "auditlog_disabled", False)
+        if not disable:
+            disable = kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE
+        kwargs.setdefault("disable", disable)
         signal_handler(*args, **kwargs)
 
     return wrapper
 
 
-@maybe_disable_on_raw
-def log_create(sender, instance, created, **kwargs):
+@check_disable
+def log_create(sender, instance, created, disable=False, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is first saved to the database.
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if created:
+    if created and not disable:
         changes = model_instance_diff(None, instance)
 
         LogEntry.objects.log_create(
@@ -38,14 +43,14 @@ def log_create(sender, instance, created, **kwargs):
         )
 
 
-@maybe_disable_on_raw
-def log_update(sender, instance, **kwargs):
+@check_disable
+def log_update(sender, instance, disable=False, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is changed and saved to the database.
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if instance.pk is not None:
+    if instance.pk is not None and not disable:
         try:
             old = sender.objects.get(pk=instance.pk)
         except sender.DoesNotExist:
@@ -64,14 +69,14 @@ def log_update(sender, instance, **kwargs):
                 )
 
 
-@maybe_disable_on_raw
-def log_delete(sender, instance, **kwargs):
+@check_disable
+def log_delete(sender, instance, disable=False, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is deleted from the database.
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if instance.pk is not None:
+    if instance.pk is not None and not disable:
         changes = model_instance_diff(instance, None)
 
         LogEntry.objects.log_create(
@@ -81,13 +86,13 @@ def log_delete(sender, instance, **kwargs):
         )
 
 
-@maybe_disable_on_raw
 def make_log_m2m_changes(field_name):
     """Return a handler for m2m_changed with field_name enclosed."""
 
-    def log_m2m_changes(signal, action, **kwargs):
+    @check_disable
+    def log_m2m_changes(signal, action, disable=False, **kwargs):
         """Handle m2m_changed and call LogEntry.objects.log_m2m_changes as needed."""
-        if action not in ["post_add", "post_clear", "post_remove"]:
+        if disable or action not in ["post_add", "post_clear", "post_remove"]:
             return
 
         if action == "post_clear":
