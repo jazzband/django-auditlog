@@ -17,23 +17,22 @@ def check_disable(signal_handler):
 
     @wraps(signal_handler)
     def wrapper(*args, **kwargs):
-        disable = getattr(threadlocal, "auditlog_disabled", False)
-        if not disable:
-            disable = kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE
-        kwargs.setdefault("disable", disable)
-        signal_handler(*args, **kwargs)
+        if not getattr(threadlocal, "auditlog_disabled", False) and not (
+            kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE
+        ):
+            signal_handler(*args, **kwargs)
 
     return wrapper
 
 
 @check_disable
-def log_create(sender, instance, created, disable=False, **kwargs):
+def log_create(sender, instance, created, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is first saved to the database.
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if created and not disable:
+    if created:
         changes = model_instance_diff(None, instance)
 
         LogEntry.objects.log_create(
@@ -44,13 +43,13 @@ def log_create(sender, instance, created, disable=False, **kwargs):
 
 
 @check_disable
-def log_update(sender, instance, disable=False, **kwargs):
+def log_update(sender, instance, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is changed and saved to the database.
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if instance.pk is not None and not disable:
+    if instance.pk is not None:
         try:
             old = sender.objects.get(pk=instance.pk)
         except sender.DoesNotExist:
@@ -70,13 +69,13 @@ def log_update(sender, instance, disable=False, **kwargs):
 
 
 @check_disable
-def log_delete(sender, instance, disable=False, **kwargs):
+def log_delete(sender, instance, **kwargs):
     """
     Signal receiver that creates a log entry when a model instance is deleted from the database.
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if instance.pk is not None and not disable:
+    if instance.pk is not None:
         changes = model_instance_diff(instance, None)
 
         LogEntry.objects.log_create(
@@ -90,9 +89,9 @@ def make_log_m2m_changes(field_name):
     """Return a handler for m2m_changed with field_name enclosed."""
 
     @check_disable
-    def log_m2m_changes(signal, action, disable=False, **kwargs):
+    def log_m2m_changes(signal, action, **kwargs):
         """Handle m2m_changed and call LogEntry.objects.log_m2m_changes as needed."""
-        if disable or action not in ["post_add", "post_clear", "post_remove"]:
+        if action not in ["post_add", "post_clear", "post_remove"]:
             return
 
         if action == "post_clear":
