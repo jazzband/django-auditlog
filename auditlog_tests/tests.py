@@ -1095,7 +1095,7 @@ class RegisterModelSettingsTest(TestCase):
 
         with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
             with self.assertRaisesMessage(
-                    TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
+                TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
             ):
                 self.test_auditlog.register_from_settings()
 
