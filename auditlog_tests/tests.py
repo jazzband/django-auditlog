@@ -1093,6 +1093,12 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
+        with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
+            with self.assertRaisesMessage(
+                    TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
+            ):
+                self.test_auditlog.register_from_settings()
+
     @override_settings(
         AUDITLOG_INCLUDE_ALL_MODELS=True,
         AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
