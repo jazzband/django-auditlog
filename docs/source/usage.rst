@@ -249,8 +249,6 @@ Set actor
 To enable the automatic logging of the actors outside of request context (e.g. in a Celery task), you can use a context
 manager::
 
-.. code-block:: python
-
     from auditlog.context import set_actor
 
     def do_stuff(actor_id: int):
@@ -259,6 +257,7 @@ manager::
             # if your code here leads to creation of LogEntry instances, these will have the actor set
             ...
 
+
 .. versionadded:: 2.1.0
 
 
@@ -266,9 +265,7 @@ Disable auditlog
 ****************
 
 Disable auditlog temporary, for instance if you need to install a large fixture on a live system or cleanup
-corrupt data.
-
-.. code-block:: python
+corrupt data::
 
     from auditlog.context import disable_auditlog
 
