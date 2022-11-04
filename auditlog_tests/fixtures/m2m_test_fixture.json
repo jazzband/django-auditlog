@@ -1,0 +1,15 @@
+[
+  {
+    "model": "auditlog_tests.manyrelatedmodel",
+    "pk": 1,
+    "fields": {
+      "recursive": [1],
+      "related": [1]
+    }
+  },
+  {
+    "model": "auditlog_tests.manyrelatedothermodel",
+    "pk": 1,
+    "fields": {}
+  }
+]
