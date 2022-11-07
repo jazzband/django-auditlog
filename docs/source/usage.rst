@@ -220,6 +220,18 @@ It must be a list or tuple. Each item in this setting can be a:
 
 .. versionadded:: 2.1.0
 
+**AUDITLOG_DISABLE_ON_RAW_SAVE**
+
+Disables logging during raw save. (I.e. for instance using loaddata)
+
+.. note::
+
+    M2M operations will still be logged, since they're never considered `raw`. To disable them
+    you must remove their setting or use the `disable_auditlog` context manager.
+
+.. versionadded:: 2.2.0
+
+
 Actors
 ------
 
@@ -247,10 +259,11 @@ It is recommended to keep all middleware that alters the request loaded before A
     user as actor. To only have some object changes to be logged with the current request's user as actor manual logging is
     required.
 
-Context manager
-***************
+Context managers
+----------------
 
-.. versionadded:: 2.1.0
+Set actor
+*********
 
 To enable the automatic logging of the actors outside of request context (e.g. in a Celery task), you can use a context
 manager::
@@ -262,6 +275,26 @@ manager::
         with set_actor(actor):
             # if your code here leads to creation of LogEntry instances, these will have the actor set
             ...
+
+
+.. versionadded:: 2.1.0
+
+
+Disable auditlog
+****************
+
+Disable auditlog temporary, for instance if you need to install a large fixture on a live system or cleanup
+corrupt data::
+
+    from auditlog.context import disable_auditlog
+
+    with disable_auditlog():
+        # Do things silently here
+        ...
+
+
+.. versionadded:: 2.2.0
+
 
 Object history
 --------------

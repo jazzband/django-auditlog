@@ -12,13 +12,14 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
+from django.core import management
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import dateformat, formats, timezone
 
 from auditlog.admin import LogEntryAdmin
-from auditlog.context import set_actor
+from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
@@ -1093,6 +1094,12 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
+        with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
+            with self.assertRaisesMessage(
+                TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
+            ):
+                self.test_auditlog.register_from_settings()
+
     @override_settings(
         AUDITLOG_INCLUDE_ALL_MODELS=True,
         AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
@@ -1825,3 +1832,54 @@ class TestAccessLog(TestCase):
             log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
         )
         self.assertEqual(log_entry.changes, "null")
+
+
+@override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE=True)
+class DisableTest(TestCase):
+    """
+    All the other tests check logging, so this only needs to test disabled logging.
+    """
+
+    def test_create(self):
+        # Mimic the way imports create objects
+        inst = SimpleModel(
+            text="I am a bit more difficult.", boolean=False, datetime=timezone.now()
+        )
+        SimpleModel.save_base(inst, raw=True)
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_create_with_context_manager(self):
+        with disable_auditlog():
+            inst = SimpleModel.objects.create(text="I am a bit more difficult.")
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_update(self):
+        inst = SimpleModel(
+            text="I am a bit more difficult.", boolean=False, datetime=timezone.now()
+        )
+        SimpleModel.save_base(inst, raw=True)
+        inst.text = "I feel refreshed"
+        inst.save_base(raw=True)
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_update_with_context_manager(self):
+        inst = SimpleModel(
+            text="I am a bit more difficult.", boolean=False, datetime=timezone.now()
+        )
+        SimpleModel.save_base(inst, raw=True)
+        with disable_auditlog():
+            inst.text = "I feel refreshed"
+            inst.save()
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_m2m(self):
+        """
+        Create m2m from fixture and check that nothing was logged.
+        This only works with context manager
+        """
+        with disable_auditlog():
+            management.call_command("loaddata", "m2m_test_fixture.json", verbosity=0)
+        recursive = ManyRelatedModel.objects.get(pk=1)
+        self.assertEqual(0, LogEntry.objects.get_for_object(recursive).count())
+        related = ManyRelatedOtherModel.objects.get(pk=1)
+        self.assertEqual(0, LogEntry.objects.get_for_object(related).count())

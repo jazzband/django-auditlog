@@ -64,3 +64,15 @@ def _set_actor(user, sender, instance, signal_duid, **kwargs):
             instance.actor = user
 
         instance.remote_addr = auditlog["remote_addr"]
+
+
+@contextlib.contextmanager
+def disable_auditlog():
+    threadlocal.auditlog_disabled = True
+    try:
+        yield
+    finally:
+        try:
+            del threadlocal.auditlog_disabled
+        except AttributeError:
+            pass

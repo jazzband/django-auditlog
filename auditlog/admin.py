@@ -6,6 +6,7 @@ from auditlog.mixins import LogEntryAdminMixin
 from auditlog.models import LogEntry
 
 
+@admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     list_select_related = ["content_type", "actor"]
     list_display = ["created", "resource_url", "action", "msg_short", "user_url"]
@@ -27,6 +28,3 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     def has_add_permission(self, request):
         # As audit admin doesn't allow log creation from admin
         return False
-
-
-admin.site.register(LogEntry, LogEntryAdmin)

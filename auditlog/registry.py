@@ -270,7 +270,8 @@ class AuditlogModelRegistry:
         """
         if not isinstance(settings.AUDITLOG_INCLUDE_ALL_MODELS, bool):
             raise TypeError("Setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be a boolean")
-
+        if not isinstance(settings.AUDITLOG_DISABLE_ON_RAW_SAVE, bool):
+            raise TypeError("Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean")
         if not isinstance(settings.AUDITLOG_EXCLUDE_TRACKING_MODELS, (list, tuple)):
             raise TypeError(
                 "Setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS' must be a list or tuple"
