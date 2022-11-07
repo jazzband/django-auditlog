@@ -7,6 +7,7 @@
 - feat: New context manager `disable_auditlog` to turn off logging and a new setting `AUDITLOG_DISABLE_ON_RAW_SAVE`
   to disable it during raw-save operations like loaddata. [#446](https://github.com/jazzband/django-auditlog/pull/446)
 - Python: Confirm Python 3.11 support ([#447](https://github.com/jazzband/django-auditlog/pull/447))
+- feat: Replace the `django.utils.timezone.utc` by `datetime.timezone.utc`. [#448](https://github.com/jazzband/django-auditlog/pull/448)
 
 #### Fixes
 

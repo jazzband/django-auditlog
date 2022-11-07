@@ -1,6 +1,7 @@
 import ast
 import json
 from copy import deepcopy
+from datetime import timezone
 from typing import Any, Dict, List
 
 from dateutil import parser
@@ -12,7 +13,7 @@ from django.core import serializers
 from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
-from django.utils import formats, timezone
+from django.utils import formats
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 

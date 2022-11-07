@@ -2,6 +2,7 @@ import datetime
 import itertools
 import json
 import warnings
+from datetime import timezone
 from unittest import mock
 
 import freezegun
@@ -16,7 +17,8 @@ from django.core import management
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
-from django.utils import dateformat, formats, timezone
+from django.utils import dateformat, formats
+from django.utils import timezone as django_timezone
 
 from auditlog.admin import LogEntryAdmin
 from auditlog.context import disable_auditlog, set_actor
@@ -618,8 +620,8 @@ class AdditionalDataModelTest(TestCase):
 class DateTimeFieldModelTest(TestCase):
     """Tests if DateTimeField changes are recognised correctly"""
 
-    utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
-    now = timezone.now()
+    utc_plus_one = django_timezone.get_fixed_timezone(datetime.timedelta(hours=1))
+    now = django_timezone.now()
 
     def setUp(self):
         super().setUp()
@@ -788,7 +790,7 @@ class DateTimeFieldModelTest(TestCase):
                 " DATETIME_FORMAT"
             ),
         )
-        timestamp = timezone.now()
+        timestamp = django_timezone.now()
         dtm.timestamp = timestamp
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
@@ -912,7 +914,9 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # Change with naive field doesnt raise error
-        dtm.naive_dt = timezone.make_naive(timezone.now(), timezone=timezone.utc)
+        dtm.naive_dt = django_timezone.make_naive(
+            django_timezone.now(), timezone=timezone.utc
+        )
         dtm.save()
 
 
@@ -1588,7 +1592,7 @@ class ModelInstanceDiffTest(TestCase):
 class TestModelSerialization(TestCase):
     def setUp(self):
         super().setUp()
-        self.test_date = datetime.datetime(2022, 1, 1, 12, tzinfo=datetime.timezone.utc)
+        self.test_date = datetime.datetime(2022, 1, 1, 12, tzinfo=timezone.utc)
         self.test_date_string = datetime.datetime.strftime(
             self.test_date, "%Y-%m-%dT%XZ"
         )
@@ -1843,7 +1847,9 @@ class DisableTest(TestCase):
     def test_create(self):
         # Mimic the way imports create objects
         inst = SimpleModel(
-            text="I am a bit more difficult.", boolean=False, datetime=timezone.now()
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
         )
         SimpleModel.save_base(inst, raw=True)
         self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
@@ -1855,7 +1861,9 @@ class DisableTest(TestCase):
 
     def test_update(self):
         inst = SimpleModel(
-            text="I am a bit more difficult.", boolean=False, datetime=timezone.now()
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
         )
         SimpleModel.save_base(inst, raw=True)
         inst.text = "I feel refreshed"
@@ -1864,7 +1872,9 @@ class DisableTest(TestCase):
 
     def test_update_with_context_manager(self):
         inst = SimpleModel(
-            text="I am a bit more difficult.", boolean=False, datetime=timezone.now()
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
         )
         SimpleModel.save_base(inst, raw=True)
         with disable_auditlog():
