@@ -1,5 +1,7 @@
 # Changes
 
+## 2.2.0 (2022-10-07)
+
 #### Improvements
 - feat: Add `ACCESS` action to `LogEntry` model and allow object access to be logged. ([#436](https://github.com/jazzband/django-auditlog/pull/436))
 - feat: Add `serialized_data` field on `LogEntry` model. ([#412](https://github.com/jazzband/django-auditlog/pull/412))
