@@ -37,6 +37,25 @@ It is recommended to place the register code (``auditlog.register(MyModel)``) at
 This ensures that every time your model is imported it will also be registered to log changes. Auditlog makes sure that
 each model is only registered once, otherwise duplicate log entries would occur.
 
+
+**Logging access**
+
+By default, Auditlog will only log changes to your model instances. If you want to log access to your model instances as well, Auditlog provides a mixin class for that purpose. Simply add the :py:class:`auditlog.mixins.LogAccessMixin` to your class based view and Auditlog will log access to your model instances. The mixin expects your view to have a ``get_object`` method that returns the model instance for which access shall be logged - this is usually the case for DetailViews and UpdateViews.
+
+A DetailView utilizing the LogAccessMixin could look like the following example:
+
+.. code-block:: python
+
+    from django.views.generic import DetailView
+
+    from auditlog.mixins import LogAccessMixin
+
+    class MyModelDetailView(LogAccessMixin, DetailView):
+        model = MyModel
+
+        # View code goes here
+
+
 **Excluding fields**
 
 Fields that are excluded will not trigger saving a new log entry and will not show up in the recorded changes.

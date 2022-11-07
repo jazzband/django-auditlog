@@ -85,6 +85,21 @@ def log_delete(sender, instance, **kwargs):
         )
 
 
+def log_access(sender, instance, **kwargs):
+    """
+    Signal receiver that creates a log entry when a model instance is accessed in a AccessLogDetailView.
+
+    Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
+    """
+    if instance.pk is not None:
+
+        LogEntry.objects.log_create(
+            instance,
+            action=LogEntry.Action.ACCESS,
+            changes="null",
+        )
+
+
 def make_log_m2m_changes(field_name):
     """Return a handler for m2m_changed with field_name enclosed."""
 
