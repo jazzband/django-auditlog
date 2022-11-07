@@ -650,7 +650,7 @@ class DateTimeFieldModelTest(TestCase):
         self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
         # Change timestamp to same datetime and timezone
-        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=datetime.timezone.utc)
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         dtm.timestamp = timestamp
         dtm.date = datetime.date(2017, 1, 10)
         dtm.time = datetime.time(12, 0)
@@ -682,7 +682,7 @@ class DateTimeFieldModelTest(TestCase):
         self.assertEqual(dtm.history.count(), 1, msg="There is one log entry")
 
     def test_model_with_different_datetime(self):
-        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=datetime.timezone.utc)
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
         dtm = DateTimeFieldModel(
@@ -748,7 +748,7 @@ class DateTimeFieldModelTest(TestCase):
         self.assertEqual(dtm.history.count(), 2, msg="There are two log entries")
 
     def test_model_with_different_time_and_timezone(self):
-        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=datetime.timezone.utc)
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
         time = datetime.time(12, 0)
         dtm = DateTimeFieldModel(
