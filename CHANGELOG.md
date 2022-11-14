@@ -1,5 +1,8 @@
 # Changes
 
+#### Fixes
+- fix: Make log entries read-only in the admin. ([#449](https://github.com/jazzband/django-auditlog/pull/449))
+
 ## 2.2.0 (2022-10-07)
 
 #### Improvements
