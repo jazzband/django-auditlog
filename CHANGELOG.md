@@ -1,7 +1,11 @@
 # Changes
 
+## Next Release
+
 #### Fixes
+
 - fix: Make log entries read-only in the admin. ([#449](https://github.com/jazzband/django-auditlog/pull/449))
+- fix: Handle IPv6 addresses in `X-Forwarded-For`. ([#457](https://github.com/jazzband/django-auditlog/pull/457))
 
 ## 2.2.0 (2022-10-07)
 
