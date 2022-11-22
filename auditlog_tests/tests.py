@@ -450,6 +450,11 @@ class MiddlewareTest(TestCase):
             ({}, "127.0.0.1"),
             ({"HTTP_X_FORWARDED_FOR": "127.0.0.2"}, "127.0.0.2"),
             ({"HTTP_X_FORWARDED_FOR": "127.0.0.3:1234"}, "127.0.0.3"),
+            ({"HTTP_X_FORWARDED_FOR": "2606:4700:4700::1111"}, "2606:4700:4700::1111"),
+            (
+                {"HTTP_X_FORWARDED_FOR": "[2606:4700:4700::1001]:1234"},
+                "2606:4700:4700::1001",
+            ),
         ]
         for headers, expected_remote_addr in tests:
             with self.subTest(headers=headers):
