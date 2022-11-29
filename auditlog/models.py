@@ -464,10 +464,13 @@ class LogEntry(models.Model):
                 except AttributeError:
                     # if the field is a relationship it has no internal type and exclude it
                     continue
-                
+
                 if field_type == "ManyToManyField":
                     values_display = values
-                    values_display['objects'] = [f"{i[:140]}..." if len(i) >140 else i for i in values['objects'] ]
+                    values_display["objects"] = [
+                        f"{i[:140]}..." if len(i) > 140 else i
+                        for i in values["objects"]
+                    ]
                     verbose_name = model_fields["mapping_fields"].get(
                         field.name, getattr(field, "verbose_name", field.name)
                     )
