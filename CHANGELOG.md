@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Fixes
+
+- fix: Make sure `LogEntry.changes_dict()` returns an empty dict instead of `None` when `json.loads()` returns `None`. ([#472](https://github.com/jazzband/django-auditlog/pull/472))
+
 ## 2.2.1 (2022-11-28)
 
 #### Fixes

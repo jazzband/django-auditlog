@@ -387,7 +387,7 @@ class LogEntry(models.Model):
         :return: The changes recorded in this log entry as a dictionary object.
         """
         try:
-            return json.loads(self.changes)
+            return json.loads(self.changes) or {}
         except ValueError:
             return {}
 

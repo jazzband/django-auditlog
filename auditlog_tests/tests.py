@@ -1841,6 +1841,7 @@ class TestAccessLog(TestCase):
             log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
         )
         self.assertEqual(log_entry.changes, "null")
+        self.assertEqual(log_entry.changes_dict, {})
 
 
 @override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE=True)
