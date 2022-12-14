@@ -17,6 +17,7 @@ from django.utils import formats
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
+from auditlog.cid import get_cid
 from auditlog.diff import mask_str
 
 
@@ -75,6 +76,9 @@ class LogEntryManager(models.Manager):
                         content_type=kwargs.get("content_type"),
                         object_pk=kwargs.get("object_pk", ""),
                     ).delete()
+
+            # set correlation id
+            kwargs.setdefault("correlation_id", get_cid())
             return self.create(**kwargs)
         return None
 
@@ -350,6 +354,9 @@ class LogEntry(models.Model):
         null=True,
         related_name="+",
         verbose_name=_("actor"),
+    )
+    correlation_id = models.CharField(
+        max_length=255, db_index=True, blank=True, verbose_name=_("correlation id")
     )
     remote_addr = models.GenericIPAddressField(
         blank=True, null=True, verbose_name=_("remote address")
