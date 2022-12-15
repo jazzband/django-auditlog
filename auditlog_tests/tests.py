@@ -200,6 +200,24 @@ class SimpleModelTest(TestCase):
             log_entry._state.db, "default", msg=msg
         )  # must be created in default database
 
+    def test_default_timestamp(self):
+        start = django_timezone.now()
+        self.test_recreate()
+        end = django_timezone.now()
+        history = self.obj.history.latest()
+        self.assertTrue(start <= history.timestamp <= end)
+
+    def test_manual_timestamp(self):
+        timestamp = datetime.datetime(1999, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        LogEntry.objects.log_create(
+            instance=self.obj,
+            timestamp=timestamp,
+            changes="foo bar",
+            action=LogEntry.Action.UPDATE,
+        )
+        history = self.obj.history.filter(timestamp=timestamp, changes="foo bar")
+        self.assertTrue(history.exists())
+
 
 class NoActorMixin:
     def check_create_log_entry(self, obj, log_entry):
