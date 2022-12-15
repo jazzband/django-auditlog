@@ -1,5 +1,3 @@
-import json
-
 from django import urls as urlresolvers
 from django.conf import settings
 from django.contrib import admin
