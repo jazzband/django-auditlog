@@ -54,7 +54,7 @@ class LogEntryAdminMixin:
     def msg_short(self, obj):
         if obj.action in [LogEntry.Action.DELETE, LogEntry.Action.ACCESS]:
             return ""  # delete
-        changes = json.loads(obj.changes)
+        changes = obj.changes_dict
         s = "" if len(changes) == 1 else "s"
         fields = ", ".join(changes.keys())
         if len(fields) > MAX:
@@ -64,7 +64,7 @@ class LogEntryAdminMixin:
 
     @admin.display(description=_("Changes"))
     def msg(self, obj):
-        changes = json.loads(obj.changes)
+        changes = obj.changes_dict
 
         atom_changes = {}
         m2m_changes = {}
