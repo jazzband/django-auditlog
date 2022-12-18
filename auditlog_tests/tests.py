@@ -621,7 +621,7 @@ class SimpleMappingModelTest(TestCase):
         )
 
 
-class SimpeMaskedFieldsModelTest(TestCase):
+class SimpleMaskedFieldsModelTest(TestCase):
     """Log masked changes for fields in mask_fields"""
 
     def test_register_mask_fields(self):
@@ -1242,7 +1242,7 @@ class ChoicesFieldModelTest(TestCase):
         assert "related_models" in history.changes_display_dict
 
 
-class CharfieldTextfieldModelTest(TestCase):
+class CharFieldTextFieldModelTest(TestCase):
     def setUp(self):
         self.PLACEHOLDER_LONGCHAR = "s" * 255
         self.PLACEHOLDER_LONGTEXTFIELD = "s" * 1000
@@ -1359,6 +1359,23 @@ class AdminPanelTest(TestCase):
             with self.settings(TIME_ZONE=tz):
                 created = self.admin.created(log_entry)
                 self.assertEqual(created.strftime("%Y-%m-%d %H:%M:%S"), timestamp)
+
+    def test_cid(self):
+        self.client.force_login(self.user)
+        expected_response = '<a href="/admin/auditlog/logentry/?cid=123" '
+        expected_response += (
+            'title="Click to filter by records with this correlation id">'
+        )
+        expected_response += "123"
+        expected_response += "</a>"
+
+        log_entry = self.obj.history.latest()
+        log_entry.cid = "123"
+        log_entry.save()
+
+        res = self.client.get("/admin/auditlog/logentry/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(expected_response, res.rendered_content)
 
 
 class DiffMsgTest(TestCase):
