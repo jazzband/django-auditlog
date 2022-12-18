@@ -483,31 +483,31 @@ class MiddlewareTest(TestCase):
                     self.middleware._get_remote_addr(request), expected_remote_addr
                 )
 
-    def test_get_cid_from_header(self):
-        header = "HTTP_" + str(settings.AUDITLOG_CID_HEADER).upper().replace("-", "_")
-        cid = "random_CID"
-        self.factory.get("/", **{header: cid})
-
-        self.assertEqual(get_cid(), cid)
-
-    def test_cid_disabled(self):
+    def test_cid_from_header(self):
         header = "HTTP_" + str(settings.AUDITLOG_CID_HEADER).upper().replace("-", "_")
         cid = "random_CID"
 
-        with self.settings(AUDITLOG_CID_HEADER=None):
-            self.factory.get("/", **{header: cid})
+        _settings = [
+            # these two tuples test reading the cid from the header defined in the settings
+            ({}, cid),
+            ({"AUDITLOG_CID_HEADER": None}, None),
+            # these two tuples test using a custom getter.
+            # Here, we don't necessarily care about the cid that was set in set_cid
+            (
+                {
+                    "AUDITLOG_CID_GETTER": "auditlog_tests.fixtures.custom_get_cid.get_cid"
+                },
+                custom_get_cid(),
+            ),
+            ({"AUDITLOG_CID_GETTER": custom_get_cid}, custom_get_cid()),
+        ]
+        for setting, expected_result in _settings:
+            with self.subTest():
+                with self.settings(**setting):
+                    request = self.factory.get("/", **{header: cid})
+                    self.middleware(request)
 
-        self.assertIsNone(get_cid())
-
-    def test_cid_custom_getter_using_reference_to_callable(self):
-        with self.settings(
-            AUDITLOG_CID_GETTER="auditlog_tests.fixtures.custom_get_cid.get_cid"
-        ):
-            self.assertEqual(get_cid(), custom_get_cid())
-
-    def test_cid_custom_getter_using_callable(self):
-        with self.settings(AUDITLOG_CID_GETTER=custom_get_cid):
-            self.assertEqual(get_cid(), custom_get_cid())
+                    self.assertEqual(get_cid(), expected_result)
 
 
 class SimpleIncludeModelTest(TestCase):

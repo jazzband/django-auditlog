@@ -9,11 +9,15 @@ correlation_id = ContextVar("auditlog_correlation_id", default=None)
 
 
 def set_cid(request: Optional[HttpRequest] = None) -> None:
+    cid = None
     header = settings.AUDITLOG_CID_HEADER
 
     if header and request and header in request.headers or header in request.META:
         cid = request.headers.get(header)
-        correlation_id.set(cid)
+
+    # in theory, we shouldn't have to set the cid back to None because each request should be in a new thread.
+    # however, this was causing some tests to fail.
+    correlation_id.set(cid)
 
 
 def _get_cid() -> Union[str, None]:
