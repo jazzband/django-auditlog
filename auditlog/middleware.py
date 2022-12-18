@@ -1,5 +1,6 @@
 import contextlib
 
+from auditlog.cid import set_cid
 from auditlog.context import set_actor
 
 
@@ -31,6 +32,8 @@ class AuditlogMiddleware:
 
     def __call__(self, request):
         remote_addr = self._get_remote_addr(request)
+
+        set_cid(request)
 
         if hasattr(request, "user") and request.user.is_authenticated:
             context = set_actor(actor=request.user, remote_addr=remote_addr)

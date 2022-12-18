@@ -21,11 +21,13 @@ from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
 
 from auditlog.admin import LogEntryAdmin
+from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
+from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -480,6 +482,32 @@ class MiddlewareTest(TestCase):
                 self.assertEqual(
                     self.middleware._get_remote_addr(request), expected_remote_addr
                 )
+
+    def test_get_cid_from_header(self):
+        header = "HTTP_" + str(settings.AUDITLOG_CID_HEADER).upper().replace("-", "_")
+        cid = "random_CID"
+        self.factory.get("/", **{header: cid})
+
+        self.assertEqual(get_cid(), cid)
+
+    def test_cid_disabled(self):
+        header = "HTTP_" + str(settings.AUDITLOG_CID_HEADER).upper().replace("-", "_")
+        cid = "random_CID"
+
+        with self.settings(AUDITLOG_CID_HEADER=None):
+            self.factory.get("/", **{header: cid})
+
+        self.assertIsNone(get_cid())
+
+    def test_cid_custom_getter_using_reference_to_callable(self):
+        with self.settings(
+            AUDITLOG_CID_GETTER="auditlog_tests.fixtures.custom_get_cid.get_cid"
+        ):
+            self.assertEqual(get_cid(), custom_get_cid())
+
+    def test_cid_custom_getter_using_callable(self):
+        with self.settings(AUDITLOG_CID_GETTER=custom_get_cid):
+            self.assertEqual(get_cid(), custom_get_cid())
 
 
 class SimpleIncludeModelTest(TestCase):

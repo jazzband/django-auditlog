@@ -37,6 +37,8 @@ class LogEntryManager(models.Manager):
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
         """
+        from auditlog.cid import get_cid
+
         changes = kwargs.get("changes", None)
         pk = self._get_pk_value(instance)
 
@@ -76,6 +78,9 @@ class LogEntryManager(models.Manager):
                         content_type=kwargs.get("content_type"),
                         object_pk=kwargs.get("object_pk", ""),
                     ).delete()
+
+            # set correlation id
+            kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
         return None
 
@@ -351,6 +356,9 @@ class LogEntry(models.Model):
         null=True,
         related_name="+",
         verbose_name=_("actor"),
+    )
+    cid = models.CharField(
+        max_length=255, db_index=True, blank=True, verbose_name=_("Correlation ID")
     )
     remote_addr = models.GenericIPAddressField(
         blank=True, null=True, verbose_name=_("remote address")
