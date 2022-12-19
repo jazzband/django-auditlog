@@ -6,6 +6,7 @@ from django.conf import settings
 from auditlog.context import threadlocal
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
+from auditlog.signals import post_log, pre_log
 
 
 def check_disable(signal_handler):
@@ -33,12 +34,12 @@ def log_create(sender, instance, created, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if created:
-        changes = model_instance_diff(None, instance)
-
-        LogEntry.objects.log_create(
-            instance,
+        _create_log_entry(
             action=LogEntry.Action.CREATE,
-            changes=json.dumps(changes),
+            instance=instance,
+            sender=sender,
+            diff_old=None,
+            diff_new=instance,
         )
 
 
@@ -50,22 +51,16 @@ def log_update(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
-        try:
-            old = sender.objects.get(pk=instance.pk)
-        except sender.DoesNotExist:
-            pass
-        else:
-            new = instance
-            update_fields = kwargs.get("update_fields", None)
-            changes = model_instance_diff(old, new, fields_to_check=update_fields)
-
-            # Log an entry only if there are changes
-            if changes:
-                LogEntry.objects.log_create(
-                    instance,
-                    action=LogEntry.Action.UPDATE,
-                    changes=json.dumps(changes),
-                )
+        update_fields = kwargs.get("update_fields", None)
+        old = sender.objects.filter(pk=instance.pk).first()
+        _create_log_entry(
+            action=LogEntry.Action.UPDATE,
+            instance=instance,
+            sender=sender,
+            diff_old=old,
+            diff_new=instance,
+            fields_to_check=update_fields,
+        )
 
 
 @check_disable
@@ -76,12 +71,12 @@ def log_delete(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
-        changes = model_instance_diff(instance, None)
-
-        LogEntry.objects.log_create(
-            instance,
+        _create_log_entry(
             action=LogEntry.Action.DELETE,
-            changes=json.dumps(changes),
+            instance=instance,
+            sender=sender,
+            diff_old=instance,
+            diff_new=None,
         )
 
 
@@ -92,12 +87,48 @@ def log_access(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
-
-        LogEntry.objects.log_create(
-            instance,
+        _create_log_entry(
             action=LogEntry.Action.ACCESS,
-            changes="null",
+            instance=instance,
+            sender=sender,
+            diff_old=None,
+            diff_new=None,
+            force_log=True,
         )
+
+
+def _create_log_entry(
+    action, instance, sender, diff_old, diff_new, fields_to_check=None, force_log=False
+):
+    pre_log_results = pre_log.send(
+        sender,
+        instance=instance,
+        action=action,
+    )
+    error = None
+    try:
+        changes = model_instance_diff(
+            diff_old, diff_new, fields_to_check=fields_to_check
+        )
+
+        if force_log or changes:
+            LogEntry.objects.log_create(
+                instance,
+                action=action,
+                changes=json.dumps(changes),
+            )
+    except Exception as e:
+        error = e
+    finally:
+        post_log.send(
+            sender,
+            instance=instance,
+            action=action,
+            error=error,
+            pre_log_results=pre_log_results,
+        )
+        if error:
+            raise error
 
 
 def make_log_m2m_changes(field_name):
