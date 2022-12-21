@@ -398,7 +398,7 @@ class ManyRelatedModelTest(TestCase):
         )
 
 
-class MiddlewareTest(TestCase):
+class MiddlewareTest(SimpleModelTest):
     """
     Test the middleware responsible for connecting and disconnecting the signals used in automatic logging.
     """
@@ -483,7 +483,7 @@ class MiddlewareTest(TestCase):
                     self.middleware._get_remote_addr(request), expected_remote_addr
                 )
 
-    def test_cid_from_header(self):
+    def test_cid(self):
         header = "HTTP_" + str(settings.AUDITLOG_CID_HEADER).upper().replace("-", "_")
         cid = "random_CID"
 
@@ -507,6 +507,10 @@ class MiddlewareTest(TestCase):
                     request = self.factory.get("/", **{header: cid})
                     self.middleware(request)
 
+                    obj = self.make_object()
+                    history = obj.history.get(action=LogEntry.Action.CREATE)
+
+                    self.assertEqual(history.cid, expected_result)
                     self.assertEqual(get_cid(), expected_result)
 
 
@@ -1362,12 +1366,10 @@ class AdminPanelTest(TestCase):
 
     def test_cid(self):
         self.client.force_login(self.user)
-        expected_response = '<a href="/admin/auditlog/logentry/?cid=123" '
-        expected_response += (
-            'title="Click to filter by records with this correlation id">'
+        expected_response = (
+            '<a href="/admin/auditlog/logentry/?cid=123" '
+            'title="Click to filter by records with this correlation id">123</a>'
         )
-        expected_response += "123"
-        expected_response += "</a>"
 
         log_entry = self.obj.history.latest()
         log_entry.cid = "123"

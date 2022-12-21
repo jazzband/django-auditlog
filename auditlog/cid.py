@@ -1,5 +1,5 @@
 from contextvars import ContextVar
-from typing import Optional, Union
+from typing import Optional
 
 from django.conf import settings
 from django.http import HttpRequest
@@ -20,11 +20,11 @@ def set_cid(request: Optional[HttpRequest] = None) -> None:
     correlation_id.set(cid)
 
 
-def _get_cid() -> Union[str, None]:
+def _get_cid() -> Optional[str]:
     return correlation_id.get()
 
 
-def get_cid() -> Union[str, None]:
+def get_cid() -> Optional[str]:
     method = settings.AUDITLOG_CID_GETTER
     if not method:
         return _get_cid()
