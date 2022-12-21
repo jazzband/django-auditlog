@@ -247,12 +247,15 @@ Disables logging during raw save. (I.e. for instance using loaddata)
 **AUDITLOG_CID_HEADER**
 
 The request header containing the Correlation ID value to use in all log entries created as a result of the request.
+The value can of in the format `HTTP_MY_HEADER` or `my-header`.
 
 .. versionadded:: 3.0.0
 
 **AUDITLOG_CID_GETTER**
 
-The function to use to retrieve the Correlation ID.
+The function to use to retrieve the Correlation ID. The value can be a callable or a string import path.
+
+If the value is `None`, the default getter will be used.
 
 .. versionadded:: 3.0.0
 
