@@ -248,7 +248,7 @@ Disables logging during raw save. (I.e. for instance using loaddata)
 
 The request header containing the Correlation ID value to use in all log entries created as a result of the request.
 
-.. versionadded:: 2.3.0
+.. versionadded:: 3.0.0
 
 **AUDITLOG_CID_GETTER**
 
