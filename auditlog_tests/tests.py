@@ -398,7 +398,7 @@ class ManyRelatedModelTest(TestCase):
         )
 
 
-class MiddlewareTest(SimpleModelTest):
+class MiddlewareTest(TestCase):
     """
     Test the middleware responsible for connecting and disconnecting the signals used in automatic logging.
     """
@@ -507,7 +507,7 @@ class MiddlewareTest(SimpleModelTest):
                     request = self.factory.get("/", **{header: cid})
                     self.middleware(request)
 
-                    obj = self.make_object()
+                    obj = SimpleModel.objects.create(text="I am not difficult.")
                     history = obj.history.get(action=LogEntry.Action.CREATE)
 
                     self.assertEqual(history.cid, expected_result)
