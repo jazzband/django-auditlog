@@ -254,7 +254,7 @@ The request header containing the Correlation ID value to use in all log entries
 
 The function to use to retrieve the Correlation ID.
 
-.. versionadded:: 2.3.0
+.. versionadded:: 3.0.0
 
 Actors
 ------
