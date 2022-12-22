@@ -484,12 +484,14 @@ class MiddlewareTest(TestCase):
                 )
 
     def test_cid(self):
-        header = "HTTP_" + str(settings.AUDITLOG_CID_HEADER).upper().replace("-", "_")
+        header = str(settings.AUDITLOG_CID_HEADER).lstrip("HTTP_").replace("_", "-")
+        header_meta = "HTTP_" + header.upper().replace("-", "_")
         cid = "random_CID"
 
         _settings = [
-            # these two tuples test reading the cid from the header defined in the settings
-            ({}, cid),
+            # these tuples test reading the cid from the header defined in the settings
+            ({"AUDITLOG_CID_HEADER": header}, cid),  # x-correlation-id
+            ({"AUDITLOG_CID_HEADER": header_meta}, cid),  # HTTP_X_CORRELATION_ID
             ({"AUDITLOG_CID_HEADER": None}, None),
             # these two tuples test using a custom getter.
             # Here, we don't necessarily care about the cid that was set in set_cid
@@ -504,7 +506,7 @@ class MiddlewareTest(TestCase):
         for setting, expected_result in _settings:
             with self.subTest():
                 with self.settings(**setting):
-                    request = self.factory.get("/", **{header: cid})
+                    request = self.factory.get("/", **{header_meta: cid})
                     self.middleware(request)
 
                     obj = SimpleModel.objects.create(text="I am not difficult.")
