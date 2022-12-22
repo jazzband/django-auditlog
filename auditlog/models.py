@@ -101,6 +101,7 @@ class LogEntryManager(models.Manager):
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
         """
+        from auditlog.cid import get_cid
 
         pk = self._get_pk_value(instance)
         if changed_queryset is not None:
@@ -128,6 +129,7 @@ class LogEntryManager(models.Manager):
                     }
                 }
             )
+            kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
 
         return None
