@@ -21,11 +21,17 @@ def set_cid(request: Optional[HttpRequest] = None) -> None:
     cid = None
     header = settings.AUDITLOG_CID_HEADER
 
-    if header and request and header in request.headers or header in request.META:
-        cid = request.headers.get(header)
+    if header and request:
+        if header in request.headers:
+            cid = request.headers.get(header)
+        elif header in request.META:
+            cid = request.META.get(header)
 
-    # in theory, we shouldn't have to set the cid back to None because each request should be in a new thread.
-    # however, this was causing some tests to fail.
+    # Ideally, this line should be nested inside the if statement.
+    # However, because the tests do not run requests in multiple threads,
+    # we have to always set the value of the cid,
+    # even if the request does not have the header present,
+    # in which case it will be set to None
     correlation_id.set(cid)
 
 
