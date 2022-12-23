@@ -3,6 +3,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import FieldDoesNotExist
 from django.forms.utils import pretty_name
+from django.http import HttpRequest
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
@@ -17,6 +18,9 @@ MAX = 75
 
 
 class LogEntryAdminMixin:
+    request: HttpRequest
+    CID_TITLE = _("Click to filter by records with this correlation id")
+
     @admin.display(description=_("Created"))
     def created(self, obj):
         return localtime(obj.timestamp)
@@ -112,6 +116,15 @@ class LogEntryAdminMixin:
 
         return mark_safe("".join(msg))
 
+    @admin.display(description="Correlation ID")
+    def cid_url(self, obj):
+        cid = obj.cid
+        if cid:
+            url = self._add_query_parameter("cid", cid)
+            return format_html(
+                '<a href="{}" title="{}">{}</a>', url, self.CID_TITLE, cid
+            )
+
     def _format_header(self, *labels):
         return format_html(
             "".join(["<tr>", "<th>{}</th>" * len(labels), "</tr>"]), *labels
@@ -137,6 +150,12 @@ class LogEntryAdminMixin:
             return pretty_name(getattr(field, "verbose_name", field_name))
         except FieldDoesNotExist:
             return pretty_name(field_name)
+
+    def _add_query_parameter(self, key: str, value: str):
+        full_path = self.request.get_full_path()
+        delimiter = "&" if "?" in full_path else "?"
+
+        return f"{full_path}{delimiter}{key}={value}"
 
 
 class LogAccessMixin:

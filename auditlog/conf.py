@@ -20,3 +20,10 @@ settings.AUDITLOG_INCLUDE_TRACKING_MODELS = getattr(
 settings.AUDITLOG_DISABLE_ON_RAW_SAVE = getattr(
     settings, "AUDITLOG_DISABLE_ON_RAW_SAVE", False
 )
+
+# CID
+
+settings.AUDITLOG_CID_HEADER = getattr(
+    settings, "AUDITLOG_CID_HEADER", "x-correlation-id"
+)
+settings.AUDITLOG_CID_GETTER = getattr(settings, "AUDITLOG_CID_GETTER", None)
