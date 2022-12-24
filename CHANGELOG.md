@@ -4,7 +4,8 @@
 
 #### Improvements
 
-- feat: Added support for Correlation ID
+- feat: Added support for Correlation ID. ([#481](https://github.com/jazzband/django-auditlog/pull/481))
+- feat: Added pre-log and post-log signals. ([#483](https://github.com/jazzband/django-auditlog/pull/483))
 
 #### Fixes
 
