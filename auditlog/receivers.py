@@ -117,7 +117,7 @@ def _create_log_entry(
                 action=action,
                 changes=json.dumps(changes),
             )
-    except Exception as e:
+    except BaseException as e:
         error = e
     finally:
         post_log.send(
