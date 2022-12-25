@@ -2014,9 +2014,10 @@ class SignalTests(TestCase):
         pre_log.connect(pre_log_receiver)
         post_log.connect(post_log_receiver)
 
-        self.obj.delete()
+        self.obj.text = "Changed Text"
+        self.obj.save()
 
-        self.assertSignals(LogEntry.Action.DELETE)
+        self.assertSignals(LogEntry.Action.UPDATE)
 
     def test_custom_signals_delete(self):
         def pre_log_receiver(sender, instance, action, **_kwargs):
@@ -2035,36 +2036,43 @@ class SignalTests(TestCase):
         pre_log.connect(pre_log_receiver)
         post_log.connect(post_log_receiver)
 
-        self.obj.text = "Changed Text"
-        self.obj.save()
+        self.obj.delete()
 
-        self.assertSignals(LogEntry.Action.UPDATE)
+        self.assertSignals(LogEntry.Action.DELETE)
 
     @patch("auditlog.receivers.LogEntry.objects")
     def test_signals_errors(self, log_entry_objects_mock):
-        log_entry_objects_mock.log_create.side_effect = ValueError("Testing")
-
-        try:
-            SimpleModel.objects.create(text="I am not difficult.")
-            self.assertFalse(True)
-        except ValueError:
+        class CustomSignalError(BaseException):
             pass
 
-        try:
+        def post_log_receiver(error, **_kwargs):
+            self.my_post_log_data["my_error"] = error
+
+        post_log.connect(post_log_receiver)
+
+        # create
+        error_create = CustomSignalError(LogEntry.Action.CREATE)
+        log_entry_objects_mock.log_create.side_effect = error_create
+        with self.assertRaises(CustomSignalError):
+            SimpleModel.objects.create(text="I am not difficult.")
+        self.assertEqual(self.my_post_log_data["my_error"], error_create)
+
+        # update
+        error_update = CustomSignalError(LogEntry.Action.UPDATE)
+        log_entry_objects_mock.log_create.side_effect = error_update
+        with self.assertRaises(CustomSignalError):
             obj = SimpleModel.objects.get(pk=self.obj.pk)
             obj.text = "updating"
             obj.save()
-            self.assertFalse(True)
-        except ValueError:
-            pass
+        self.assertEqual(self.my_post_log_data["my_error"], error_update)
 
-        try:
+        # delete
+        error_delete = CustomSignalError(LogEntry.Action.DELETE)
+        log_entry_objects_mock.log_create.side_effect = error_delete
+        with self.assertRaises(CustomSignalError):
             obj = SimpleModel.objects.get(pk=self.obj.pk)
-            obj.text = "updating"
             obj.delete()
-            self.assertFalse(True)
-        except ValueError:
-            pass
+        self.assertEqual(self.my_post_log_data["my_error"], error_delete)
 
 
 @override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE=True)
