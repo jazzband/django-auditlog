@@ -1930,7 +1930,7 @@ class TestAccessLog(TestCase):
         self.assertEqual(
             log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
         )
-        self.assertEqual(log_entry.changes, "null")
+        self.assertIsNone(log_entry.changes)
         self.assertEqual(log_entry.changes_dict, {})
 
 

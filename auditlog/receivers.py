@@ -115,6 +115,7 @@ def _create_log_entry(
                 instance,
                 action=action,
                 changes=changes,
+                force_log=force_log,
             )
     except BaseException as e:
         error = e
