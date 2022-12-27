@@ -1,4 +1,5 @@
 from datetime import timezone
+from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -98,7 +99,9 @@ def mask_str(value: str) -> str:
     return "*" * mask_limit + value[mask_limit:]
 
 
-def model_instance_diff(old, new, fields_to_check=None):
+def model_instance_diff(
+    old: Optional[Model], new: Optional[Model], fields_to_check=None
+):
     """
     Calculates the differences between two model instances. One of the instances may be ``None``
     (i.e., a newly created model or deleted model). This will cause all fields with a value to have
