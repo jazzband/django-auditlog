@@ -247,7 +247,8 @@ class AuditlogModelRegistry:
     ) -> List[ModelBase]:
         exclude_models = [
             model
-            for app_model in tuple(exclude_tracking_models) + self.DEFAULT_EXCLUDE_MODELS
+            for app_model in tuple(exclude_tracking_models)
+            + self.DEFAULT_EXCLUDE_MODELS
             for model in self._get_model_classes(app_model)
         ]
         return exclude_models
