@@ -1168,7 +1168,17 @@ class RegisterModelSettingsTest(TestCase):
         AUDITLOG_INCLUDE_ALL_MODELS=True,
         AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
     )
-    def test_register_from_settings_register_all_models_with_exclude_models(self):
+    def test_register_from_settings_register_all_models_with_exclude_models_tuple(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertFalse(self.test_auditlog.contains(SimpleExcludeModel))
+        self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
+
+    @override_settings(
+        AUDITLOG_INCLUDE_ALL_MODELS=True,
+        AUDITLOG_EXCLUDE_TRACKING_MODELS=["auditlog_tests.SimpleExcludeModel"],
+    )
+    def test_register_from_settings_register_all_models_with_exclude_models_list(self):
         self.test_auditlog.register_from_settings()
 
         self.assertFalse(self.test_auditlog.contains(SimpleExcludeModel))
