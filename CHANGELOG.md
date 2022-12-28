@@ -1,5 +1,9 @@
 # Changes
 
+#### Breaking Changes
+
+- feat: Change `LogEntry.change` field type to `JSONField` rather than `TextField`. This change include a migration that may take time to run depending on the number of records on your `LogEntry` table ([#407](https://github.com/jazzband/django-auditlog/pull/407))
+
 ## Next Release
 
 #### Breaking Changes

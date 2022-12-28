@@ -105,9 +105,9 @@ class SimpleModelTest(TestCase):
         obj.save()
 
     def check_update_log_entry(self, obj, history):
-        self.assertJSONEqual(
+        self.assertDictEqual(
             history.changes,
-            '{"boolean": ["False", "True"]}',
+            {"boolean": ["False", "True"]},
             msg="The change is correctly logged",
         )
 
@@ -120,9 +120,9 @@ class SimpleModelTest(TestCase):
         obj.save(update_fields=["boolean"])
 
         # This implicitly asserts there is only one UPDATE change since the `.get` would fail otherwise.
-        self.assertJSONEqual(
+        self.assertDictEqual(
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
-            '{"boolean": ["False", "True"]}',
+            {"boolean": ["False", "True"]},
             msg=(
                 "Object modifications that are not saved to DB are not logged "
                 "when using the `update_fields`."
@@ -153,9 +153,9 @@ class SimpleModelTest(TestCase):
         obj.integer = 1
         obj.boolean = True
         obj.save(update_fields=None)
-        self.assertJSONEqual(
+        self.assertDictEqual(
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
-            '{"boolean": ["False", "True"], "integer": ["None", "1"]}',
+            {"boolean": ["False", "True"], "integer": ["None", "1"]},
             msg="The 2 fields changed are correctly logged",
         )
 
@@ -537,9 +537,9 @@ class SimpleIncludeModelTest(TestCase):
         obj.text = "Newer text"
         obj.save(update_fields=["text", "label"])
 
-        self.assertJSONEqual(
+        self.assertDictEqual(
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
-            '{"label": ["Initial label", "New label"]}',
+            {"label": ["Initial label", "New label"]},
             msg="Only the label was logged, regardless of multiple entries in `update_fields`",
         )
 
@@ -1411,7 +1411,27 @@ class DiffMsgTest(TestCase):
         return LogEntry.objects.log_create(
             SimpleModel.objects.create(),  # doesn't affect anything
             action=action,
-            changes=json.dumps(changes),
+            changes=changes,
+        )
+
+    def test_change_msg_create_when_exceeds_max_len(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {
+                "Camelopardalis": [None, "Giraffe"],
+                "Capricornus": [None, "Sea goat"],
+                "Equuleus": [None, "Little horse"],
+                "Horologium": [None, "Clock"],
+                "Microscopium": [None, "Microscope"],
+                "Reticulum": [None, "Net"],
+                "Telescopium": [None, "Telescope"],
+            },
+        )
+
+        self.assertEqual(
+            self.admin.msg_short(log_entry),
+            "7 changes: Camelopardalis, Capricornus, Equuleus, Horologium, "
+            "Microscopium, ..",
         )
 
     def test_changes_msg_delete(self):
@@ -1585,9 +1605,9 @@ class JSONModelTest(TestCase):
 
         history = obj.history.get(action=LogEntry.Action.UPDATE)
 
-        self.assertJSONEqual(
+        self.assertDictEqual(
             history.changes,
-            '{"json": ["{}", "{\'quantity\': \'1\'}"]}',
+            {"json": ["{}", "{'quantity': '1'}"]},
             msg="The change is correctly logged",
         )
 
@@ -1926,7 +1946,7 @@ class TestAccessLog(TestCase):
         self.assertEqual(
             log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
         )
-        self.assertEqual(log_entry.changes, "null")
+        self.assertIsNone(log_entry.changes)
         self.assertEqual(log_entry.changes_dict, {})
 
 
