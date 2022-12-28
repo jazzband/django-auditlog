@@ -26,13 +26,15 @@ class LogEntryManager(models.Manager):
     Custom manager for the :py:class:`LogEntry` model.
     """
 
-    def log_create(self, instance, **kwargs):
+    def log_create(self, instance, force_log: bool = False, **kwargs):
         """
         Helper method to create a new log entry. This method automatically populates some fields when no
         explicit value is given.
 
         :param instance: The model instance to log a change for.
         :type instance: Model
+        :param force_log: Create a LogEntry even if no changes exist.
+        :type force_log: bool
         :param kwargs: Field overrides for the :py:class:`LogEntry` object.
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
@@ -42,7 +44,7 @@ class LogEntryManager(models.Manager):
         changes = kwargs.get("changes", None)
         pk = self._get_pk_value(instance)
 
-        if changes is not None:
+        if changes is not None or force_log:
             kwargs.setdefault(
                 "content_type", ContentType.objects.get_for_model(instance)
             )
@@ -350,7 +352,7 @@ class LogEntry(models.Model):
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
-    changes = models.TextField(blank=True, verbose_name=_("change message"))
+    changes = models.JSONField(null=True, verbose_name=_("change message"))
     actor = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -399,10 +401,7 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry as a dictionary object.
         """
-        try:
-            return json.loads(self.changes) or {}
-        except ValueError:
-            return {}
+        return self.changes or {}
 
     @property
     def changes_str(self, colon=": ", arrow=" \u2192 ", separator="; "):
