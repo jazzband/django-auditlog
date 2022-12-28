@@ -2,7 +2,7 @@ import ast
 import json
 from copy import deepcopy
 from datetime import timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 from dateutil import parser
 from dateutil.tz import gettz
@@ -10,7 +10,11 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
-from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import (
+    FieldDoesNotExist,
+    ObjectDoesNotExist,
+    ValidationError,
+)
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
 from django.utils import formats
@@ -491,6 +495,9 @@ class LogEntry(models.Model):
                             value = formats.localize(value)
                         except ValueError:
                             pass
+                    elif field_type in ["ForeignKey", "OneToOneField"]:
+                        value = self._get_changes_display_for_fk_field(field, value)
+
                     # check if length is longer than 140 and truncate with ellipsis
                     if len(value) > 140:
                         value = f"{value[:140]}..."
@@ -501,6 +508,31 @@ class LogEntry(models.Model):
             )
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
+
+    def _get_changes_display_for_fk_field(
+        self, field: Union[models.ForeignKey, models.OneToOneField], value: Any
+    ) -> str:
+        """
+        :return: A string representing a given FK value and the field to which it belongs
+        """
+        # Return "None" if the FK value is "None".
+        if value == "None":
+            return value
+
+        # Attempt to convert given value to the PK type for the related model
+        try:
+            pk_value = field.related_model._meta.pk.to_python(value)
+        # ValidationError will handle legacy values where string representations were
+        # stored rather than PKs. This will also handle cases where the PK type is
+        # changed between the time the LogEntry is created and this method is called.
+        except ValidationError:
+            return value
+        # Attempt to return the string representation of the object
+        try:
+            return smart_str(field.related_model.objects.get(pk=pk_value))
+        # ObjectDoesNotExist will be raised if the object was deleted.
+        except ObjectDoesNotExist:
+            return f"Deleted '{field.related_model.__name__}' ({value})"
 
 
 class AuditlogHistoryField(GenericRelation):

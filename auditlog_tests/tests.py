@@ -1684,6 +1684,142 @@ class ModelInstanceDiffTest(TestCase):
         )
 
 
+class TestRelatedDiffs(TestCase):
+    def setUp(self):
+        self.test_date = datetime.datetime(2022, 1, 1, 12, tzinfo=datetime.timezone.utc)
+
+    def test_log_entry_changes_on_fk_object_update(self):
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create()
+            one_simple = SimpleModel.objects.create()
+            two_simple = SimpleModel.objects.create()
+            instance = RelatedModel.objects.create(
+                one_to_one=simple, related=one_simple
+            )
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            instance.related = two_simple
+            instance.save()
+
+        log_one = instance.history.filter(timestamp=t1).first()
+        log_two = instance.history.filter(timestamp=t2).first()
+        self.assertTrue(isinstance(log_one, LogEntry))
+        self.assertTrue(isinstance(log_two, LogEntry))
+
+        self.assertEqual(int(log_one.changes_dict["related"][1]), one_simple.id)
+        self.assertEqual(int(log_one.changes_dict["one_to_one"][1]), simple.id)
+        self.assertEqual(int(log_two.changes_dict["related"][1]), two_simple.id)
+
+    def test_log_entry_changes_on_fk_id_update(self):
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create()
+            one_simple = SimpleModel.objects.create()
+            two_simple = SimpleModel.objects.create()
+            instance = RelatedModel.objects.create(
+                one_to_one_id=int(simple.id), related_id=int(one_simple.id)
+            )
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            instance.related_id = int(two_simple.id)
+            instance.save()
+
+        log_one = instance.history.filter(timestamp=t1).first()
+        log_two = instance.history.filter(timestamp=t2).first()
+        self.assertTrue(isinstance(log_one, LogEntry))
+        self.assertTrue(isinstance(log_two, LogEntry))
+
+        self.assertEqual(int(log_one.changes_dict["related"][1]), one_simple.id)
+        self.assertEqual(int(log_one.changes_dict["one_to_one"][1]), simple.id)
+        self.assertEqual(int(log_two.changes_dict["related"][1]), two_simple.id)
+
+    def test_log_entry_create_fk_changes_to_string_objects_in_display_dict(self):
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create(text="Test Foo")
+            one_simple = SimpleModel.objects.create(text="Test Bar")
+            instance = RelatedModel.objects.create(
+                one_to_one=simple, related=one_simple
+            )
+
+        log_one = instance.history.filter(timestamp=t1).first()
+        self.assertTrue(isinstance(log_one, LogEntry))
+        display_dict = log_one.changes_display_dict
+        self.assertEqual(display_dict["related"][1], "Test Bar")
+        self.assertEqual(display_dict["related"][0], "None")
+        self.assertEqual(display_dict["one to one"][1], "Test Foo")
+
+    def test_log_entry_deleted_fk_changes_to_string_objects_in_display_dict(self):
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create(text="Test Foo")
+            one_simple = SimpleModel.objects.create(text="Test Bar")
+            one_simple_id = int(one_simple.id)
+            instance = RelatedModel.objects.create(
+                one_to_one=simple, related=one_simple
+            )
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            one_simple.delete()
+
+        log_two = LogEntry.objects.filter(object_id=instance.id, timestamp=t2).first()
+        self.assertTrue(isinstance(log_two, LogEntry))
+        display_dict = log_two.changes_display_dict
+        self.assertEqual(
+            display_dict["related"][0], f"Deleted 'SimpleModel' ({one_simple_id})"
+        )
+        self.assertEqual(display_dict["related"][1], "None")
+
+    def test_no_log_entry_created_on_related_object_string_update(self):
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create(text="Test Foo")
+            one_simple = SimpleModel.objects.create(text="Test Bar")
+            instance = RelatedModel.objects.create(
+                one_to_one=simple, related=one_simple
+            )
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            # Order is important. Without special FK handling, the arbitrary in memory
+            # changes to the (same) related object's signature result in a perceived
+            # update where no update has occurred.
+            one_simple.text = "Test Baz"
+            instance.save()
+            one_simple.save()
+
+        # Assert that only one log for the instance was created
+        self.assertEqual(instance.history.all().count(), 1)
+        # Assert that two logs were created for the parent object
+        self.assertEqual(one_simple.history.all().count(), 2)
+
+    def test_log_entry_created_if_obj_strings_are_same_for_two_objs(self):
+        """FK changes trigger update when the string representation is the same."""
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create(text="Test Foo")
+            one_simple = SimpleModel.objects.create(text="Twinsies", boolean=True)
+            two_simple = SimpleModel.objects.create(text="Twinsies", boolean=False)
+            instance = RelatedModel.objects.create(
+                one_to_one=simple, related=one_simple
+            )
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            instance.related = two_simple
+            instance.save()
+
+        self.assertEqual(instance.history.all().count(), 2)
+        log_create = instance.history.filter(timestamp=t1).first()
+        log_update = instance.history.filter(timestamp=t2).first()
+        self.assertEqual(int(log_create.changes_dict["related"][1]), one_simple.id)
+        self.assertEqual(int(log_update.changes_dict["related"][1]), two_simple.id)
+
+
 class TestModelSerialization(TestCase):
     def setUp(self):
         super().setUp()

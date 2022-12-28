@@ -36,6 +36,7 @@
 
 #### Fixes
 
+- fix: Foreign key values are used to check for changes in related fields instead of object representations. When changes are detected, the foreign key value is persisted in `LogEntry.changes` field instead of object representations. ([#420](https://github.com/jazzband/django-auditlog/pull/420))
 - fix: Display `created` timestamp in server timezone ([#404](https://github.com/jazzband/django-auditlog/pull/404))
 - fix: Handle port in `remote_addr` ([#417](https://github.com/jazzband/django-auditlog/pull/417))
 - fix: Handle the error with AttributeError: 'OneToOneRel' error occur during a `PolymorphicModel` has relation with other models  ([#429](https://github.com/jazzband/django-auditlog/pull/429))
