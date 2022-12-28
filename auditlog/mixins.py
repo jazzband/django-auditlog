@@ -7,7 +7,7 @@ from django.http import HttpRequest
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from django.utils.timezone import localtime, is_aware
+from django.utils.timezone import is_aware, localtime
 from django.utils.translation import gettext_lazy as _
 
 from auditlog.models import LogEntry
