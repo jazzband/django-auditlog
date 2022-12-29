@@ -1601,7 +1601,7 @@ class JSONModelTest(TestCase):
 
         self.assertDictEqual(
             history.changes,
-            {"json": ["{}", "{'quantity': '1'}"]},
+            {"json": ["{}", '{"quantity": "1"}']},
             msg="The change is correctly logged",
         )
 
@@ -1692,6 +1692,27 @@ class ModelInstanceDiffTest(TestCase):
             {"boolean": ("True", "False")},
             msg="ObjectDoesNotExist should be handled",
         )
+
+    def test_diff_models_with_json_fields(self):
+        first = JSONModel.objects.create(json={
+            "code": "17",
+            "date": datetime.date(2022, 1, 1),
+            "description": "first",
+        })
+        first.refresh_from_db()  # refresh json data from db
+        second = JSONModel.objects.create(json={
+            "code": "17",
+            "description": "second",
+            "date": datetime.date(2023, 1, 1),
+        })
+        diff = model_instance_diff(first, second, ["json"])
+
+        self.assertDictEqual(diff, {
+            "json": (
+                '{"code": "17", "date": "2022-01-01", "description": "first"}',
+                '{"code": "17", "date": "2023-01-01", "description": "second"}'
+            )
+        })
 
 
 class TestRelatedDiffs(TestCase):
