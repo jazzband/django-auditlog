@@ -1694,25 +1694,32 @@ class ModelInstanceDiffTest(TestCase):
         )
 
     def test_diff_models_with_json_fields(self):
-        first = JSONModel.objects.create(json={
-            "code": "17",
-            "date": datetime.date(2022, 1, 1),
-            "description": "first",
-        })
+        first = JSONModel.objects.create(
+            json={
+                "code": "17",
+                "date": datetime.date(2022, 1, 1),
+                "description": "first",
+            }
+        )
         first.refresh_from_db()  # refresh json data from db
-        second = JSONModel.objects.create(json={
-            "code": "17",
-            "description": "second",
-            "date": datetime.date(2023, 1, 1),
-        })
+        second = JSONModel.objects.create(
+            json={
+                "code": "17",
+                "description": "second",
+                "date": datetime.date(2023, 1, 1),
+            }
+        )
         diff = model_instance_diff(first, second, ["json"])
 
-        self.assertDictEqual(diff, {
-            "json": (
-                '{"code": "17", "date": "2022-01-01", "description": "first"}',
-                '{"code": "17", "date": "2023-01-01", "description": "second"}'
-            )
-        })
+        self.assertDictEqual(
+            diff,
+            {
+                "json": (
+                    '{"code": "17", "date": "2022-01-01", "description": "first"}',
+                    '{"code": "17", "date": "2023-01-01", "description": "second"}',
+                )
+            },
+        )
 
 
 class TestRelatedDiffs(TestCase):
