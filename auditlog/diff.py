@@ -1,3 +1,4 @@
+import json
 from datetime import timezone
 from typing import Optional
 
@@ -74,6 +75,7 @@ def get_field_value(obj, field):
                 value = django_timezone.make_naive(value, timezone=timezone.utc)
         elif isinstance(field, JSONField):
             value = field.to_python(getattr(obj, field.name, None))
+            value = json.dumps(value, sort_keys=True, cls=field.encoder)
         else:
             value = smart_str(getattr(obj, field.name, None))
     except ObjectDoesNotExist:

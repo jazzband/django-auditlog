@@ -14,6 +14,7 @@
 
 #### Improvements
 
+- Changes the view when it has changes in fields `JSONField`. The `JSONField.encoder` is assigned to `json.dumps`. ([#489](https://github.com/jazzband/django-auditlog/pull/489))
 - feat: Added support for Correlation ID. ([#481](https://github.com/jazzband/django-auditlog/pull/481))
 - feat: Added pre-log and post-log signals. ([#483](https://github.com/jazzband/django-auditlog/pull/483))
 
