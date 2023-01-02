@@ -1158,7 +1158,9 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
-        with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "notanapp.test"},)):
+        with override_settings(
+            AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "notanapp.test"},)
+        ):
             with self.assertRaisesMessage(
                 AuditLogRegistrationError,
                 (

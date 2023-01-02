@@ -263,7 +263,9 @@ class AuditlogModelRegistry:
             elif isinstance(model, dict):
                 appmodel = self._get_model_classes(model["model"])
                 if not appmodel:
-                    raise AuditLogRegistrationError(f"An error was encountered while registering model {model['model']} - make sure the app is registered correctly.")
+                    raise AuditLogRegistrationError(
+                        f"An error was encountered while registering model {model['model']} - make sure the app is registered correctly."
+                    )
                 model["model"] = appmodel[0]
                 self.unregister(model["model"])
                 self.register(**model)
