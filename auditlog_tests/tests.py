@@ -1158,6 +1158,18 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
+        with override_settings(
+            AUDITLOG_INCLUDE_TRACKING_MODELS=({"model": "notanapp.test"},)
+        ):
+            with self.assertRaisesMessage(
+                AuditLogRegistrationError,
+                (
+                    "An error was encountered while registering model 'notanapp.test'"
+                    " - make sure the app is registered correctly."
+                ),
+            ):
+                self.test_auditlog.register_from_settings()
+
         with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
             with self.assertRaisesMessage(
                 TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
