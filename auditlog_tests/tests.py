@@ -1164,7 +1164,7 @@ class RegisterModelSettingsTest(TestCase):
             with self.assertRaisesMessage(
                 AuditLogRegistrationError,
                 (
-                    "An error was encountered while registering model notanapp.test"
+                    "An error was encountered while registering model 'notanapp.test'"
                     " - make sure the app is registered correctly."
                 ),
             ):
