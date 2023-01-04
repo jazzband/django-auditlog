@@ -433,7 +433,7 @@ class MiddlewareTest(TestCase):
         request = self.factory.get("/")
         request.user = AnonymousUser()
 
-        self.get_response_mock.side_effect = self.side_effect(self.assert_no_listeners)
+        self.get_response_mock.side_effect = self.side_effect(self.assert_has_listeners)
 
         response = self.middleware(request)
 
@@ -517,6 +517,38 @@ class MiddlewareTest(TestCase):
 
                     self.assertEqual(history.cid, expected_result)
                     self.assertEqual(get_cid(), expected_result)
+
+    def test_set_actor_anonymous_request(self):
+        """
+        The remote address will be set even when there is no actor
+        """
+        remote_addr = "123.213.145.99"
+        actor = None
+
+        with set_actor(actor=actor, remote_addr=remote_addr):
+            obj = SimpleModel.objects.create(text="I am not difficult.")
+
+            history = obj.history.get()
+            self.assertEqual(
+                history.remote_addr,
+                remote_addr,
+                msg=f"Remote address is {remote_addr}",
+            )
+            self.assertIsNone(history.actor, msg="Actor is `None` for anonymous user")
+
+    def test_get_actor(self):
+        params = [
+            (AnonymousUser(), None, "The user is anonymous so the actor is `None`"),
+            (self.user, self.user, "The use is authenticated so it is the actor"),
+            (None, None, "There is no actor"),
+            ("1234", None, "The value of request.user is not a valid user model"),
+        ]
+        for user, actor, msg in params:
+            with self.subTest(msg):
+                request = self.factory.get("/")
+                request.user = user
+
+                self.assertEqual(self.middleware._get_actor(request), actor)
 
 
 class SimpleIncludeModelTest(TestCase):

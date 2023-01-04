@@ -1,13 +1,10 @@
 # Changes
 
-#### Breaking Changes
-
-- feat: Change `LogEntry.change` field type to `JSONField` rather than `TextField`. This change include a migration that may take time to run depending on the number of records on your `LogEntry` table ([#407](https://github.com/jazzband/django-auditlog/pull/407))
-
 ## Next Release
 
 #### Breaking Changes
 
+- feat: Change `LogEntry.change` field type to `JSONField` rather than `TextField`. This change include a migration that may take time to run depending on the number of records on your `LogEntry` table ([#407](https://github.com/jazzband/django-auditlog/pull/407))
 - feat: stop deleting old log entries when a model with the same pk is created (i.e. the pk value is reused) ([#559](https://github.com/jazzband/django-auditlog/pull/559))
 - feat: Set `AuditlogHistoryField.delete_related` to `False` by default. This is different from the default configuration of Django's `GenericRelation`, but we should not erase the audit log of objects on deletion by default. ([#557](https://github.com/jazzband/django-auditlog/pull/557))
 - Python: Drop support for Python 3.7 ([#546](https://github.com/jazzband/django-auditlog/pull/546))
@@ -17,18 +14,18 @@
 - Changes the view when it has changes in fields `JSONField`. The `JSONField.encoder` is assigned to `json.dumps`. ([#489](https://github.com/jazzband/django-auditlog/pull/489))
 - feat: Added support for Correlation ID. ([#481](https://github.com/jazzband/django-auditlog/pull/481))
 - feat: Added pre-log and post-log signals. ([#483](https://github.com/jazzband/django-auditlog/pull/483))
+- feat: Make timestamp in LogEntry overwritable. ([#476](https://github.com/jazzband/django-auditlog/pull/476))
 
 #### Fixes
 
 - fix: Make sure `LogEntry.changes_dict()` returns an empty dict instead of `None` when `json.loads()` returns `None`. ([#472](https://github.com/jazzband/django-auditlog/pull/472))
-- feat: Make timestamp in LogEntry overwritable. ([#476](https://github.com/jazzband/django-auditlog/pull/476))
 - fix: Make log entries read-only in the admin. ([#449](https://github.com/jazzband/django-auditlog/pull/449), [#556](https://github.com/jazzband/django-auditlog/pull/556)) (applied again after being reverted in 2.2.2)
+~~- fix: revert [#449](https://github.com/jazzband/django-auditlog/pull/449) "Make log entries read-only in the admin" as it breaks deletion of any auditlogged model through the admin when `AuditlogHistoryField` is used. ([#496](https://github.com/jazzband/django-auditlog/pull/496))~~
+- fix: Always set remote_addr even if the request has no authenticated user. ([#484](https://github.com/jazzband/django-auditlog/pull/484))
 
 ## 2.2.2 (2023-01-16)
 
-#### Fixes
-
-~~- fix: revert [#449](https://github.com/jazzband/django-auditlog/pull/449) "Make log entries read-only in the admin" as it breaks deletion of any auditlogged model through the admin when `AuditlogHistoryField` is used. ([#496](https://github.com/jazzband/django-auditlog/pull/496))~~
+No changes.
 
 ## 2.2.1 (2022-11-28)
 
