@@ -465,7 +465,7 @@ class LogEntry(models.Model):
                 except AttributeError:
                     # if the field is a relationship it has no internal type and exclude it
                     continue
-                
+
                 if field_type == "ManyToManyField":
                     values_display = values
                     values_display['objects'] = [f"{Truncator(i).chars(140,html=True)}..." if len(i) >140 else i for i in values['objects'] ]
