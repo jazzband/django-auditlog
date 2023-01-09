@@ -16,6 +16,7 @@ from django.db.models import Q, QuerySet
 from django.utils import formats
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import Truncator
 
 from auditlog.diff import mask_str
 
@@ -467,7 +468,7 @@ class LogEntry(models.Model):
                 
                 if field_type == "ManyToManyField":
                     values_display = values
-                    values_display['objects'] = [f"{i[:140]}..." if len(i) >140 else i for i in values['objects'] ]
+                    values_display['objects'] = [f"{Truncator(i).chars(140,html=True)}..." if len(i) >140 else i for i in values['objects'] ]
                     verbose_name = model_fields["mapping_fields"].get(
                         field.name, getattr(field, "verbose_name", field.name)
                     )
@@ -491,7 +492,8 @@ class LogEntry(models.Model):
                             pass
                     # check if length is longer than 140 and truncate with ellipsis
                     if len(value) > 140:
-                        value = f"{value[:140]}..."
+                        #value = f"{value[:140]}..."
+                        value=f"{Truncator(value).chars(140,html=True)}..."
 
                     values_display.append(value)
             verbose_name = model_fields["mapping_fields"].get(
