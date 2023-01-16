@@ -2,6 +2,8 @@
 
 ## Next Release
 
+## 2.2.2 (2023-01-16)
+
 #### Fixes
 
 - fix: revert [#449](https://github.com/jazzband/django-auditlog/pull/449) "Make log entries read-only in the admin" as it breaks deletion of any auditlogged model through the admin when `AuditlogHistoryField` is used. ([#496](https://github.com/jazzband/django-auditlog/pull/496))
