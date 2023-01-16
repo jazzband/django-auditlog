@@ -1297,7 +1297,7 @@ class AdminPanelTest(TestCase):
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
         self.assertEqual(res.status_code, 200)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
-        self.assertEqual(res.status_code, 403)
+        self.assertEqual(res.status_code, 200)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
         self.assertEqual(res.status_code, 200)
 
