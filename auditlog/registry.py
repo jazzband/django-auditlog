@@ -113,6 +113,9 @@ class AuditlogModelRegistry:
                 "set. Did you forget to set serialized_data to True?"
             )
 
+        for fld in settings.AUDITLOG_EXCLUDE_TRACKING_FIELDS:
+            exclude_fields.append(fld)
+
         def registrar(cls):
             """Register models for a given class."""
             if not issubclass(cls, Model):

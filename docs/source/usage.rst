@@ -189,6 +189,23 @@ You can use this setting to register all your models:
 
 .. versionadded:: 2.1.0
 
+**AUDITLOG_EXCLUDE_TRACKING_FIELDS**
+
+You can use this setting to exclude named fields from ALL models.
+This is useful when lots of models share similar fields like
+```created``` and ```modified``` and you want those excluded from
+logging.
+It will be considered when ``AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
+
+.. code-block:: python
+
+    AUDITLOG_EXCLUDE_TRACKING_FIELDS = (
+        "created",
+        "modified"
+    )
+
+.. versionadded:: 2.2.3
+
 **AUDITLOG_EXCLUDE_TRACKING_MODELS**
 
 You can use this setting to exclude models in registration process.
