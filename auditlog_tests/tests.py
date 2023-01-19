@@ -1166,11 +1166,13 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
-        with override_settings(AUDITLOG_EXCLUDE_TRACKING_FIELDS=('created', 'modified')):
+        with override_settings(
+            AUDITLOG_EXCLUDE_TRACKING_FIELDS=("created", "modified")
+        ):
             with self.assertRaisesMessage(
                 ValueError,
                 "In order to use 'AUDITLOG_EXCLUDE_TRACKING_FIELDS', "
-                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'"
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'",
             ):
                 self.test_auditlog.register_from_settings()
 
