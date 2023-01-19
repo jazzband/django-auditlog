@@ -204,7 +204,7 @@ It will be considered when ``AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
         "modified"
     )
 
-.. versionadded:: 2.2.3
+.. versionadded:: 3.0.0
 
 **AUDITLOG_EXCLUDE_TRACKING_MODELS**
 
