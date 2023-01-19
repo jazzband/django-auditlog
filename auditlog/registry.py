@@ -304,8 +304,10 @@ class AuditlogModelRegistry:
                 "In order to use AUDITLOG_EXCLUDE_TRACKING_FIELDS, setting AUDITLOG_INCLUDE_ALL_MODELS must be set to 'True'"
             )
 
-        if not isinstance(settings.AUDITLOG_EXCLUDE_TRACKING_FIELDS, (list, tuple)):
-            raise TypeError("AUDITLOG_EXCLUDE_TRACKING_FIELDS must be a list or tuple")
+        if settings.AUDITLOG_EXCLUDE_TRACKING_FIELDS and not settings.AUDITLOG_INCLUDE_ALL_MODELS:
+            raise  ValueError(
+                "In order to use 'AUDITLOG_EXCLUDE_TRACKING_FIELDS', setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'"
+            )
 
         if not isinstance(settings.AUDITLOG_INCLUDE_TRACKING_MODELS, (list, tuple)):
             raise TypeError(

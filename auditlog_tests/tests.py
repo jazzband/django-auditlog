@@ -1159,6 +1159,21 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
+        with override_settings(AUDITLOG_EXCLUDE_TRACKING_FIELDS="badvalue"):
+            with self.assertRaisesMessage(
+                TypeError,
+                "AUDITLOG_EXCLUDE_TRACKING_FIELDS must be a list or tuple",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_EXCLUDE_TRACKING_FIELDS=('created', 'modified')):
+            with self.assertRaisesMessage(
+                ValueError,
+                "In order to use 'AUDITLOG_EXCLUDE_TRACKING_FIELDS', "
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'"
+            ):
+                self.test_auditlog.register_from_settings()
+
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS="str"):
             with self.assertRaisesMessage(
                 TypeError,
