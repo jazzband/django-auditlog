@@ -15,6 +15,7 @@
 - feat: Added support for Correlation ID. ([#481](https://github.com/jazzband/django-auditlog/pull/481))
 - feat: Added pre-log and post-log signals. ([#483](https://github.com/jazzband/django-auditlog/pull/483))
 - feat: Make timestamp in LogEntry overwritable. ([#476](https://github.com/jazzband/django-auditlog/pull/476))
+- feat: Support excluding field names globally when ```AUDITLOG_INCLUDE_ALL_MODELS``` is enabled. ([#498](https://github.com/jazzband/django-auditlog/pull/498))
 
 #### Fixes
 
