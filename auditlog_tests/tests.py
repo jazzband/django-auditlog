@@ -1159,10 +1159,10 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
-        with override_settings(AUDITLOG_EXCLUDE_TRACKING_FIELDS="badvalue"):
+        with override_settings(AUDITLOG_INCLUDE_ALL_MODELS=True, AUDITLOG_EXCLUDE_TRACKING_FIELDS="badvalue"):
             with self.assertRaisesMessage(
                 TypeError,
-                "AUDITLOG_EXCLUDE_TRACKING_FIELDS must be a list or tuple",
+                "Setting 'AUDITLOG_EXCLUDE_TRACKING_FIELDS' must be a list or tuple",
             ):
                 self.test_auditlog.register_from_settings()
 
@@ -1234,6 +1234,16 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertFalse(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
+
+    @override_settings(
+        AUDITLOG_INCLUDE_ALL_MODELS=True,
+        AUDITLOG_EXCLUDE_TRACKING_FIELDS=("datetime",),
+    )
+    def test_register_from_settings_register_all_models_with_exclude_tracking_fields(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertEqual(self.test_auditlog.get_model_fields(SimpleModel)['exclude_fields'], ['datetime'])
+        self.assertEqual(self.test_auditlog.get_model_fields(AltPrimaryKeyModel)['exclude_fields'], ['datetime'])
 
     @override_settings(
         AUDITLOG_INCLUDE_ALL_MODELS=True,
