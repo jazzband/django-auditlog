@@ -21,6 +21,7 @@ Contents
 
    installation
    usage
+   upgrade
    internals
 
 
