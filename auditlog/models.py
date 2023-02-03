@@ -366,7 +366,7 @@ class LogEntry(models.Model):
         verbose_name=_("actor"),
     )
     cid = models.CharField(
-        max_length=255, db_index=True, blank=True, verbose_name=_("Correlation ID")
+        max_length=255, db_index=True, blank=True, null=True, verbose_name=_("Correlation ID")
     )
     remote_addr = models.GenericIPAddressField(
         blank=True, null=True, verbose_name=_("remote address")
