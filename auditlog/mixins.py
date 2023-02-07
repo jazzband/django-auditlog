@@ -139,7 +139,7 @@ class LogEntryAdminMixin:
 
     def field_verbose_name(self, obj, field_name: str):
         model = obj.content_type.model_class()
-        if not model:
+        if model is None:
             return field_name
         try:
             model_fields = auditlog.get_model_fields(model._meta.model)
