@@ -31,7 +31,11 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         "object_repr",
         "changes",
         f"actor__{user_model.USERNAME_FIELD}",
-    ] + (["actor__first_name", "actor__last_name"] if has_first_and_last_name_fields else [])
+    ] + (
+        ["actor__first_name", "actor__last_name"]
+        if has_first_and_last_name_fields
+        else []
+    )
     list_filter = ["action", ResourceTypeFilter, CIDFilter]
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
     fieldsets = [
