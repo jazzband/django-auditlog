@@ -7,7 +7,7 @@ from django.http import HttpRequest
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from django.utils.timezone import localtime
+from django.utils.timezone import is_aware, localtime
 from django.utils.translation import gettext_lazy as _
 
 from auditlog.models import LogEntry
@@ -23,7 +23,9 @@ class LogEntryAdminMixin:
 
     @admin.display(description=_("Created"))
     def created(self, obj):
-        return localtime(obj.timestamp)
+        if is_aware(obj.timestamp):
+            return localtime(obj.timestamp)
+        return obj.timestamp
 
     @admin.display(description=_("User"))
     def user_url(self, obj):
