@@ -21,6 +21,7 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
+from django.utils.encoding import smart_str
 
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
@@ -399,6 +400,14 @@ class ManyRelatedModelTest(TestCase):
         self.assertEqual(
             log_entry.additional_data, {"related_model_id": self.related.id}
         )
+
+    def test_changes(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.changes, {"related": {"type": "m2m", "operation": "add", "objects": [smart_str(related)]}}
+        )
+
 
 
 class MiddlewareTest(TestCase):
