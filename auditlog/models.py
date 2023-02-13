@@ -133,7 +133,7 @@ class LogEntryManager(models.Manager):
                     "objects": objects,
                 }
             }
-            
+
             kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
 
