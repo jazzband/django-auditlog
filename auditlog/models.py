@@ -132,11 +132,7 @@ class LogEntryManager(models.Manager):
                     "operation": operation,
                     "objects": objects,
                 }
-<<<<<<< Updated upstream
-            )
-=======
             }
->>>>>>> Stashed changes
             
             kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
