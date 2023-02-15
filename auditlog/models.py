@@ -126,15 +126,14 @@ class LogEntryManager(models.Manager):
                 kwargs.setdefault("additional_data", get_additional_data())
 
             objects = [smart_str(instance) for instance in changed_queryset]
-            kwargs["changes"] = json.dumps(
-                {
-                    field_name: {
-                        "type": "m2m",
-                        "operation": operation,
-                        "objects": objects,
-                    }
+            kwargs["changes"] = {
+                field_name: {
+                    "type": "m2m",
+                    "operation": operation,
+                    "objects": objects,
                 }
-            )
+            }
+
             kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
 
