@@ -1858,6 +1858,32 @@ class TestRelatedDiffs(TestCase):
         self.assertEqual(int(log_one.changes_dict["one_to_one"][1]), simple.id)
         self.assertEqual(int(log_two.changes_dict["related"][1]), two_simple.id)
 
+    def test_log_entry_changes_on_fk_object_id_update(self):
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create()
+            one_simple = SimpleModel.objects.create()
+            two_simple = SimpleModel.objects.create()
+            instance = RelatedModel.objects.create(
+                one_to_one=simple, related=one_simple
+            )
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            instance.related_id = two_simple.id
+            instance.one_to_one = one_simple
+            instance.save(update_fields=["related_id", "one_to_one_id"])
+
+        log_one = instance.history.filter(timestamp=t1).first()
+        log_two = instance.history.filter(timestamp=t2).first()
+        self.assertTrue(isinstance(log_one, LogEntry))
+        self.assertTrue(isinstance(log_two, LogEntry))
+
+        self.assertEqual(int(log_one.changes_dict["related"][1]), one_simple.id)
+        self.assertEqual(int(log_one.changes_dict["one_to_one"][1]), simple.id)
+        self.assertEqual(int(log_two.changes_dict["related"][1]), two_simple.id)
+        self.assertEqual(int(log_two.changes_dict["one_to_one"][1]), one_simple.id)
+
     def test_log_entry_changes_on_fk_id_update(self):
         t1 = self.test_date
         with freezegun.freeze_time(t1):
