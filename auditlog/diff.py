@@ -147,14 +147,14 @@ def model_instance_diff(
         model_fields = None
 
     if fields_to_check:
-        _fields = set()
-        for field in fields:
-            if isinstance(field, ForeignKey):
-                if field.attname in fields_to_check:
-                    _fields.add(field)
-            if field.name in fields_to_check:
-                _fields.add(field)
-        fields = _fields
+        fields = {
+            field
+            for field in fields
+            if (
+                (isinstance(field, ForeignKey) and field.attname in fields_to_check)
+                or (field.name in fields_to_check)
+            )
+        }
 
     # Check if fields must be filtered
     if (
