@@ -16,6 +16,7 @@
 
 #### Fixes
 
+- fix: Audit changes to FK fields when saved using `*_id` naming. ([#525](https://github.com/jazzband/django-auditlog/pull/525))
 - fix: Fix a bug in audit log admin page when `USE_TZ=False`. ([#511](https://github.com/jazzband/django-auditlog/pull/511))
 - fix: Make sure `LogEntry.changes_dict()` returns an empty dict instead of `None` when `json.loads()` returns `None`. ([#472](https://github.com/jazzband/django-auditlog/pull/472))
 - fix: Always set remote_addr even if the request has no authenticated user. ([#484](https://github.com/jazzband/django-auditlog/pull/484))

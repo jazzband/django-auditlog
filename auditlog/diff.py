@@ -4,7 +4,7 @@ from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import NOT_PROVIDED, DateTimeField, JSONField, Model
+from django.db.models import NOT_PROVIDED, DateTimeField, ForeignKey, JSONField, Model
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 
@@ -147,7 +147,14 @@ def model_instance_diff(
         model_fields = None
 
     if fields_to_check:
-        fields = {field for field in fields if field.name in fields_to_check}
+        fields = {
+            field
+            for field in fields
+            if (
+                (isinstance(field, ForeignKey) and field.attname in fields_to_check)
+                or (field.name in fields_to_check)
+            )
+        }
 
     # Check if fields must be filtered
     if (
