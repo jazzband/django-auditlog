@@ -1657,15 +1657,12 @@ class DiffMsgTest(TestCase):
             {"test": "test"},
         )
 
-        self.assertEqual(
-            self.admin.field_verbose_name(log_entry, "actor"),
-            "Actor"
-        )
-        with patch("django.contrib.contenttypes.models.ContentType.model_class", return_value=None):
-            self.assertEqual(
-                self.admin.field_verbose_name(log_entry, "actor"),
-                "actor"
-            )
+        self.assertEqual(self.admin.field_verbose_name(log_entry, "actor"), "Actor")
+        with patch(
+            "django.contrib.contenttypes.models.ContentType.model_class",
+            return_value=None,
+        ):
+            self.assertEqual(self.admin.field_verbose_name(log_entry, "actor"), "actor")
 
 
 class NoDeleteHistoryTest(TestCase):
