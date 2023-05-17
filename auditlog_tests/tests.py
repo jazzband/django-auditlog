@@ -1651,6 +1651,22 @@ class DiffMsgTest(TestCase):
         # Re-register
         auditlog.register(SimpleModel)
 
+    def test_field_verbose_name(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {"test": "test"},
+        )
+
+        self.assertEqual(
+            self.admin.field_verbose_name(log_entry, "actor"),
+            "Actor"
+        )
+        with patch("django.contrib.contenttypes.models.ContentType.model_class", return_value=None):
+            self.assertEqual(
+                self.admin.field_verbose_name(log_entry, "actor"),
+                "actor"
+            )
+
 
 class NoDeleteHistoryTest(TestCase):
     def test_delete_related(self):
