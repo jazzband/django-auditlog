@@ -1314,6 +1314,17 @@ class AdminPanelTest(TestCase):
                 created = self.admin.created(log_entry)
                 self.assertEqual(created.strftime("%Y-%m-%d %H:%M:%S"), timestamp)
 
+    @freezegun.freeze_time("2022-08-01 12:00:00Z")
+    def test_created_naive_datetime(self):
+        with self.settings(USE_TZ=False):
+            obj = SimpleModel.objects.create(text="For USE_TZ=False test")
+            log_entry = obj.history.latest()
+            created = self.admin.created(log_entry)
+            self.assertEqual(
+                created.strftime("%Y-%m-%d %H:%M:%S"),
+                "2022-08-01 12:00:00",
+            )
+
 
 class DiffMsgTest(TestCase):
     def setUp(self):

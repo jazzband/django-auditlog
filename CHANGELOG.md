@@ -2,6 +2,9 @@
 
 ## Next Release
 
+#### Fixes
+fix: Fix a bug in audit log admin page when `USE_TZ=False`. ([#511](https://github.com/jazzband/django-auditlog/pull/511))
+
 ## 2.2.2 (2023-01-16)
 
 #### Fixes

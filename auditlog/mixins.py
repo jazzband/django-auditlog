@@ -8,7 +8,7 @@ from django.forms.utils import pretty_name
 from django.urls.exceptions import NoReverseMatch
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
-from django.utils.timezone import localtime
+from django.utils.timezone import is_aware, localtime
 
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
@@ -20,7 +20,9 @@ MAX = 75
 class LogEntryAdminMixin:
     @admin.display(description="Created")
     def created(self, obj):
-        return localtime(obj.timestamp)
+        if is_aware(obj.timestamp):
+            return localtime(obj.timestamp)
+        return obj.timestamp
 
     @admin.display(description="User")
     def user_url(self, obj):
