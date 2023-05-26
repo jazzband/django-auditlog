@@ -2,6 +2,8 @@
 
 ## Next Release
 
+## 2.3.0 (2023-05-26)
+
 #### Improvements
 
 - Django: Confirm Django 4.2 support ([#530](https://github.com/jazzband/django-auditlog/pull/530))
