@@ -92,7 +92,6 @@ def log_access(sender, instance, **kwargs):
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
     if instance.pk is not None:
-
         LogEntry.objects.log_create(
             instance,
             action=LogEntry.Action.ACCESS,
