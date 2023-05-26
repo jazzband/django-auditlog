@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Improvements
+
+- Django: Confirm Django 4.2 support ([#530](https://github.com/jazzband/django-auditlog/pull/530))
+
 #### Fixes
 fix: Fix a bug in audit log admin page when `USE_TZ=False`. ([#511](https://github.com/jazzband/django-auditlog/pull/511))
 
