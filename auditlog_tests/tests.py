@@ -415,6 +415,24 @@ class ManyRelatedModelTest(TestCase):
             },
         )
 
+    def test_adding_existing_related_obj(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.changes,
+            {
+                "related": {
+                    "type": "m2m",
+                    "operation": "add",
+                    "objects": [smart_str(self.related)],
+                }
+            },
+        )
+        # Add same related obj again.
+        self.obj.related.add(self.related)
+        latest_log_entry = self.obj.history.first()
+        self.assertEqual(log_entry.id, latest_log_entry.id)
+
 
 class MiddlewareTest(TestCase):
     """
