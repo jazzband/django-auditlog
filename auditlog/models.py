@@ -86,7 +86,7 @@ class LogEntryManager(models.Manager):
         from auditlog.cid import get_cid
 
         pk = self._get_pk_value(instance)
-        if changed_queryset is not None:
+        if changed_queryset:
             kwargs.setdefault(
                 "content_type", ContentType.objects.get_for_model(instance)
             )
