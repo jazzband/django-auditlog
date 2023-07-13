@@ -32,8 +32,10 @@ If you have great ideas for Auditlog, or if you like to improve something, feel 
 Releases
 --------
 
-1. Make sure all tests on `master` are green.
-2. Create a new branch `vX.Y.Z` from master for that specific release.
-3. Bump versions in `setup.py` and `docs/source/conf.py` (docs have 2 places where the versions need to be changed!)
-4. Pull request `vX.Y.Z` -> `master`. 
-5. Pull request `master` -> `stable`. This merge triggers the deploy to pypi.
+1. Make sure all tests on `master` are green
+2. Create a new branch `vX.Y.Z` from master for that specific release
+3. Update the CHANGELOG release date
+4. Pull request `vX.Y.Z` -> `master`
+5. As a project lead, once the PR is merged, create and push a tag `vX.Y.Z`: this will trigger the release build and a notification will be sent from Jazzband of the availability of two packages (tgz and wheel)
+6. Test the install
+7. Publish the release to PyPI

@@ -1,5 +1,21 @@
 # Changes
 
+#### Fixes
+
+- fix: Display `created` timestamp in server timezone ([#404](https://github.com/jazzband/django-auditlog/pull/404))
+- fix: Handle port in `remote_addr` ([#417](https://github.com/jazzband/django-auditlog/pull/417))
+
+## 2.1.1 (2022-07-27)
+
+#### Improvements
+
+- feat: Display the diff for deleted objects in the admin ([#396](https://github.com/jazzband/django-auditlog/pull/396))
+- Django: Confirm Django 4.1 support ([#406](https://github.com/jazzband/django-auditlog/pull/406))
+
+#### Fixes
+
+- fix: Pin `python-dateutil` to 2.7.0 or higher for compatibility with Python 3.10 ([#401](https://github.com/jazzband/django-auditlog/pull/401))
+
 ## 2.1.0 (2022-06-27)
 
 #### Improvements
