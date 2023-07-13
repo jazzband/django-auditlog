@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.12.0
     hooks:
       - id: black
         language_version: python3.8
@@ -9,16 +9,21 @@ repos:
           - "--target-version"
           - "py37"
   - repo: https://github.com/PyCQA/flake8
-    rev: "4.0.1"
+    rev: "6.0.0"
     hooks:
       - id: flake8
         args: ["--max-line-length", "110"]
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: v5.11.3
     hooks:
       - id: isort
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.34.0
+    rev: v3.3.1
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.12.0
+    hooks:
+    - id: django-upgrade
+      args: [--target-version, "3.2"]

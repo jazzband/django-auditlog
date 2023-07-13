@@ -1,5 +1,58 @@
 # Changes
 
+## Next Release
+
+#### Improvements
+
+- feat: Added support for Correlation ID
+
+#### Fixes
+
+- fix: Make sure `LogEntry.changes_dict()` returns an empty dict instead of `None` when `json.loads()` returns `None`. ([#472](https://github.com/jazzband/django-auditlog/pull/472))
+- feat: Make timestamp in LogEntry overwritable. ([#476](https://github.com/jazzband/django-auditlog/pull/476))
+
+## 2.2.2 (2023-01-16)
+
+#### Fixes
+
+~~- fix: revert [#449](https://github.com/jazzband/django-auditlog/pull/449) "Make log entries read-only in the admin" as it breaks deletion of any auditlogged model through the admin when `AuditlogHistoryField` is used. ([#496](https://github.com/jazzband/django-auditlog/pull/496))~~
+
+## 2.2.1 (2022-11-28)
+
+#### Fixes
+
+- fix: Make log entries read-only in the admin. ([#449](https://github.com/jazzband/django-auditlog/pull/449))
+- fix: Handle IPv6 addresses in `X-Forwarded-For`. ([#457](https://github.com/jazzband/django-auditlog/pull/457))
+
+## 2.2.0 (2022-10-07)
+
+#### Improvements
+- feat: Add `ACCESS` action to `LogEntry` model and allow object access to be logged. ([#436](https://github.com/jazzband/django-auditlog/pull/436))
+- feat: Add `serialized_data` field on `LogEntry` model. ([#412](https://github.com/jazzband/django-auditlog/pull/412))
+- feat: Display the field name as it would be displayed in Django Admin or use `mapping_field` if available [#428](https://github.com/jazzband/django-auditlog/pull/428)
+- feat: New context manager `disable_auditlog` to turn off logging and a new setting `AUDITLOG_DISABLE_ON_RAW_SAVE`
+  to disable it during raw-save operations like loaddata. [#446](https://github.com/jazzband/django-auditlog/pull/446)
+- Python: Confirm Python 3.11 support ([#447](https://github.com/jazzband/django-auditlog/pull/447))
+- feat: Replace the `django.utils.timezone.utc` by `datetime.timezone.utc`. [#448](https://github.com/jazzband/django-auditlog/pull/448)
+
+#### Fixes
+
+- fix: Display `created` timestamp in server timezone ([#404](https://github.com/jazzband/django-auditlog/pull/404))
+- fix: Handle port in `remote_addr` ([#417](https://github.com/jazzband/django-auditlog/pull/417))
+- fix: Handle the error with AttributeError: 'OneToOneRel' error occur during a `PolymorphicModel` has relation with other models  ([#429](https://github.com/jazzband/django-auditlog/pull/429))
+- fix: Support search by custom USERNAME_FIELD ([#432](https://github.com/jazzband/django-auditlog/pull/432))
+
+## 2.1.1 (2022-07-27)
+
+#### Improvements
+
+- feat: Display the diff for deleted objects in the admin ([#396](https://github.com/jazzband/django-auditlog/pull/396))
+- Django: Confirm Django 4.1 support ([#406](https://github.com/jazzband/django-auditlog/pull/406))
+
+#### Fixes
+
+- fix: Pin `python-dateutil` to 2.7.0 or higher for compatibility with Python 3.10 ([#401](https://github.com/jazzband/django-auditlog/pull/401))
+
 ## 2.1.0 (2022-06-27)
 
 #### Improvements

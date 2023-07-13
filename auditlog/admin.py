@@ -3,9 +3,11 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
 
 from auditlog.count import limit_query_time
 from auditlog.filters import (
+    CIDFilter,
     FieldFilter,
     ResourceTypeFilter,
     ShortActorFilter,
@@ -26,15 +28,23 @@ class TimeLimitedPaginator(Paginator):
         return super().count
 
 
+@admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
-    list_display = ["created", "resource_url", "action", "msg_short", "user_url"]
+    list_display = [
+        "created",
+        "resource_url",
+        "action",
+        "msg_short",
+        "user_url",
+        "cid_url",
+    ]
     search_fields = [
         "timestamp",
         "object_repr",
         "changes",
         "actor__first_name",
         "actor__last_name",
-        "actor__{}".format(get_user_model().USERNAME_FIELD),
+        f"actor__{get_user_model().USERNAME_FIELD}",
     ]
     list_filter = [
         "action",
@@ -42,11 +52,12 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         ResourceTypeFilter,
         FieldFilter,
         ("timestamp", get_timestamp_filter()),
+        CIDFilter,
     ]
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
     fieldsets = [
-        (None, {"fields": ["created", "user_url", "resource_url"]}),
-        ("Changes", {"fields": ["action", "msg"]}),
+        (None, {"fields": ["created", "user_url", "resource_url", "cid"]}),
+        (_("Changes"), {"fields": ["action", "msg"]}),
     ]
     list_select_related = ["actor", "content_type"]
     show_full_result_count = False
@@ -61,5 +72,6 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-
-admin.site.register(LogEntry, LogEntryAdmin)
+    def get_queryset(self, request):
+        self.request = request
+        return super().get_queryset(request=request)

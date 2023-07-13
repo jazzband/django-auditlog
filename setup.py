@@ -28,9 +28,10 @@ setup(
     description="Audit log app for Django",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    python_requires=">=3.7",
     install_requires=[
         "django-admin-rangefilter>=0.8.0",
-        "python-dateutil>=2.6.0",
+        "python-dateutil>=2.7.0",
     ],
     zip_safe=False,
     classifiers=[
@@ -39,9 +40,11 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Framework :: Django",
         "Framework :: Django :: 3.2",
         "Framework :: Django :: 4.0",
+        "Framework :: Django :: 4.1",
         "License :: OSI Approved :: MIT License",
     ],
 )

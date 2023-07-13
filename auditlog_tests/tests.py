@@ -2,8 +2,10 @@ import datetime
 import itertools
 import json
 import warnings
+from datetime import timezone
 from unittest import mock
 
+import freezegun
 from dateutil.tz import gettz
 from django.apps import apps
 from django.conf import settings
@@ -11,16 +13,21 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
+from django.core import management
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
-from django.utils import dateformat, formats, timezone
+from django.urls import reverse
+from django.utils import dateformat, formats
+from django.utils import timezone as django_timezone
 
 from auditlog.admin import LogEntryAdmin
-from auditlog.context import set_actor
+from auditlog.cid import get_cid
+from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
-from auditlog.registry import AuditlogModelRegistry, auditlog
+from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
+from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -34,6 +41,10 @@ from auditlog_tests.models import (
     PostgresArrayFieldModel,
     ProxyModel,
     RelatedModel,
+    SerializeNaturalKeyRelatedModel,
+    SerializeOnlySomeOfThisModel,
+    SerializePrimaryKeyRelatedModel,
+    SerializeThisModel,
     SimpleExcludeModel,
     SimpleIncludeModel,
     SimpleMappingModel,
@@ -190,6 +201,24 @@ class SimpleModelTest(TestCase):
         self.assertEqual(
             log_entry._state.db, "default", msg=msg
         )  # must be created in default database
+
+    def test_default_timestamp(self):
+        start = django_timezone.now()
+        self.test_recreate()
+        end = django_timezone.now()
+        history = self.obj.history.latest()
+        self.assertTrue(start <= history.timestamp <= end)
+
+    def test_manual_timestamp(self):
+        timestamp = datetime.datetime(1999, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+        LogEntry.objects.log_create(
+            instance=self.obj,
+            timestamp=timestamp,
+            changes="foo bar",
+            action=LogEntry.Action.UPDATE,
+        )
+        history = self.obj.history.filter(timestamp=timestamp, changes="foo bar")
+        self.assertTrue(history.exists())
 
 
 class NoActorMixin:
@@ -436,6 +465,56 @@ class MiddlewareTest(TestCase):
 
         self.assert_no_listeners()
 
+    def test_get_remote_addr(self):
+        tests = [  # (headers, expected_remote_addr)
+            ({}, "127.0.0.1"),
+            ({"HTTP_X_FORWARDED_FOR": "127.0.0.2"}, "127.0.0.2"),
+            ({"HTTP_X_FORWARDED_FOR": "127.0.0.3:1234"}, "127.0.0.3"),
+            ({"HTTP_X_FORWARDED_FOR": "2606:4700:4700::1111"}, "2606:4700:4700::1111"),
+            (
+                {"HTTP_X_FORWARDED_FOR": "[2606:4700:4700::1001]:1234"},
+                "2606:4700:4700::1001",
+            ),
+        ]
+        for headers, expected_remote_addr in tests:
+            with self.subTest(headers=headers):
+                request = self.factory.get("/", **headers)
+                self.assertEqual(
+                    self.middleware._get_remote_addr(request), expected_remote_addr
+                )
+
+    def test_cid(self):
+        header = str(settings.AUDITLOG_CID_HEADER).lstrip("HTTP_").replace("_", "-")
+        header_meta = "HTTP_" + header.upper().replace("-", "_")
+        cid = "random_CID"
+
+        _settings = [
+            # these tuples test reading the cid from the header defined in the settings
+            ({"AUDITLOG_CID_HEADER": header}, cid),  # x-correlation-id
+            ({"AUDITLOG_CID_HEADER": header_meta}, cid),  # HTTP_X_CORRELATION_ID
+            ({"AUDITLOG_CID_HEADER": None}, None),
+            # these two tuples test using a custom getter.
+            # Here, we don't necessarily care about the cid that was set in set_cid
+            (
+                {
+                    "AUDITLOG_CID_GETTER": "auditlog_tests.fixtures.custom_get_cid.get_cid"
+                },
+                custom_get_cid(),
+            ),
+            ({"AUDITLOG_CID_GETTER": custom_get_cid}, custom_get_cid()),
+        ]
+        for setting, expected_result in _settings:
+            with self.subTest():
+                with self.settings(**setting):
+                    request = self.factory.get("/", **{header_meta: cid})
+                    self.middleware(request)
+
+                    obj = SimpleModel.objects.create(text="I am not difficult.")
+                    history = obj.history.get(action=LogEntry.Action.CREATE)
+
+                    self.assertEqual(history.cid, expected_result)
+                    self.assertEqual(get_cid(), expected_result)
+
 
 class SimpleIncludeModelTest(TestCase):
     """Log only changes in include_fields"""
@@ -548,7 +627,7 @@ class SimpleMappingModelTest(TestCase):
         )
 
 
-class SimpeMaskedFieldsModelTest(TestCase):
+class SimpleMaskedFieldsModelTest(TestCase):
     """Log masked changes for fields in mask_fields"""
 
     def test_register_mask_fields(self):
@@ -598,8 +677,8 @@ class AdditionalDataModelTest(TestCase):
 class DateTimeFieldModelTest(TestCase):
     """Tests if DateTimeField changes are recognised correctly"""
 
-    utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
-    now = timezone.now()
+    utc_plus_one = django_timezone.get_fixed_timezone(datetime.timedelta(hours=1))
+    now = django_timezone.now()
 
     def setUp(self):
         super().setUp()
@@ -768,7 +847,7 @@ class DateTimeFieldModelTest(TestCase):
                 " DATETIME_FORMAT"
             ),
         )
-        timestamp = timezone.now()
+        timestamp = django_timezone.now()
         dtm.timestamp = timestamp
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
@@ -892,7 +971,9 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # Change with naive field doesnt raise error
-        dtm.naive_dt = timezone.make_naive(timezone.now(), timezone=timezone.utc)
+        dtm.naive_dt = django_timezone.make_naive(
+            django_timezone.now(), timezone=timezone.utc
+        )
         dtm.save()
 
 
@@ -986,7 +1067,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 19)
+        self.assertEqual(len(self.test_auditlog.get_models()), 23)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -1074,6 +1155,12 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
+        with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
+            with self.assertRaisesMessage(
+                TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
+            ):
+                self.test_auditlog.register_from_settings()
+
     @override_settings(
         AUDITLOG_INCLUDE_ALL_MODELS=True,
         AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
@@ -1103,6 +1190,17 @@ class RegisterModelSettingsTest(TestCase):
         self.assertEqual(fields["include_fields"], ["label"])
         self.assertEqual(fields["exclude_fields"], ["text"])
 
+    def test_registration_error_if_bad_serialize_params(self):
+        with self.assertRaisesMessage(
+            AuditLogRegistrationError,
+            "Serializer options were given but the 'serialize_data' option is not "
+            "set. Did you forget to set serialized_data to True?",
+        ):
+            register = AuditlogModelRegistry()
+            register.register(
+                SimpleModel, serialize_kwargs={"fields": ["text", "integer"]}
+            )
+
 
 class ChoicesFieldModelTest(TestCase):
     def setUp(self):
@@ -1116,7 +1214,6 @@ class ChoicesFieldModelTest(TestCase):
         )
 
     def test_changes_display_dict_single_choice(self):
-
         self.assertEqual(
             self.obj.history.latest().changes_display_dict["status"][1],
             "Red",
@@ -1151,7 +1248,7 @@ class ChoicesFieldModelTest(TestCase):
         assert "related_models" in history.changes_display_dict
 
 
-class CharfieldTextfieldModelTest(TestCase):
+class CharFieldTextFieldModelTest(TestCase):
     def setUp(self):
         self.PLACEHOLDER_LONGCHAR = "s" * 255
         self.PLACEHOLDER_LONGTEXTFIELD = "s" * 1000
@@ -1233,31 +1330,55 @@ class PostgresArrayFieldModelTest(TestCase):
 
 
 class AdminPanelTest(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.username = "test_admin"
-        cls.password = User.objects.make_random_password()
-        cls.user, created = User.objects.get_or_create(username=cls.username)
-        cls.user.set_password(cls.password)
-        cls.user.is_staff = True
-        cls.user.is_superuser = True
-        cls.user.is_active = True
-        cls.user.save()
-        cls.obj = SimpleModel.objects.create(text="For admin logentry test")
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="test_admin", is_staff=True, is_superuser=True, is_active=True
+        )
+        self.site = AdminSite()
+        self.admin = LogEntryAdmin(LogEntry, self.site)
+        with freezegun.freeze_time("2022-08-01 12:00:00Z"):
+            self.obj = SimpleModel.objects.create(text="For admin logentry test")
 
     def test_auditlog_admin(self):
-        self.client.login(username=self.username, password=self.password)
+        self.client.force_login(self.user)
         log_pk = self.obj.history.latest().pk
         res = self.client.get("/admin/auditlog/logentry/")
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
         res = self.client.get("/admin/auditlog/logentry/add/")
-        assert res.status_code == 403
+        self.assertEqual(res.status_code, 403)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 403)
         res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
-        assert res.status_code == 200
+        self.assertEqual(res.status_code, 200)
+
+    def test_created_timezone(self):
+        log_entry = self.obj.history.latest()
+
+        for tz, timestamp in [
+            ("UTC", "2022-08-01 12:00:00"),
+            ("Asia/Tbilisi", "2022-08-01 16:00:00"),
+            ("America/Buenos_Aires", "2022-08-01 09:00:00"),
+            ("Asia/Kathmandu", "2022-08-01 17:45:00"),
+        ]:
+            with self.settings(TIME_ZONE=tz):
+                self.assertEqual(self.admin.created(log_entry), timestamp)
+
+    def test_cid(self):
+        self.client.force_login(self.user)
+        expected_response = (
+            '<a href="/admin/auditlog/logentry/?cid=123" '
+            'title="Click to filter by records with this correlation id">123</a>'
+        )
+
+        log_entry = self.obj.history.latest()
+        log_entry.cid = "123"
+        log_entry.save()
+
+        res = self.client.get("/admin/auditlog/logentry/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(expected_response, res.rendered_content)
 
 
 class DiffMsgTest(TestCase):
@@ -1274,9 +1395,22 @@ class DiffMsgTest(TestCase):
         )
 
     def test_changes_msg_delete(self):
-        log_entry = self._create_log_entry(LogEntry.Action.DELETE, {})
+        log_entry = self._create_log_entry(
+            LogEntry.Action.DELETE,
+            {"field one": ["value before deletion", None], "field two": [11, None]},
+        )
 
-        self.assertEqual(self.admin.msg(log_entry), "")
+        self.assertEqual(self.admin.msg_short(log_entry), "")
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>Field one</td><td>value before deletion</td><td>None</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>11</td><td>None</td></tr>"
+                "</table>"
+            ),
+        )
 
     def test_changes_msg_create(self):
         log_entry = self._create_log_entry(
@@ -1288,12 +1422,15 @@ class DiffMsgTest(TestCase):
         )
 
         self.assertEqual(
+            self.admin.msg_short(log_entry), "2 changes: field two, field one"
+        )
+        self.assertEqual(
             self.admin.msg(log_entry),
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>None</td><td>a value</td></tr>"
-                "<tr><td>2</td><td>field two</td><td>None</td><td>11</td></tr>"
+                "<tr><td>1</td><td>Field one</td><td>None</td><td>a value</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>None</td><td>11</td></tr>"
                 "</table>"
             ),
         )
@@ -1308,13 +1445,16 @@ class DiffMsgTest(TestCase):
         )
 
         self.assertEqual(
+            self.admin.msg_short(log_entry), "2 changes: field two, field one"
+        )
+        self.assertEqual(
             self.admin.msg(log_entry),
             (
                 "<table>"
                 "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
-                "<tr><td>1</td><td>field one</td><td>old value of field one</td>"
+                "<tr><td>1</td><td>Field one</td><td>old value of field one</td>"
                 "<td>new value of field one</td></tr>"
-                "<tr><td>2</td><td>field two</td><td>11</td><td>42</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>11</td><td>42</td></tr>"
                 "</table>"
             ),
         )
@@ -1331,16 +1471,43 @@ class DiffMsgTest(TestCase):
             },
         )
 
+        self.assertEqual(self.admin.msg_short(log_entry), "1 change: some_m2m_field")
         self.assertEqual(
             self.admin.msg(log_entry),
             (
                 "<table>"
                 "<tr><th>#</th><th>Relationship</th><th>Action</th><th>Objects</th></tr>"
-                "<tr><td>1</td><td>some_m2m_field</td><td>add</td><td>Example User (user 1)"
+                "<tr><td>1</td><td>Some m2m field</td><td>add</td><td>Example User (user 1)"
                 "<br>Illustration (user 42)</td></tr>"
                 "</table>"
             ),
         )
+
+    def test_unregister_after_log(self):
+        log_entry = self._create_log_entry(
+            LogEntry.Action.CREATE,
+            {
+                "field two": [None, 11],
+                "field one": [None, "a value"],
+            },
+        )
+        # Unregister
+        auditlog.unregister(SimpleModel)
+        self.assertEqual(
+            self.admin.msg_short(log_entry), "2 changes: field two, field one"
+        )
+        self.assertEqual(
+            self.admin.msg(log_entry),
+            (
+                "<table>"
+                "<tr><th>#</th><th>Field</th><th>From</th><th>To</th></tr>"
+                "<tr><td>1</td><td>Field one</td><td>None</td><td>a value</td></tr>"
+                "<tr><td>2</td><td>Field two</td><td>None</td><td>11</td></tr>"
+                "</table>"
+            ),
+        )
+        # Re-register
+        auditlog.register(SimpleModel)
 
 
 class NoDeleteHistoryTest(TestCase):
@@ -1491,3 +1658,310 @@ class ModelInstanceDiffTest(TestCase):
             {"boolean": ("True", "False")},
             msg="ObjectDoesNotExist should be handled",
         )
+
+
+class TestModelSerialization(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.test_date = datetime.datetime(2022, 1, 1, 12, tzinfo=timezone.utc)
+        self.test_date_string = datetime.datetime.strftime(
+            self.test_date, "%Y-%m-%dT%XZ"
+        )
+
+    def test_does_not_serialize_data_when_not_configured(self):
+        instance = SimpleModel.objects.create(
+            text="sample text here", boolean=True, integer=4
+        )
+
+        log = instance.history.first()
+        self.assertIsNone(log.serialized_data)
+
+    def test_serializes_data_on_create(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeThisModel.objects.create(
+                label="test label",
+                timestamp=self.test_date,
+                nullable=4,
+                nested={"foo": True, "bar": False},
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "label": "test label",
+                "timestamp": self.test_date_string,
+                "nullable": 4,
+                "nested": {"foo": True, "bar": False},
+                "mask_me": None,
+                "date": None,
+                "code": None,
+            },
+        )
+
+    def test_serializes_data_on_update(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeThisModel.objects.create(
+                label="test label",
+                timestamp=self.test_date,
+                nullable=4,
+                nested={"foo": True, "bar": False},
+            )
+
+        update_date = self.test_date + datetime.timedelta(days=4)
+        with freezegun.freeze_time(update_date):
+            instance.label = "test label change"
+            instance.save()
+
+        log = instance.history.filter(timestamp=update_date).first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 1)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "label": "test label change",
+                "timestamp": self.test_date_string,
+                "nullable": 4,
+                "nested": {"foo": True, "bar": False},
+                "mask_me": None,
+                "date": None,
+                "code": None,
+            },
+        )
+
+    def test_serializes_data_on_delete(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeThisModel.objects.create(
+                label="test label",
+                timestamp=self.test_date,
+                nullable=4,
+                nested={"foo": True, "bar": False},
+            )
+
+        obj_id = int(instance.id)
+        delete_date = self.test_date + datetime.timedelta(days=4)
+        with freezegun.freeze_time(delete_date):
+            instance.delete()
+
+        log = LogEntry.objects.filter(object_id=obj_id, timestamp=delete_date).first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 2)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "label": "test label",
+                "timestamp": self.test_date_string,
+                "nullable": 4,
+                "nested": {"foo": True, "bar": False},
+                "mask_me": None,
+                "date": None,
+                "code": None,
+            },
+        )
+
+    def test_serialize_string_representations(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeThisModel.objects.create(
+                label="test label",
+                nullable=4,
+                nested={"foo": 10, "bar": False},
+                timestamp="2022-03-01T12:00Z",
+                date="2022-04-05",
+                code="e82d5e53-ca80-4037-af55-b90752326460",
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "label": "test label",
+                "timestamp": "2022-03-01T12:00:00Z",
+                "date": "2022-04-05",
+                "code": "e82d5e53-ca80-4037-af55-b90752326460",
+                "nullable": 4,
+                "nested": {"foo": 10, "bar": False},
+                "mask_me": None,
+            },
+        )
+
+    def test_serialize_mask_fields(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeThisModel.objects.create(
+                label="test label",
+                nullable=4,
+                timestamp=self.test_date,
+                nested={"foo": 10, "bar": False},
+                mask_me="confidential",
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "label": "test label",
+                "timestamp": self.test_date_string,
+                "nullable": 4,
+                "nested": {"foo": 10, "bar": False},
+                "mask_me": "******ential",
+                "date": None,
+                "code": None,
+            },
+        )
+
+    def test_serialize_only_auditlog_fields(self):
+        with freezegun.freeze_time(self.test_date):
+            instance = SerializeOnlySomeOfThisModel.objects.create(
+                this="this should be there", not_this="leave this bit out"
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"], {"this": "this should be there"}
+        )
+        self.assertDictEqual(
+            log.changes_dict,
+            {"this": ["None", "this should be there"], "id": ["None", "1"]},
+        )
+
+    def test_serialize_related(self):
+        with freezegun.freeze_time(self.test_date):
+            serialize_this = SerializeThisModel.objects.create(
+                label="test label",
+                nested={"foo": "bar"},
+                timestamp=self.test_date,
+            )
+            instance = SerializePrimaryKeyRelatedModel.objects.create(
+                serialize_this=serialize_this,
+                subheading="use a primary key for this serialization, please.",
+                value=10,
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "serialize_this": serialize_this.id,
+                "subheading": "use a primary key for this serialization, please.",
+                "value": 10,
+            },
+        )
+
+    def test_serialize_related_with_kwargs(self):
+        with freezegun.freeze_time(self.test_date):
+            serialize_this = SerializeThisModel.objects.create(
+                label="test label",
+                nested={"foo": "bar"},
+                timestamp=self.test_date,
+            )
+            instance = SerializeNaturalKeyRelatedModel.objects.create(
+                serialize_this=serialize_this,
+                subheading="use a natural key for this serialization, please.",
+                value=11,
+            )
+
+        log = instance.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 0)
+        self.assertDictEqual(
+            log.serialized_data["fields"],
+            {
+                "serialize_this": "test label",
+                "subheading": "use a natural key for this serialization, please.",
+                "value": 11,
+            },
+        )
+
+
+class TestAccessLog(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="test_user", is_active=True)
+        self.obj = SimpleModel.objects.create(text="For admin logentry test")
+
+    def test_access_log(self):
+        self.client.force_login(self.user)
+        content_type = ContentType.objects.get_for_model(self.obj.__class__)
+
+        # Check for log entries
+        qs = LogEntry.objects.filter(content_type=content_type, object_pk=self.obj.pk)
+        old_count = qs.count()
+
+        self.client.get(reverse("simplemodel-detail", args=[self.obj.pk]))
+        new_count = qs.count()
+        self.assertEqual(new_count, old_count + 1)
+
+        log_entry = qs.latest()
+        self.assertEqual(int(log_entry.object_pk), self.obj.pk)
+        self.assertEqual(log_entry.actor, self.user)
+        self.assertEqual(log_entry.content_type, content_type)
+        self.assertEqual(
+            log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
+        )
+        self.assertEqual(log_entry.changes, "null")
+        self.assertEqual(log_entry.changes_dict, {})
+
+
+@override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE=True)
+class DisableTest(TestCase):
+    """
+    All the other tests check logging, so this only needs to test disabled logging.
+    """
+
+    def test_create(self):
+        # Mimic the way imports create objects
+        inst = SimpleModel(
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
+        )
+        SimpleModel.save_base(inst, raw=True)
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_create_with_context_manager(self):
+        with disable_auditlog():
+            inst = SimpleModel.objects.create(text="I am a bit more difficult.")
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_update(self):
+        inst = SimpleModel(
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
+        )
+        SimpleModel.save_base(inst, raw=True)
+        inst.text = "I feel refreshed"
+        inst.save_base(raw=True)
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_update_with_context_manager(self):
+        inst = SimpleModel(
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
+        )
+        SimpleModel.save_base(inst, raw=True)
+        with disable_auditlog():
+            inst.text = "I feel refreshed"
+            inst.save()
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_m2m(self):
+        """
+        Create m2m from fixture and check that nothing was logged.
+        This only works with context manager
+        """
+        with disable_auditlog():
+            management.call_command("loaddata", "m2m_test_fixture.json", verbosity=0)
+        recursive = ManyRelatedModel.objects.get(pk=1)
+        self.assertEqual(0, LogEntry.objects.get_for_object(recursive).count())
+        related = ManyRelatedOtherModel.objects.get(pk=1)
+        self.assertEqual(0, LogEntry.objects.get_for_object(related).count())
