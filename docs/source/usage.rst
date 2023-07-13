@@ -214,6 +214,9 @@ It must be a list or tuple. Each item in this setting can be a:
             },
             "mask_fields": ["field5", "field6"],
             "m2m_fields": ["field7", "field8"],
+            "serialize_data": True, 
+            "serialize_auditlog_fields_only": False,
+            "serialize_kwargs": {"fields": ["foo", "bar", "biz", "baz"]},
         },
         "<appname>.<model3>",
     )
