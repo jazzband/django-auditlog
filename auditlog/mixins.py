@@ -1,5 +1,3 @@
-import json
-
 from django import urls as urlresolvers
 from django.conf import settings
 from django.contrib import admin
@@ -12,6 +10,7 @@ from django.utils import timezone
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
 from django.utils.timezone import localtime
+from django.utils.translation import gettext_lazy as _
 
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
@@ -21,11 +20,11 @@ MAX = 75
 
 
 class LogEntryAdminMixin:
-    @admin.display(description="Created")
+    @admin.display(description=_("Created"))
     def created(self, obj):
         return localtime(obj.timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
-    @admin.display(description="User")
+    @admin.display(description=_("User"))
     def user_url(self, obj):
         if obj.actor:
             app_label, model = settings.AUTH_USER_MODEL.split(".")
@@ -38,7 +37,7 @@ class LogEntryAdminMixin:
 
         return "system"
 
-    @admin.display(description="Resource")
+    @admin.display(description=_("Resource"))
     def resource_url(self, obj):
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = f"admin:{app_label}_{model}_change"
@@ -52,11 +51,11 @@ class LogEntryAdminMixin:
                 '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
             )
 
-    @admin.display(description="Changes")
+    @admin.display(description=_("Changes"))
     def msg_short(self, obj):
         if obj.action in [LogEntry.Action.DELETE, LogEntry.Action.ACCESS]:
             return ""  # delete
-        changes = json.loads(obj.changes)
+        changes = obj.changes_dict
         s = "" if len(changes) == 1 else "s"
         fields = ", ".join(changes.keys())
         if len(fields) > MAX:
@@ -64,9 +63,9 @@ class LogEntryAdminMixin:
             fields = fields[:i] + " .."
         return "%d change%s: %s" % (len(changes), s, fields)
 
-    @admin.display(description="Changes")
+    @admin.display(description=_("Changes"))
     def msg(self, obj):
-        changes = json.loads(obj.changes)
+        changes = obj.changes_dict
 
         atom_changes = {}
         m2m_changes = {}

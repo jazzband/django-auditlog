@@ -14,6 +14,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import DEFAULT_DB_ALIAS, models
 from django.db.models import Q, QuerySet
 from django.utils import formats
+from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
@@ -355,7 +356,9 @@ class LogEntry(models.Model):
         blank=True, null=True, verbose_name=_("remote address")
     )
     timestamp = models.DateTimeField(
-        db_index=True, auto_now_add=True, verbose_name=_("timestamp")
+        default=django_timezone.now,
+        db_index=True,
+        verbose_name=_("timestamp"),
     )
     additional_data = models.JSONField(
         blank=True, null=True, verbose_name=_("additional data")
@@ -388,7 +391,7 @@ class LogEntry(models.Model):
         :return: The changes recorded in this log entry as a dictionary object.
         """
         try:
-            return json.loads(self.changes)
+            return json.loads(self.changes) or {}
         except ValueError:
             return {}
 

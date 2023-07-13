@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
 
 from auditlog.count import limit_query_time
 from auditlog.filters import (
@@ -47,7 +48,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
     fieldsets = [
         (None, {"fields": ["created", "user_url", "resource_url"]}),
-        ("Changes", {"fields": ["action", "msg"]}),
+        (_("Changes"), {"fields": ["action", "msg"]}),
     ]
     list_select_related = ["actor", "content_type"]
     show_full_result_count = False

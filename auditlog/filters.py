@@ -6,16 +6,17 @@ from django.contrib.postgres.fields import JSONField
 from django.db import connection
 from django.db.models import Value
 from django.db.models.functions import Cast, Concat
+from django.utils.translation import gettext_lazy as _
 
 from auditlog.registry import auditlog
 
 
 class ShortActorFilter(SimpleListFilter):
-    title = "Actor"
+    title = _("Actor")
     parameter_name = "actor"
 
     def lookups(self, request, model_admin):
-        return [("null", "System"), ("not_null", "Users")]
+        return [("null", _("System")), ("not_null", _("Users"))]
 
     def queryset(self, request, queryset):
         value = self.value()
@@ -27,7 +28,7 @@ class ShortActorFilter(SimpleListFilter):
 
 
 class ResourceTypeFilter(SimpleListFilter):
-    title = "Resource Type"
+    title = _("Resource Type")
     parameter_name = "resource_type"
 
     def lookups(self, request, model_admin):
@@ -50,7 +51,7 @@ class ResourceTypeFilter(SimpleListFilter):
 
 
 class FieldFilter(SimpleListFilter):
-    title = "Field"
+    title = _("Field")
     parameter_name = "field"
     parent = ResourceTypeFilter
 
