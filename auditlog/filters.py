@@ -2,9 +2,8 @@ from django.apps import apps
 from django.contrib.admin import SimpleListFilter
 from django.contrib.admin.filters import DateFieldListFilter
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField
 from django.db import connection
-from django.db.models import Value
+from django.db.models import JSONField, Value
 from django.db.models.functions import Cast, Concat
 from django.utils.translation import gettext_lazy as _
 
@@ -33,8 +32,7 @@ class ResourceTypeFilter(SimpleListFilter):
 
     def lookups(self, request, model_admin):
         tracked_model_names = [
-            "{}.{}".format(m._meta.app_label, m._meta.model_name)
-            for m in auditlog.get_models()
+            f"{m._meta.app_label}.{m._meta.model_name}" for m in auditlog.get_models()
         ]
         model_name_concat = Concat("app_label", Value("."), "model")
         content_types = ContentType.objects.annotate(
@@ -82,7 +80,7 @@ class FieldFilter(SimpleListFilter):
         if self.value() is None:
             return queryset
         return queryset.annotate(changes_json=Cast("changes", JSONField())).filter(
-            **{"changes_json__{}__isnull".format(self.value()): False}
+            **{f"changes_json__{self.value()}__isnull": False}
         )
 
 

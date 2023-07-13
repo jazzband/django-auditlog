@@ -166,14 +166,14 @@ class LogEntryAdminMixin:
         ahead_behind = "ahead of" if offset_seconds < 0 else "behind"
         offset_seconds = abs(offset_seconds)
         hours, minutes = divmod(int(offset_seconds / 60), 60)
-        hours = "{} hour{}".format(hours, pluralize(hours))
-        minutes = " {} minute{}".format(minutes, pluralize(minutes)) if minutes else ""
+        hours = f"{hours} hour{pluralize(hours)}"
+        minutes = f" {minutes} minute{pluralize(minutes)}" if minutes else ""
         warning_message = (
             "Note: The timestamps are in UTC, which is {}{} {} server time".format(
                 hours, minutes, ahead_behind
             )
         )
-        return '<span class="timezonewarning">{}</span>'.format(warning_message)
+        return f'<span class="timezonewarning">{warning_message}</span>'
 
     def field_verbose_name(self, obj, field_name: str):
         model = obj.content_type.model_class()
