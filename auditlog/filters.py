@@ -97,3 +97,19 @@ def get_timestamp_filter():
             pass
 
     return DateFieldListFilter
+
+
+class CIDFilter(SimpleListFilter):
+    title = _("Correlation ID")
+    parameter_name = "cid"
+
+    def lookups(self, request, model_admin):
+        return []
+
+    def has_output(self):
+        return True
+
+    def queryset(self, request, queryset):
+        if self.value() is None:
+            return queryset
+        return queryset.filter(cid=self.value())

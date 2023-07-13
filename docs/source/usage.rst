@@ -147,8 +147,8 @@ Objects are serialized using the Django core serializer. Keyword arguments may b
 .. code-block:: python
 
     auditlog.register(
-        MyModel, 
-        serialize_data=True, 
+        MyModel,
+        serialize_data=True,
         serialize_kwargs={"fields": ["foo", "bar", "biz", "baz"]}
     )
 
@@ -163,8 +163,18 @@ Note that all fields on the object will be serialized unless restricted with one
         serialize_auditlog_fields_only=True
     )
 
-Field masking is supported in object serialization. Any value belonging to a field whose name is found in the ``mask_fields`` list will be masked in the serialized object data. Masked values are obfuscated with asterisks in the same way as they are in the ``LogEntry.changes`` field. 
+Field masking is supported in object serialization. Any value belonging to a field whose name is found in the ``mask_fields`` list will be masked in the serialized object data. Masked values are obfuscated with asterisks in the same way as they are in the ``LogEntry.changes`` field.
 
+Correlation ID
+--------------
+
+You can store a correlation ID (cid) in the log entries by:
+
+1. Reading from a request header (specified by `AUDITLOG_CID_HEADER`)
+2. Using a custom cid getter (specified by `AUDITLOG_CID_GETTER`)
+
+Using the custom getter is helpful for integrating with a third-party cid package
+such as `django-cid <https://pypi.org/project/django-cid/>`_.
 
 Settings
 --------
@@ -214,7 +224,7 @@ It must be a list or tuple. Each item in this setting can be a:
             },
             "mask_fields": ["field5", "field6"],
             "m2m_fields": ["field7", "field8"],
-            "serialize_data": True, 
+            "serialize_data": True,
             "serialize_auditlog_fields_only": False,
             "serialize_kwargs": {"fields": ["foo", "bar", "biz", "baz"]},
         },
@@ -234,6 +244,20 @@ Disables logging during raw save. (I.e. for instance using loaddata)
 
 .. versionadded:: 2.2.0
 
+**AUDITLOG_CID_HEADER**
+
+The request header containing the Correlation ID value to use in all log entries created as a result of the request.
+The value can of in the format `HTTP_MY_HEADER` or `my-header`.
+
+.. versionadded:: 3.0.0
+
+**AUDITLOG_CID_GETTER**
+
+The function to use to retrieve the Correlation ID. The value can be a callable or a string import path.
+
+If the value is `None`, the default getter will be used.
+
+.. versionadded:: 3.0.0
 
 Actors
 ------

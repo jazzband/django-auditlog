@@ -21,11 +21,13 @@ from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
 
 from auditlog.admin import LogEntryAdmin
+from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
+from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
@@ -481,6 +483,38 @@ class MiddlewareTest(TestCase):
                     self.middleware._get_remote_addr(request), expected_remote_addr
                 )
 
+    def test_cid(self):
+        header = str(settings.AUDITLOG_CID_HEADER).lstrip("HTTP_").replace("_", "-")
+        header_meta = "HTTP_" + header.upper().replace("-", "_")
+        cid = "random_CID"
+
+        _settings = [
+            # these tuples test reading the cid from the header defined in the settings
+            ({"AUDITLOG_CID_HEADER": header}, cid),  # x-correlation-id
+            ({"AUDITLOG_CID_HEADER": header_meta}, cid),  # HTTP_X_CORRELATION_ID
+            ({"AUDITLOG_CID_HEADER": None}, None),
+            # these two tuples test using a custom getter.
+            # Here, we don't necessarily care about the cid that was set in set_cid
+            (
+                {
+                    "AUDITLOG_CID_GETTER": "auditlog_tests.fixtures.custom_get_cid.get_cid"
+                },
+                custom_get_cid(),
+            ),
+            ({"AUDITLOG_CID_GETTER": custom_get_cid}, custom_get_cid()),
+        ]
+        for setting, expected_result in _settings:
+            with self.subTest():
+                with self.settings(**setting):
+                    request = self.factory.get("/", **{header_meta: cid})
+                    self.middleware(request)
+
+                    obj = SimpleModel.objects.create(text="I am not difficult.")
+                    history = obj.history.get(action=LogEntry.Action.CREATE)
+
+                    self.assertEqual(history.cid, expected_result)
+                    self.assertEqual(get_cid(), expected_result)
+
 
 class SimpleIncludeModelTest(TestCase):
     """Log only changes in include_fields"""
@@ -593,7 +627,7 @@ class SimpleMappingModelTest(TestCase):
         )
 
 
-class SimpeMaskedFieldsModelTest(TestCase):
+class SimpleMaskedFieldsModelTest(TestCase):
     """Log masked changes for fields in mask_fields"""
 
     def test_register_mask_fields(self):
@@ -1214,7 +1248,7 @@ class ChoicesFieldModelTest(TestCase):
         assert "related_models" in history.changes_display_dict
 
 
-class CharfieldTextfieldModelTest(TestCase):
+class CharFieldTextFieldModelTest(TestCase):
     def setUp(self):
         self.PLACEHOLDER_LONGCHAR = "s" * 255
         self.PLACEHOLDER_LONGTEXTFIELD = "s" * 1000
@@ -1330,6 +1364,21 @@ class AdminPanelTest(TestCase):
         ]:
             with self.settings(TIME_ZONE=tz):
                 self.assertEqual(self.admin.created(log_entry), timestamp)
+
+    def test_cid(self):
+        self.client.force_login(self.user)
+        expected_response = (
+            '<a href="/admin/auditlog/logentry/?cid=123" '
+            'title="Click to filter by records with this correlation id">123</a>'
+        )
+
+        log_entry = self.obj.history.latest()
+        log_entry.cid = "123"
+        log_entry.save()
+
+        res = self.client.get("/admin/auditlog/logentry/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(expected_response, res.rendered_content)
 
 
 class DiffMsgTest(TestCase):

@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Improvements
+
+- feat: Added support for Correlation ID
+
 #### Fixes
 
 - fix: Make sure `LogEntry.changes_dict()` returns an empty dict instead of `None` when `json.loads()` returns `None`. ([#472](https://github.com/jazzband/django-auditlog/pull/472))

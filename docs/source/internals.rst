@@ -19,6 +19,12 @@ Middleware
 .. automodule:: auditlog.middleware
     :members: AuditlogMiddleware
 
+Correlation ID
+--------------
+
+.. automodule:: auditlog.cid
+    :members: get_cid, set_cid
+
 Signal receivers
 ----------------
 
