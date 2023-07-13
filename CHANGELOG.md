@@ -3,11 +3,14 @@
 #### Improvements
 
 - feat: Add `serialized_data` field on `LogEntry` model. ([#412](https://github.com/jazzband/django-auditlog/pull/412))
+- feat: Display the field name as it would be displayed in Django Admin or use `mapping_field` if available [#428](https://github.com/jazzband/django-auditlog/pull/428)
 
 #### Fixes
 
 - fix: Display `created` timestamp in server timezone ([#404](https://github.com/jazzband/django-auditlog/pull/404))
 - fix: Handle port in `remote_addr` ([#417](https://github.com/jazzband/django-auditlog/pull/417))
+- fix: Handle the error with AttributeError: 'OneToOneRel' error occur during a `PolymorphicModel` has relation with other models  ([#429](https://github.com/jazzband/django-auditlog/pull/429))
+- fix: Support search by custom USERNAME_FIELD ([#432](https://github.com/jazzband/django-auditlog/pull/432))
 
 ## 2.1.1 (2022-07-27)
 

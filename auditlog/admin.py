@@ -26,6 +26,7 @@ class TimeLimitedPaginator(Paginator):
         return super().count
 
 
+@admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     list_display = ["created", "resource_url", "action", "msg_short", "user_url"]
     search_fields = [
@@ -34,7 +35,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         "changes",
         "actor__first_name",
         "actor__last_name",
-        "actor__{}".format(get_user_model().USERNAME_FIELD),
+        f"actor__{get_user_model().USERNAME_FIELD}",
     ]
     list_filter = [
         "action",
@@ -60,6 +61,3 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-
-admin.site.register(LogEntry, LogEntryAdmin)

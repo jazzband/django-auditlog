@@ -2,7 +2,10 @@ import json
 
 from django import urls as urlresolvers
 from django.conf import settings
+from django.contrib import admin
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import DateTimeField
+from django.forms.utils import pretty_name
 from django.template.defaultfilters import pluralize
 from django.urls.exceptions import NoReverseMatch
 from django.utils import timezone
@@ -11,16 +14,17 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import localtime
 
 from auditlog.models import LogEntry
+from auditlog.registry import auditlog
 
 MAX = 75
 
 
 class LogEntryAdminMixin:
+    @admin.display(description="Created")
     def created(self, obj):
         return localtime(obj.timestamp).strftime("%Y-%m-%d %H:%M:%S")
 
-    created.short_description = "Created"
-
+    @admin.display(description="User")
     def user_url(self, obj):
         if obj.actor:
             app_label, model = settings.AUTH_USER_MODEL.split(".")
@@ -33,8 +37,7 @@ class LogEntryAdminMixin:
 
         return "system"
 
-    user_url.short_description = "User"
-
+    @admin.display(description="Resource")
     def resource_url(self, obj):
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = f"admin:{app_label}_{model}_change"
@@ -48,8 +51,7 @@ class LogEntryAdminMixin:
                 '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
             )
 
-    resource_url.short_description = "Resource"
-
+    @admin.display(description="Changes")
     def msg_short(self, obj):
         if obj.action == LogEntry.Action.DELETE:
             return ""  # delete
@@ -61,8 +63,7 @@ class LogEntryAdminMixin:
             fields = fields[:i] + " .."
         return "%d change%s: %s" % (len(changes), s, fields)
 
-    msg_short.short_description = "Changes"
-
+    @admin.display(description="Changes")
     def msg(self, obj):
         changes = json.loads(obj.changes)
 
@@ -86,7 +87,9 @@ class LogEntryAdminMixin:
             msg.append("<table>")
             msg.append(self._format_header("#", "Field", "From", "To"))
             for i, (field, change) in enumerate(sorted(atom_changes.items()), 1):
-                value = [i, field] + (["***", "***"] if field == "password" else change)
+                value = [i, self.field_verbose_name(obj, field)] + (
+                    ["***", "***"] if field == "password" else change
+                )
                 if field in datetime_fields:
                     spotted_datetime_field = True
                 msg.append(self._format_line(*value))
@@ -106,7 +109,7 @@ class LogEntryAdminMixin:
                     format_html(
                         "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
                         i,
-                        field,
+                        self.field_verbose_name(obj, field),
                         change["operation"],
                         change_html,
                     )
@@ -120,8 +123,6 @@ class LogEntryAdminMixin:
                 msg.append(warning_message)
 
         return mark_safe("".join(msg))
-
-    msg.short_description = "Changes"
 
     def _get_datetime_fields(self, obj):
         # only works for existing models and existing fields
@@ -160,3 +161,19 @@ class LogEntryAdminMixin:
             )
         )
         return '<span class="timezonewarning">{}</span>'.format(warning_message)
+
+    def field_verbose_name(self, obj, field_name: str):
+        model = obj.content_type.model_class()
+        try:
+            model_fields = auditlog.get_model_fields(model._meta.model)
+            mapping_field_name = model_fields["mapping_fields"].get(field_name)
+            if mapping_field_name:
+                return mapping_field_name
+        except KeyError:
+            # Model definition in auditlog was probably removed
+            pass
+        try:
+            field = model._meta.get_field(field_name)
+            return pretty_name(getattr(field, "verbose_name", field_name))
+        except FieldDoesNotExist:
+            return pretty_name(field_name)
