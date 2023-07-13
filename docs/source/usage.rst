@@ -37,6 +37,25 @@ It is recommended to place the register code (``auditlog.register(MyModel)``) at
 This ensures that every time your model is imported it will also be registered to log changes. Auditlog makes sure that
 each model is only registered once, otherwise duplicate log entries would occur.
 
+
+**Logging access**
+
+By default, Auditlog will only log changes to your model instances. If you want to log access to your model instances as well, Auditlog provides a mixin class for that purpose. Simply add the :py:class:`auditlog.mixins.LogAccessMixin` to your class based view and Auditlog will log access to your model instances. The mixin expects your view to have a ``get_object`` method that returns the model instance for which access shall be logged - this is usually the case for DetailViews and UpdateViews.
+
+A DetailView utilizing the LogAccessMixin could look like the following example:
+
+.. code-block:: python
+
+    from django.views.generic import DetailView
+
+    from auditlog.mixins import LogAccessMixin
+
+    class MyModelDetailView(LogAccessMixin, DetailView):
+        model = MyModel
+
+        # View code goes here
+
+
 **Excluding fields**
 
 Fields that are excluded will not trigger saving a new log entry and will not show up in the recorded changes.
@@ -201,6 +220,18 @@ It must be a list or tuple. Each item in this setting can be a:
 
 .. versionadded:: 2.1.0
 
+**AUDITLOG_DISABLE_ON_RAW_SAVE**
+
+Disables logging during raw save. (I.e. for instance using loaddata)
+
+.. note::
+
+    M2M operations will still be logged, since they're never considered `raw`. To disable them
+    you must remove their setting or use the `disable_auditlog` context manager.
+
+.. versionadded:: 2.2.0
+
+
 Actors
 ------
 
@@ -228,10 +259,11 @@ It is recommended to keep all middleware that alters the request loaded before A
     user as actor. To only have some object changes to be logged with the current request's user as actor manual logging is
     required.
 
-Context manager
-***************
+Context managers
+----------------
 
-.. versionadded:: 2.1.0
+Set actor
+*********
 
 To enable the automatic logging of the actors outside of request context (e.g. in a Celery task), you can use a context
 manager::
@@ -243,6 +275,26 @@ manager::
         with set_actor(actor):
             # if your code here leads to creation of LogEntry instances, these will have the actor set
             ...
+
+
+.. versionadded:: 2.1.0
+
+
+Disable auditlog
+****************
+
+Disable auditlog temporary, for instance if you need to install a large fixture on a live system or cleanup
+corrupt data::
+
+    from auditlog.context import disable_auditlog
+
+    with disable_auditlog():
+        # Do things silently here
+        ...
+
+
+.. versionadded:: 2.2.0
+
 
 Object history
 --------------

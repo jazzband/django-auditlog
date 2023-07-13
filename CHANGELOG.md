@@ -1,9 +1,15 @@
 # Changes
 
-#### Improvements
+## 2.2.0 (2022-10-07)
 
+#### Improvements
+- feat: Add `ACCESS` action to `LogEntry` model and allow object access to be logged. ([#436](https://github.com/jazzband/django-auditlog/pull/436))
 - feat: Add `serialized_data` field on `LogEntry` model. ([#412](https://github.com/jazzband/django-auditlog/pull/412))
 - feat: Display the field name as it would be displayed in Django Admin or use `mapping_field` if available [#428](https://github.com/jazzband/django-auditlog/pull/428)
+- feat: New context manager `disable_auditlog` to turn off logging and a new setting `AUDITLOG_DISABLE_ON_RAW_SAVE`
+  to disable it during raw-save operations like loaddata. [#446](https://github.com/jazzband/django-auditlog/pull/446)
+- Python: Confirm Python 3.11 support ([#447](https://github.com/jazzband/django-auditlog/pull/447))
+- feat: Replace the `django.utils.timezone.utc` by `datetime.timezone.utc`. [#448](https://github.com/jazzband/django-auditlog/pull/448)
 
 #### Fixes
 

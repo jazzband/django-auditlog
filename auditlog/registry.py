@@ -24,6 +24,7 @@ from django.db.models.signals import (
 )
 
 from auditlog.conf import settings
+from auditlog.signals import accessed
 
 DispatchUID = Tuple[int, int, int]
 
@@ -44,10 +45,11 @@ class AuditlogModelRegistry:
         create: bool = True,
         update: bool = True,
         delete: bool = True,
+        access: bool = True,
         m2m: bool = True,
         custom: Optional[Dict[ModelSignal, Callable]] = None,
     ):
-        from auditlog.receivers import log_create, log_delete, log_update
+        from auditlog.receivers import log_access, log_create, log_delete, log_update
 
         self._registry = {}
         self._signals = {}
@@ -59,6 +61,8 @@ class AuditlogModelRegistry:
             self._signals[pre_save] = log_update
         if delete:
             self._signals[post_delete] = log_delete
+        if access:
+            self._signals[accessed] = log_access
         self._m2m = m2m
 
         if custom is not None:
@@ -267,7 +271,8 @@ class AuditlogModelRegistry:
         """
         if not isinstance(settings.AUDITLOG_INCLUDE_ALL_MODELS, bool):
             raise TypeError("Setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be a boolean")
-
+        if not isinstance(settings.AUDITLOG_DISABLE_ON_RAW_SAVE, bool):
+            raise TypeError("Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean")
         if not isinstance(settings.AUDITLOG_EXCLUDE_TRACKING_MODELS, (list, tuple)):
             raise TypeError(
                 "Setting 'AUDITLOG_EXCLUDE_TRACKING_MODELS' must be a list or tuple"

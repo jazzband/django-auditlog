@@ -15,6 +15,7 @@ from django.utils.timezone import localtime
 
 from auditlog.models import LogEntry
 from auditlog.registry import auditlog
+from auditlog.signals import accessed
 
 MAX = 75
 
@@ -53,7 +54,7 @@ class LogEntryAdminMixin:
 
     @admin.display(description="Changes")
     def msg_short(self, obj):
-        if obj.action == LogEntry.Action.DELETE:
+        if obj.action in [LogEntry.Action.DELETE, LogEntry.Action.ACCESS]:
             return ""  # delete
         changes = json.loads(obj.changes)
         s = "" if len(changes) == 1 else "s"
@@ -177,3 +178,10 @@ class LogEntryAdminMixin:
             return pretty_name(getattr(field, "verbose_name", field_name))
         except FieldDoesNotExist:
             return pretty_name(field_name)
+
+
+class LogAccessMixin:
+    def render_to_response(self, context, **response_kwargs):
+        obj = self.get_object()
+        accessed.send(obj.__class__, instance=obj)
+        return super().render_to_response(context, **response_kwargs)

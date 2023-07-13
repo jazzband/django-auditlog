@@ -2,6 +2,7 @@ import datetime
 import itertools
 import json
 import warnings
+from datetime import timezone
 from unittest import mock
 
 import freezegun
@@ -12,12 +13,15 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
+from django.core import management
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
-from django.utils import dateformat, formats, timezone
+from django.urls import reverse
+from django.utils import dateformat, formats
+from django.utils import timezone as django_timezone
 
 from auditlog.admin import LogEntryAdmin
-from auditlog.context import set_actor
+from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import LogEntry
@@ -616,8 +620,8 @@ class AdditionalDataModelTest(TestCase):
 class DateTimeFieldModelTest(TestCase):
     """Tests if DateTimeField changes are recognised correctly"""
 
-    utc_plus_one = timezone.get_fixed_timezone(datetime.timedelta(hours=1))
-    now = timezone.now()
+    utc_plus_one = django_timezone.get_fixed_timezone(datetime.timedelta(hours=1))
+    now = django_timezone.now()
 
     def setUp(self):
         super().setUp()
@@ -786,7 +790,7 @@ class DateTimeFieldModelTest(TestCase):
                 " DATETIME_FORMAT"
             ),
         )
-        timestamp = timezone.now()
+        timestamp = django_timezone.now()
         dtm.timestamp = timestamp
         dtm.save()
         localized_timestamp = timestamp.astimezone(gettz(settings.TIME_ZONE))
@@ -910,7 +914,9 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
 
         # Change with naive field doesnt raise error
-        dtm.naive_dt = timezone.make_naive(timezone.now(), timezone=timezone.utc)
+        dtm.naive_dt = django_timezone.make_naive(
+            django_timezone.now(), timezone=timezone.utc
+        )
         dtm.save()
 
 
@@ -1089,6 +1095,12 @@ class RegisterModelSettingsTest(TestCase):
                     "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' model must be in the "
                     "format <app_name>.<model_name>"
                 ),
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
+            with self.assertRaisesMessage(
+                TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
             ):
                 self.test_auditlog.register_from_settings()
 
@@ -1579,7 +1591,7 @@ class ModelInstanceDiffTest(TestCase):
 class TestModelSerialization(TestCase):
     def setUp(self):
         super().setUp()
-        self.test_date = datetime.datetime(2022, 1, 1, 12, tzinfo=datetime.timezone.utc)
+        self.test_date = datetime.datetime(2022, 1, 1, 12, tzinfo=timezone.utc)
         self.test_date_string = datetime.datetime.strftime(
             self.test_date, "%Y-%m-%dT%XZ"
         )
@@ -1796,3 +1808,87 @@ class TestModelSerialization(TestCase):
                 "value": 11,
             },
         )
+
+
+class TestAccessLog(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="test_user", is_active=True)
+        self.obj = SimpleModel.objects.create(text="For admin logentry test")
+
+    def test_access_log(self):
+        self.client.force_login(self.user)
+        content_type = ContentType.objects.get_for_model(self.obj.__class__)
+
+        # Check for log entries
+        qs = LogEntry.objects.filter(content_type=content_type, object_pk=self.obj.pk)
+        old_count = qs.count()
+
+        self.client.get(reverse("simplemodel-detail", args=[self.obj.pk]))
+        new_count = qs.count()
+        self.assertEqual(new_count, old_count + 1)
+
+        log_entry = qs.latest()
+        self.assertEqual(int(log_entry.object_pk), self.obj.pk)
+        self.assertEqual(log_entry.actor, self.user)
+        self.assertEqual(log_entry.content_type, content_type)
+        self.assertEqual(
+            log_entry.action, LogEntry.Action.ACCESS, msg="Action is 'ACCESS'"
+        )
+        self.assertEqual(log_entry.changes, "null")
+
+
+@override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE=True)
+class DisableTest(TestCase):
+    """
+    All the other tests check logging, so this only needs to test disabled logging.
+    """
+
+    def test_create(self):
+        # Mimic the way imports create objects
+        inst = SimpleModel(
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
+        )
+        SimpleModel.save_base(inst, raw=True)
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_create_with_context_manager(self):
+        with disable_auditlog():
+            inst = SimpleModel.objects.create(text="I am a bit more difficult.")
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_update(self):
+        inst = SimpleModel(
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
+        )
+        SimpleModel.save_base(inst, raw=True)
+        inst.text = "I feel refreshed"
+        inst.save_base(raw=True)
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_update_with_context_manager(self):
+        inst = SimpleModel(
+            text="I am a bit more difficult.",
+            boolean=False,
+            datetime=django_timezone.now(),
+        )
+        SimpleModel.save_base(inst, raw=True)
+        with disable_auditlog():
+            inst.text = "I feel refreshed"
+            inst.save()
+        self.assertEqual(0, LogEntry.objects.get_for_object(inst).count())
+
+    def test_m2m(self):
+        """
+        Create m2m from fixture and check that nothing was logged.
+        This only works with context manager
+        """
+        with disable_auditlog():
+            management.call_command("loaddata", "m2m_test_fixture.json", verbosity=0)
+        recursive = ManyRelatedModel.objects.get(pk=1)
+        self.assertEqual(0, LogEntry.objects.get_for_object(recursive).count())
+        related = ManyRelatedOtherModel.objects.get(pk=1)
+        self.assertEqual(0, LogEntry.objects.get_for_object(related).count())
