@@ -16,6 +16,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.core import management
+from django.db import models
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
@@ -2242,6 +2243,24 @@ class TestModelSerialization(TestCase):
                 "subheading": "use a natural key for this serialization, please.",
                 "value": 11,
             },
+        )
+
+    def test_f_expressions(self):
+        serialize_this = SerializeThisModel.objects.create(
+            label="test label",
+            nested={"foo": "bar"},
+            timestamp=self.test_date,
+            nullable=1,
+        )
+        serialize_this.nullable = models.F("nullable") + 1
+        serialize_this.save()
+
+        log = serialize_this.history.first()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, 1)
+        self.assertEqual(
+            log.serialized_data["fields"]["nullable"],
+            "F(nullable) + Value(1)",
         )
 
 
