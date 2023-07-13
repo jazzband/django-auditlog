@@ -249,7 +249,10 @@ class LogEntryManager(models.Manager):
         for field in instance_copy._meta.fields:
             if not field.is_relation:
                 value = getattr(instance_copy, field.name)
-                setattr(instance_copy, field.name, field.to_python(value))
+                try:
+                    setattr(instance_copy, field.name, field.to_python(value))
+                except ValidationError:
+                    continue
         return instance_copy
 
     def _get_applicable_model_fields(
