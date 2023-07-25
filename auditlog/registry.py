@@ -13,7 +13,7 @@ from typing import (
 )
 
 from django.apps import apps
-from django.db.models import Model
+from django.db.models import ManyToManyField, Model
 from django.db.models.base import ModelBase
 from django.db.models.signals import (
     ModelSignal,
@@ -336,12 +336,28 @@ class AuditlogModelRegistry:
             exclude_models = self._get_exclude_models(
                 settings.AUDITLOG_EXCLUDE_TRACKING_MODELS
             )
-            models = apps.get_models()
 
-            for model in models:
+            for model in apps.get_models(include_auto_created=True):
                 if model in exclude_models:
                     continue
-                self.register(model)
+
+                meta = model._meta
+                if not meta.managed:
+                    continue
+
+                m2m_fields = [
+                    m.name for m in meta.get_fields() if isinstance(m, ManyToManyField)
+                ]
+
+                exclude_fields = [
+                    i.related_name
+                    for i in meta.related_objects
+                    if i.related_name and not i.related_model._meta.managed
+                ]
+
+                self.register(
+                    model=model, m2m_fields=m2m_fields, exclude_fields=exclude_fields
+                )
 
         self._register_models(settings.AUDITLOG_INCLUDE_TRACKING_MODELS)
 
