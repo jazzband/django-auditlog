@@ -301,6 +301,29 @@ class SerializeNaturalKeyRelatedModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class SimpleNonManagedModel(models.Model):
+    """
+    A simple model with no special things going on.
+    """
+
+    text = models.TextField(blank=True)
+    boolean = models.BooleanField(default=False)
+    integer = models.IntegerField(blank=True, null=True)
+    datetime = models.DateTimeField(auto_now=True)
+
+    history = AuditlogHistoryField()
+
+    def __str__(self):
+        return self.text
+
+    class Meta:
+        managed = False
+
+
+class AutoManyRelatedModel(models.Model):
+    related = models.ManyToManyField(SimpleModel)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ProxyModel)

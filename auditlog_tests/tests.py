@@ -36,6 +36,7 @@ from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
+    AutoManyRelatedModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
@@ -55,6 +56,7 @@ from auditlog_tests.models import (
     SimpleMappingModel,
     SimpleMaskedModel,
     SimpleModel,
+    SimpleNonManagedModel,
     UUIDPrimaryKeyModel,
 )
 
@@ -1136,7 +1138,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 23)
+        self.assertEqual(len(self.test_auditlog.get_models()), 25)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -1329,6 +1331,32 @@ class RegisterModelSettingsTest(TestCase):
             register.register(
                 SimpleModel, serialize_kwargs={"fields": ["text", "integer"]}
             )
+
+    @override_settings(AUDITLOG_INCLUDE_ALL_MODELS=True)
+    def test_register_from_settings_register_all_models_excluding_non_managed_models(
+        self,
+    ):
+        self.test_auditlog.register_from_settings()
+
+        self.assertFalse(self.test_auditlog.contains(SimpleNonManagedModel))
+
+    @override_settings(AUDITLOG_INCLUDE_ALL_MODELS=True)
+    def test_register_from_settings_register_all_models_and_figure_out_m2m_fields(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertIn(
+            "related", self.test_auditlog._registry[AutoManyRelatedModel]["m2m_fields"]
+        )
+
+    @override_settings(AUDITLOG_INCLUDE_ALL_MODELS=True)
+    def test_register_from_settings_register_all_models_including_auto_created_models(
+        self,
+    ):
+        self.test_auditlog.register_from_settings()
+
+        self.assertTrue(
+            self.test_auditlog.contains(AutoManyRelatedModel.related.through)
+        )
 
 
 class ChoicesFieldModelTest(TestCase):
