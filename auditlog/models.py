@@ -1,8 +1,9 @@
 import ast
+import contextlib
 import json
 from copy import deepcopy
 from datetime import timezone
-from typing import Any, Dict, List, Union
+from typing import Any, Callable, Dict, List, Union
 
 from dateutil import parser
 from dateutil.tz import gettz
@@ -66,7 +67,7 @@ class LogEntryManager(models.Manager):
                 kwargs.setdefault("additional_data", get_additional_data())
 
             # Delete log entries with the same pk as a newly created model.
-            # This should only be necessary when an pk is used twice.
+            # This should only be necessary when a pk is used twice.
             if kwargs.get("action", None) is LogEntry.Action.CREATE:
                 if (
                     kwargs.get("object_id", None) is not None
@@ -225,7 +226,7 @@ class LogEntryManager(models.Manager):
         pk_field = instance._meta.pk.name
         pk = getattr(instance, pk_field, None)
 
-        # Check to make sure that we got an pk not a model object.
+        # Check to make sure that we got a pk not a model object.
         if isinstance(pk, models.Model):
             pk = self._get_pk_value(pk)
         return pk
@@ -358,6 +359,7 @@ class LogEntry(models.Model):
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
+    changes_text = models.TextField(blank=True, verbose_name=_("change message"))
     changes = models.JSONField(null=True, verbose_name=_("change message"))
     actor = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
@@ -411,7 +413,7 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry as a dictionary object.
         """
-        return self.changes or {}
+        return changes_func(self)
 
     @property
     def changes_str(self, colon=": ", arrow=" \u2192 ", separator="; "):
@@ -459,7 +461,7 @@ class LogEntry(models.Model):
                 changes_display_dict[field_name] = values
                 continue
             values_display = []
-            # handle choices fields and Postgres ArrayField to get human readable version
+            # handle choices fields and Postgres ArrayField to get human-readable version
             choices_dict = None
             if getattr(field, "choices", []):
                 choices_dict = dict(field.choices)
@@ -546,7 +548,7 @@ class AuditlogHistoryField(GenericRelation):
     A subclass of py:class:`django.contrib.contenttypes.fields.GenericRelation` that sets some default
     variables. This makes it easier to access Auditlog's log entries, for example in templates.
 
-    By default this field will assume that your primary keys are numeric, simply because this is the most
+    By default, this field will assume that your primary keys are numeric, simply because this is the most
     common case. However, if you have a non-integer primary key, you can simply pass ``pk_indexable=False``
     to the constructor, and Auditlog will fall back to using a non-indexed text based field for this model.
 
@@ -585,3 +587,24 @@ class AuditlogHistoryField(GenericRelation):
         # method.  However, because we don't want to delete these related
         # objects, we simply return an empty list.
         return []
+
+
+# should I add a signal receiver for setting_changed?
+changes_func = None
+
+
+def _changes_func() -> Callable[[LogEntry], Dict]:
+    def json_then_text(instance: LogEntry) -> Dict:
+        if instance.changes:
+            return instance.changes
+        elif instance.changes_text:
+            with contextlib.suppress(ValueError):
+                return json.loads(instance.changes_text)
+        return {}
+
+    def default(instance: LogEntry) -> Dict:
+        return instance.changes or {}
+
+    if settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT:
+        return json_then_text
+    return default

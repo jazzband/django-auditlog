@@ -11,3 +11,7 @@ class AuditlogConfig(AppConfig):
         from auditlog.registry import auditlog
 
         auditlog.register_from_settings()
+
+        from auditlog import models
+
+        models.changes_func = models._changes_func()

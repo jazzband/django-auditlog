@@ -32,3 +32,11 @@ settings.AUDITLOG_CID_HEADER = getattr(
     settings, "AUDITLOG_CID_HEADER", "x-correlation-id"
 )
 settings.AUDITLOG_CID_GETTER = getattr(settings, "AUDITLOG_CID_GETTER", None)
+
+# migration
+settings.AUDITLOG_TWO_STEP_MIGRATION = getattr(
+    settings, "AUDITLOG_TWO_STEP_MIGRATION", False
+)
+settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT = getattr(
+    settings, "AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT", False
+)
