@@ -40,6 +40,11 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         return False
 
     def has_delete_permission(self, request, obj=None):
+        if request.resolver_match and request.resolver_match.url_name not in [
+            pattern.name for pattern in self.urls if pattern.name
+        ]:
+            # only allow cascade delete to satisfy delete_related flag
+            return super().has_delete_permission(request, obj)
         return False
 
     def get_queryset(self, request):

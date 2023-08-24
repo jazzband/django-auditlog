@@ -24,6 +24,7 @@
 - fix: Always set remote_addr even if the request has no authenticated user. ([#484](https://github.com/jazzband/django-auditlog/pull/484))
 - fix: Fix a bug in getting field's `verbose_name` when model is not accessible. ([508](https://github.com/jazzband/django-auditlog/pull/508))
 - fix: Fix a bug in `serialized_data` with F expressions. ([508](https://github.com/jazzband/django-auditlog/pull/508))
+- fix: Make log entries read-only in the admin. ([#449](https://github.com/jazzband/django-auditlog/pull/449), [#556](https://github.com/jazzband/django-auditlog/pull/556)) (applied again after being reverted in 2.2.2)
 
 ## 2.2.2 (2023-01-16)
 
