@@ -503,14 +503,12 @@ class AuditlogHistoryField(GenericRelation):
 
     :param pk_indexable: Whether the primary key for this model is not an :py:class:`int` or :py:class:`long`.
     :type pk_indexable: bool
-    :param delete_related: By default, including a generic relation into a model will cause all related
-        objects to be cascade-deleted when the parent object is deleted. Passing False to this overrides this
-        behavior, retaining the full auditlog history for the object. Defaults to True, because that's
-        Django's default behavior.
+    :param delete_related: Delete referenced auditlog entries together with the tracked object.
+        Defaults to False to keep the integrity of the auditlog.
     :type delete_related: bool
     """
 
-    def __init__(self, pk_indexable=True, delete_related=True, **kwargs):
+    def __init__(self, pk_indexable=True, delete_related=False, **kwargs):
         kwargs["to"] = LogEntry
 
         if pk_indexable:

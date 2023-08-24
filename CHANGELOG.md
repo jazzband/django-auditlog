@@ -5,6 +5,7 @@
 #### Breaking Changes
 
 - feat: stop deleting old log entries when a model with the same pk is created (i.e. the pk value is reused) ([#559](https://github.com/jazzband/django-auditlog/pull/559))
+- feat: Set `AuditlogHistoryField.delete_related` to `False` by default. This is different from the default configuration of Django's `GenericRelation`, but we should not erase the audit log of objects on deletion by default. ([#557](https://github.com/jazzband/django-auditlog/pull/557))
 
 #### Improvements
 

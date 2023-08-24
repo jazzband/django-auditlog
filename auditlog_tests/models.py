@@ -20,7 +20,7 @@ class SimpleModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class AltPrimaryKeyModel(models.Model):
@@ -35,7 +35,7 @@ class AltPrimaryKeyModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditlogHistoryField(pk_indexable=False)
+    history = AuditlogHistoryField(delete_related=True, pk_indexable=False)
 
 
 class UUIDPrimaryKeyModel(models.Model):
@@ -50,7 +50,7 @@ class UUIDPrimaryKeyModel(models.Model):
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
 
-    history = AuditlogHistoryField(pk_indexable=False)
+    history = AuditlogHistoryField(delete_related=True, pk_indexable=False)
 
 
 class ProxyModel(SimpleModel):
@@ -80,7 +80,7 @@ class RelatedModel(RelatedModelParent):
         to="SimpleModel", on_delete=models.CASCADE, related_name="reverse_one_to_one"
     )
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class ManyRelatedModel(models.Model):
@@ -91,7 +91,7 @@ class ManyRelatedModel(models.Model):
     recursive = models.ManyToManyField("self")
     related = models.ManyToManyField("ManyRelatedOtherModel", related_name="related")
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
     def get_additional_data(self):
         related = self.related.first()
@@ -103,7 +103,7 @@ class ManyRelatedOtherModel(models.Model):
     A model related to ManyRelatedModel as many-to-many.
     """
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 @auditlog.register(include_fields=["label"])
@@ -115,7 +115,7 @@ class SimpleIncludeModel(models.Model):
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class SimpleExcludeModel(models.Model):
@@ -126,7 +126,7 @@ class SimpleExcludeModel(models.Model):
     label = models.CharField(max_length=100)
     text = models.TextField(blank=True)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class SimpleMappingModel(models.Model):
@@ -138,7 +138,7 @@ class SimpleMappingModel(models.Model):
     vtxt = models.CharField(verbose_name="Version", max_length=100)
     not_mapped = models.CharField(max_length=100)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 @auditlog.register(mask_fields=["address"])
@@ -150,7 +150,7 @@ class SimpleMaskedModel(models.Model):
     address = models.CharField(max_length=100)
     text = models.TextField()
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class AdditionalDataIncludedModel(models.Model):
@@ -163,7 +163,7 @@ class AdditionalDataIncludedModel(models.Model):
     text = models.TextField(blank=True)
     related = models.ForeignKey(to=SimpleModel, on_delete=models.CASCADE)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
     def get_additional_data(self):
         """
@@ -190,7 +190,7 @@ class DateTimeFieldModel(models.Model):
     time = models.TimeField()
     naive_dt = models.DateTimeField(null=True, blank=True)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class ChoicesFieldModel(models.Model):
@@ -212,7 +212,7 @@ class ChoicesFieldModel(models.Model):
     status = models.CharField(max_length=1, choices=STATUS_CHOICES)
     multiplechoice = models.CharField(max_length=255, choices=STATUS_CHOICES)
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class CharfieldTextfieldModel(models.Model):
@@ -225,7 +225,7 @@ class CharfieldTextfieldModel(models.Model):
     longchar = models.CharField(max_length=255)
     longtextfield = models.TextField()
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class PostgresArrayFieldModel(models.Model):
@@ -247,7 +247,7 @@ class PostgresArrayFieldModel(models.Model):
         models.CharField(max_length=1, choices=STATUS_CHOICES), size=3
     )
 
-    history = AuditlogHistoryField()
+    history = AuditlogHistoryField(delete_related=True)
 
 
 class NoDeleteHistoryModel(models.Model):
