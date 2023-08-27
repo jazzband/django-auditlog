@@ -16,7 +16,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import management
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
 
@@ -1379,6 +1379,23 @@ class AdminPanelTest(TestCase):
         res = self.client.get("/admin/auditlog/logentry/")
         self.assertEqual(res.status_code, 200)
         self.assertIn(expected_response, res.rendered_content)
+
+    def test_has_delete_permission(self):
+        log = self.obj.history.latest()
+        obj_pk = self.obj.pk
+        delete_log_request = RequestFactory().post(
+            f"/admin/auditlog/logentry/{log.pk}/delete/"
+        )
+        delete_log_request.resolver_match = resolve(delete_log_request.path)
+        delete_log_request.user = self.user
+        delete_object_request = RequestFactory().post(
+            f"/admin/tests/simplemodel/{obj_pk}/delete/"
+        )
+        delete_object_request.resolver_match = resolve(delete_object_request.path)
+        delete_object_request.user = self.user
+
+        self.assertTrue(self.admin.has_delete_permission(delete_object_request, log))
+        self.assertFalse(self.admin.has_delete_permission(delete_log_request, log))
 
 
 class DiffMsgTest(TestCase):
