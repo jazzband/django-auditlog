@@ -4,6 +4,14 @@
 
 #### Breaking Changes
 
+#### Improvements
+
+#### Fixes
+
+## 3.0.0-beta.1
+
+#### Breaking Changes
+
 - feat: Change `LogEntry.change` field type to `JSONField` rather than `TextField`. This change include a migration that may take time to run depending on the number of records on your `LogEntry` table ([#407](https://github.com/jazzband/django-auditlog/pull/407))([#495](https://github.com/jazzband/django-auditlog/pull/495))
 - Python: Drop support for Python 3.7 ([#546](https://github.com/jazzband/django-auditlog/pull/546))
 - feat: Set `AuditlogHistoryField.delete_related` to `False` by default. This is different from the default configuration of Django's `GenericRelation`, but we should not erase the audit log of objects on deletion by default. ([#557](https://github.com/jazzband/django-auditlog/pull/557))
