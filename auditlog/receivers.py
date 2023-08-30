@@ -123,6 +123,7 @@ def _create_log_entry(
         post_log.send(
             sender,
             instance=instance,
+            instance_old=diff_old,
             action=action,
             error=error,
             pre_log_results=pre_log_results,
