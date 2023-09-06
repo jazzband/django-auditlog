@@ -27,6 +27,8 @@ post_log = django.dispatch.Signal()
 """
 Whenever an audit log entry is written, this signal
 is sent after writing the log.
+This signal is also fired when there is an error in creating the log.
+
 Keyword arguments sent with this signal:
 
 :param class sender:
@@ -38,6 +40,15 @@ Keyword arguments sent with this signal:
 :param Action action:
     The action on the model resulting in an
     audit log entry. Type: :class:`auditlog.models.LogEntry.Action`
+
+:param Optional[dict] changes:
+    The changes that were logged. If there was en error while determining the changes,
+    this will be None. In some cases, such as when logging access to the instance,
+    the changes will be an empty dict.
+
+:param bool log_created:
+    Was the log actually created?
+    This could be false if there was an error in creating the log.
 
 :param Optional[Exception] error:
     The error, if one occurred while saving the audit log entry. ``None``,
