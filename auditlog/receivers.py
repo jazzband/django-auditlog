@@ -105,6 +105,8 @@ def _create_log_entry(
         action=action,
     )
     error = None
+    log_created = False
+    changes = None
     try:
         changes = model_instance_diff(
             diff_old, diff_new, fields_to_check=fields_to_check
@@ -117,17 +119,21 @@ def _create_log_entry(
                 changes=changes,
                 force_log=force_log,
             )
+            log_created = True
     except BaseException as e:
         error = e
     finally:
-        post_log.send(
-            sender,
-            instance=instance,
-            instance_old=diff_old,
-            action=action,
-            error=error,
-            pre_log_results=pre_log_results,
-        )
+        if log_created or error:
+            post_log.send(
+                sender,
+                instance=instance,
+                instance_old=diff_old,
+                action=action,
+                error=error,
+                pre_log_results=pre_log_results,
+                changes=changes,
+                log_created=log_created,
+            )
         if error:
             raise error
 

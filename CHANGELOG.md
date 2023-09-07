@@ -7,6 +7,7 @@
 #### Improvements
 
 #### Fixes
+* fix: only fire the `post_log` signal when the log is created or when there is an error in the process.
 
 ## 3.0.0-beta.1
 
