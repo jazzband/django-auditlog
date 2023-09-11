@@ -4,6 +4,8 @@
 
 #### Breaking Changes
 
+- feat: stop deleting old log entries when a model with the same pk is created (i.e. the pk value is reused) ([#559](https://github.com/jazzband/django-auditlog/pull/559))
+
 #### Improvements
 
 #### Fixes
