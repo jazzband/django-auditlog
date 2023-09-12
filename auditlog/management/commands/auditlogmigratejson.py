@@ -25,7 +25,7 @@ class Command(BaseCommand):
             default=None,
             metavar="The database engine",
             help="If provided, the script will use native db operations. "
-            "Otherwise, it will use LogEntry.objects.bulk_create",
+            "Otherwise, it will use LogEntry.objects.bulk_update",
             dest="db",
             type=str,
             choices=["postgres", "mysql", "oracle"],
@@ -98,14 +98,15 @@ class Command(BaseCommand):
                     updated.append(log)
 
             LogEntry.objects.bulk_update(updated, fields=["changes"])
-            self.stderr.write(
-                self.style.ERROR(
-                    f"ValueError was raised while converting the the logs with these ids into json."
-                    f"They where not be included in this migration batch."
-                    f"\n"
-                    f"{errors}"
+            if errors:
+                self.stderr.write(
+                    self.style.ERROR(
+                        f"ValueError was raised while converting the logs with these ids into json."
+                        f"They where not be included in this migration batch."
+                        f"\n"
+                        f"{errors}"
+                    )
                 )
-            )
             return len(updated)
 
         logs = self.get_logs()
@@ -132,6 +133,6 @@ class Command(BaseCommand):
             return postgres()
 
         raise CommandError(
-            f"Migraing the records using {database} is not implemented. "
+            f"Migrating the records using {database} is not implemented. "
             f"Run this management command without passing a -d/--database argument."
         )
