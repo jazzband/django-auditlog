@@ -52,7 +52,7 @@ class AuditlogMigrateJsonTest(TestCase):
     def test_nothing_to_migrate(self):
         outbuf, errbuf = self.call_command()
 
-        msg = "All records are have been migrated."
+        msg = "All records have been migrated."
         self.assertEqual(outbuf, msg)
 
     @override_settings(AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT=True)
@@ -60,7 +60,7 @@ class AuditlogMigrateJsonTest(TestCase):
         outbuf, errbuf = self.call_command()
 
         msg = (
-            "All records are have been migrated.\n"
+            "All records have been migrated.\n"
             "You can now set AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT to False."
         )
 
