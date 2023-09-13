@@ -2,7 +2,7 @@ import json
 from io import StringIO
 from unittest.mock import patch
 
-from django.core.management import call_command
+from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 
 from auditlog.models import LogEntry
@@ -52,7 +52,7 @@ class AuditlogMigrateJsonTest(TestCase):
     def test_nothing_to_migrate(self):
         outbuf, errbuf = self.call_command()
 
-        msg = "All records are have been migrated."
+        msg = "All records have been migrated."
         self.assertEqual(outbuf, msg)
 
     @override_settings(AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT=True)
@@ -60,11 +60,24 @@ class AuditlogMigrateJsonTest(TestCase):
         outbuf, errbuf = self.call_command()
 
         msg = (
-            "All records are have been migrated.\n"
+            "All records have been migrated.\n"
             "You can now set AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT to False."
         )
 
         self.assertEqual(outbuf, msg)
+
+    def test_check(self):
+        # Arrange
+        log_entry = self.make_logentry()
+
+        # Act
+        outbuf, errbuf = self.call_command("--check")
+        log_entry.refresh_from_db()
+
+        # Assert
+        self.assertEqual("There are 1 records that needs migration.", outbuf)
+        self.assertEqual("", errbuf)
+        self.assertIsNone(log_entry.changes)
 
     def test_using_django(self):
         # Arrange
@@ -125,14 +138,18 @@ class AuditlogMigrateJsonTest(TestCase):
     def test_native_unsupported(self):
         # Arrange
         log_entry = self.make_logentry()
+        msg = (
+            "Migrating the records using oracle is not implemented. "
+            "Run this management command without passing a -d/--database argument."
+        )
 
         # Act
-        outbuf, errbuf = self.call_command("-d=oracle")
+        with self.assertRaises(CommandError) as cm:
+            self.call_command("-d=oracle")
         log_entry.refresh_from_db()
 
         # Assert
-        msg = "Not yet implemented. Run this management command without passing a -d/--database argument."
-        self.assertEqual(errbuf, msg)
+        self.assertEqual(msg, cm.exception.args[0])
         self.assertIsNone(log_entry.changes)
 
     def test_using_django_with_error(self):
@@ -146,6 +163,11 @@ class AuditlogMigrateJsonTest(TestCase):
         log_entry.refresh_from_db()
 
         # Assert
-        msg = f"ValueError was raised while migrating the log with id {log_entry.id}."
-        self.assertEqual(errbuf, msg)
+        msg = (
+            f"ValueError was raised while converting the logs with these ids into json."
+            f"They where not be included in this migration batch."
+            f"\n"
+            f"{[log_entry.id]}"
+        )
+        self.assertEqual(msg, errbuf)
         self.assertIsNone(log_entry.changes)
