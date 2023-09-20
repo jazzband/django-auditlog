@@ -2,11 +2,22 @@
 
 ## Next Release
 
+#### Improvements
+- Python: Confirm Python 3.12 support ([#572](https://github.com/jazzband/django-auditlog/pull/572))
+
+## 3.0.0-beta.2 (2023-10-05)
+
+#### Breaking Changes
+- feat: stop deleting old log entries when a model with the same pk is created (i.e. the pk value is reused) ([#559](https://github.com/jazzband/django-auditlog/pull/559))
+
+#### Fixes
+* fix: don't set the correlation_id if the `AUDITLOG_CID_GETTER` is `None` ([#565](https://github.com/jazzband/django-auditlog/pull/565))
+
+## 3.0.0-beta.1
+
 #### Breaking Changes
 
-- Python: Confirm Python 3.12 support ([#572](https://github.com/jazzband/django-auditlog/pull/572))
 - feat: Change `LogEntry.change` field type to `JSONField` rather than `TextField`. This change include a migration that may take time to run depending on the number of records on your `LogEntry` table ([#407](https://github.com/jazzband/django-auditlog/pull/407))([#495](https://github.com/jazzband/django-auditlog/pull/495))
-- feat: stop deleting old log entries when a model with the same pk is created (i.e. the pk value is reused) ([#559](https://github.com/jazzband/django-auditlog/pull/559))
 - feat: Set `AuditlogHistoryField.delete_related` to `False` by default. This is different from the default configuration of Django's `GenericRelation`, but we should not erase the audit log of objects on deletion by default. ([#557](https://github.com/jazzband/django-auditlog/pull/557))
 - Python: Drop support for Python 3.7 ([#546](https://github.com/jazzband/django-auditlog/pull/546))
 

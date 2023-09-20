@@ -13,11 +13,16 @@ def set_cid(request: Optional[HttpRequest] = None) -> None:
     A function to read the cid from a request.
     If the header is not in the request, then we set it to `None`.
 
-    Note: we look for the header in `request.headers` and `request.META`.
+    Note: we look for the value of `AUDITLOG_CID_HEADER` in `request.headers` and in `request.META`.
+
+    This function doesn't do anything if the user is supplying their own `AUDITLOG_CID_GETTER`.
 
     :param request: The request to get the cid from.
     :return: None
     """
+    if settings.AUDITLOG_CID_GETTER:
+        return
+
     cid = None
     header = settings.AUDITLOG_CID_HEADER
 
