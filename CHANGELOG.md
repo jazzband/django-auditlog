@@ -9,7 +9,8 @@
 #### Improvements
 
 #### Fixes
-* fix: only fire the `post_log` signal when the log is created or when there is an error in the process.
+* fix: only fire the `post_log` signal when the log is created or when there is an error in the process ([#561](https://github.com/jazzband/django-auditlog/pull/561))
+* fix: don't set the correlation_id if the `AUDITLOG_CID_GETTER` is `None` ([#565](https://github.com/jazzband/django-auditlog/pull/565))
 
 ## 3.0.0-beta.1
 
