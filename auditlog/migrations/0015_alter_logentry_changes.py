@@ -24,7 +24,7 @@ def two_step_migrations() -> List:
         migrations.AddField(
             model_name="logentry",
             name="changes_text",
-            field=models.TextField(blank=True, verbose_name="text change message"),
+            field=models.TextField(blank=True, verbose_name="change message"),
         ),
         migrations.AlterField(
             model_name="logentry",
