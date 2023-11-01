@@ -384,6 +384,7 @@ class LogEntry(models.Model):
     additional_data = models.JSONField(
         blank=True, null=True, verbose_name=_("additional data")
     )
+    actor_email = models.CharField(blank=True, null=True, max_length=254)
 
     objects = LogEntryManager()
 

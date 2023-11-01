@@ -262,7 +262,10 @@ class WithActorMixin:
         super().setUp()
 
     def tearDown(self):
+        user_email = self.user.email
         self.user.delete()
+        auditlog_entries = LogEntry.objects.filter(actor_email=user_email).all()
+        self.assertIsNotNone(auditlog_entries, msg="All auditlog entries are deleted.")
         super().tearDown()
 
     def make_object(self):
@@ -272,6 +275,7 @@ class WithActorMixin:
     def check_create_log_entry(self, obj, log_entry):
         super().check_create_log_entry(obj, log_entry)
         self.assertEqual(log_entry.actor, self.user)
+        self.assertEqual(log_entry.actor_email, self.user.email)
 
     def update(self, obj):
         with set_actor(self.user):
@@ -280,6 +284,7 @@ class WithActorMixin:
     def check_update_log_entry(self, obj, log_entry):
         super().check_update_log_entry(obj, log_entry)
         self.assertEqual(log_entry.actor, self.user)
+        self.assertEqual(log_entry.actor_email, self.user.email)
 
     def delete(self, obj):
         with set_actor(self.user):
@@ -288,6 +293,7 @@ class WithActorMixin:
     def check_delete_log_entry(self, obj, log_entry):
         super().check_delete_log_entry(obj, log_entry)
         self.assertEqual(log_entry.actor, self.user)
+        self.assertEqual(log_entry.actor_email, self.user.email)
 
 
 class AltPrimaryKeyModelBase(SimpleModelTest):
