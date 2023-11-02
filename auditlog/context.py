@@ -49,7 +49,7 @@ def _set_actor(user, sender, instance, signal_duid, **kwargs):
     """
     try:
         auditlog = auditlog_value.get()
-    except LookupError as ex:
+    except LookupError:
         pass
     else:
         if signal_duid != auditlog["signal_duid"]:
