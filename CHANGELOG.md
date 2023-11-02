@@ -2,6 +2,9 @@
 
 ## Next Release
 
+#### Improvements
+- Python: Confirm Python 3.12 support ([#572](https://github.com/jazzband/django-auditlog/pull/572))
+
 ## 3.0.0-beta.2 (2023-10-05)
 
 #### Breaking Changes
