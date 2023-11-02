@@ -26,7 +26,7 @@ from django.utils.encoding import smart_str
 
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
-from auditlog.context import disable_auditlog, set_actor
+from auditlog.context import disable_auditlog, set_actor, set_auditlog_custom_data
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
@@ -580,6 +580,31 @@ class MiddlewareTest(TestCase):
                 msg=f"Remote address is {remote_addr}",
             )
             self.assertIsNone(history.actor, msg="Actor is `None` for anonymous user")
+
+    def test_set_actor_get_email(self):
+        """
+        The remote address will be set even when there is no actor
+        """
+        actor = self.user
+
+        with set_actor(actor=actor):
+            obj = SimpleModel.objects.create(text="I am not difficult.")
+
+            history = obj.history.get()
+            self.assertEqual(history.actor_email, self.user.email)
+
+    def test_set_actor_set_custom_data(self):
+        """
+        The remote address will be set even when there is no actor
+        """
+        actor = self.user
+
+        with set_auditlog_custom_data(actor=actor, custom_data={"foo": "bar"}):
+            obj = SimpleModel.objects.create(text="I am not difficult.")
+
+            history = obj.history.get()
+            self.assertEqual(history.actor_email, self.user.email)
+            self.assertEqual(history.custom_data, {'custom_data': {'foo': 'bar'}})
 
     def test_get_actor(self):
         params = [

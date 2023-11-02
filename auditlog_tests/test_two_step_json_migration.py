@@ -47,7 +47,17 @@ class AuditlogMigrateJsonTest(TestCase):
         call_command(
             "auditlogmigratejson", *args, stdout=outbuf, stderr=errbuf, **kwargs
         )
-        return outbuf.getvalue().strip(), errbuf.getvalue().strip()
+        outbuf = self._remove_formatters(outbuf)
+        errbuf = self._remove_formatters(errbuf)
+        return outbuf, errbuf
+
+    @staticmethod
+    def _remove_formatters(outbuf):
+        return (outbuf.getvalue().strip()
+                .replace('\x1b[0m', '')
+                .replace('\x1b[32;1m', '')
+                .replace('\x1b[33;1m', '')
+                .replace('\x1b[31;1m', ''))
 
     def test_nothing_to_migrate(self):
         outbuf, errbuf = self.call_command()
