@@ -8,8 +8,8 @@ from django.db.models.signals import pre_save
 
 from auditlog.models import LogEntry
 
-auditlog_value = ContextVar('auditlog_value')
-auditlog_disabled = ContextVar('auditlog_disabled', default=False)
+auditlog_value = ContextVar("auditlog_value")
+auditlog_disabled = ContextVar("auditlog_disabled", default=False)
 
 
 @contextlib.contextmanager
@@ -23,9 +23,7 @@ def set_actor(actor, remote_addr=None):
     auditlog_value.set(context_data)
 
     # Connect signal for automatic logging
-    set_actor = partial(
-        _set_actor, user=actor, signal_duid=context_data["signal_duid"]
-    )
+    set_actor = partial(_set_actor, user=actor, signal_duid=context_data["signal_duid"])
     pre_save.connect(
         set_actor,
         sender=LogEntry,
@@ -58,9 +56,9 @@ def _set_actor(user, sender, instance, signal_duid, **kwargs):
             return
         auth_user_model = get_user_model()
         if (
-                sender == LogEntry
-                and isinstance(user, auth_user_model)
-                and instance.actor is None
+            sender == LogEntry
+            and isinstance(user, auth_user_model)
+            and instance.actor is None
         ):
             instance.actor = user
 

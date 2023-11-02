@@ -22,7 +22,7 @@ def check_disable(signal_handler):
         except LookupError:
             auditlog_disabled_value = False
         if not auditlog_disabled_value and not (
-                kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE
+            kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE
         ):
             signal_handler(*args, **kwargs)
 
