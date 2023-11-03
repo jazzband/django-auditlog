@@ -2,6 +2,8 @@
 
 ## Next Release
 
+- improve: thread.local replaced with ContextVar to improve context managers in Django 4.2+
+
 ## 3.0.0-beta.2 (2023-10-05)
 
 #### Breaking Changes
