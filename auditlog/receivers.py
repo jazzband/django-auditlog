@@ -2,7 +2,7 @@ from functools import wraps
 
 from django.conf import settings
 
-from auditlog.context import threadlocal
+from auditlog.context import auditlog_disabled
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
 from auditlog.signals import post_log, pre_log
@@ -17,7 +17,11 @@ def check_disable(signal_handler):
 
     @wraps(signal_handler)
     def wrapper(*args, **kwargs):
-        if not getattr(threadlocal, "auditlog_disabled", False) and not (
+        try:
+            auditlog_disabled_value = auditlog_disabled.get()
+        except LookupError:
+            auditlog_disabled_value = False
+        if not auditlog_disabled_value and not (
             kwargs.get("raw") and settings.AUDITLOG_DISABLE_ON_RAW_SAVE
         ):
             signal_handler(*args, **kwargs)
