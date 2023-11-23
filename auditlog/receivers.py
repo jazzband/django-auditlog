@@ -108,10 +108,10 @@ def _create_log_entry(
         instance=instance,
         action=action,
     )
-    
+
     if any(item[1] is False for item in pre_log_results):
         return
-        
+
     error = None
     log_created = False
     changes = None
