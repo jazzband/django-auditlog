@@ -20,8 +20,8 @@ Keyword arguments sent with this signal:
     audit log entry. Type: :class:`auditlog.models.LogEntry.Action`
 
 The receivers' return values are sent to any :func:`post_log`
-signal receivers, with one exception: if any receiver returns False, 
-no logging will be made. This can be useful if logging should be 
+signal receivers, with one exception: if any receiver returns False,
+no logging will be made. This can be useful if logging should be
 conditionally enabled / disabled
 """
 
