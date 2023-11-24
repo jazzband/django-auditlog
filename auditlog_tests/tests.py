@@ -2447,7 +2447,6 @@ class SignalTests(TestCase):
 
         self.assertEqual(LogEntry.objects.count(), log_count)
 
-
     def test_custom_signals_update(self):
         def pre_log_receiver(sender, instance, action, **_kwargs):
             self.my_pre_log_data["is_called"] = True
