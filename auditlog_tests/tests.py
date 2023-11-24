@@ -2420,6 +2420,34 @@ class SignalTests(TestCase):
 
         self.assertSignals(LogEntry.Action.CREATE)
 
+    def test_disabled_logging(self):
+        log_count = LogEntry.objects.count()
+
+        def pre_log_receiver(sender, instance, action, **_kwargs):
+            return True
+
+        def pre_log_receiver_extra(*_args, **_kwargs):
+            pass
+
+        def pre_log_receiver_disable(*_args, **_kwargs):
+            return False
+
+        pre_log.connect(pre_log_receiver)
+        pre_log.connect(pre_log_receiver_extra)
+
+        self.obj = SimpleModel.objects.create(text="I am not difficult.")
+
+        self.assertEqual(LogEntry.objects.count(), log_count + 1)
+
+        log_count = LogEntry.objects.count()
+
+        pre_log.connect(pre_log_receiver_disable)
+
+        self.obj = SimpleModel.objects.create(text="I am not difficult.")
+
+        self.assertEqual(LogEntry.objects.count(), log_count)
+
+
     def test_custom_signals_update(self):
         def pre_log_receiver(sender, instance, action, **_kwargs):
             self.my_pre_log_data["is_called"] = True
