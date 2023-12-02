@@ -25,6 +25,8 @@ from django.utils.translation import gettext_lazy as _
 
 from auditlog.diff import mask_str
 
+DEFAULT_OBJECT_REPR = "<error forming object repr>"
+
 
 class LogEntryManager(models.Manager):
     """
@@ -54,7 +56,11 @@ class LogEntryManager(models.Manager):
                 "content_type", ContentType.objects.get_for_model(instance)
             )
             kwargs.setdefault("object_pk", pk)
-            kwargs.setdefault("object_repr", smart_str(instance))
+            try:
+                object_repr = smart_str(instance)
+            except ObjectDoesNotExist:
+                object_repr = DEFAULT_OBJECT_REPR
+            kwargs.setdefault("object_repr", object_repr)
             kwargs.setdefault(
                 "serialized_data", self._get_serialized_data_or_none(instance)
             )
@@ -96,7 +102,11 @@ class LogEntryManager(models.Manager):
                 "content_type", ContentType.objects.get_for_model(instance)
             )
             kwargs.setdefault("object_pk", pk)
-            kwargs.setdefault("object_repr", smart_str(instance))
+            try:
+                object_repr = smart_str(instance)
+            except ObjectDoesNotExist:
+                object_repr = DEFAULT_OBJECT_REPR
+            kwargs.setdefault("object_repr", object_repr)
             kwargs.setdefault("action", LogEntry.Action.UPDATE)
 
             if isinstance(pk, int):

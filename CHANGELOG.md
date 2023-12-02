@@ -9,6 +9,10 @@
 - Python: Confirm Python 3.12 support ([#572](https://github.com/jazzband/django-auditlog/pull/572))
 - feat: `thread.local` replaced with `ContextVar` to improve context managers in Django 4.2+
 
+#### Fixes
+
+- fix: Handle `ObjectDoesNotExist` in evaluation of `object_repr` ([#592](https://github.com/jazzband/django-auditlog/pull/592))
+
 ## 3.0.0-beta.2 (2023-10-05)
 
 #### Breaking Changes

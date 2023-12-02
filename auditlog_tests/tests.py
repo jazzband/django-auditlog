@@ -29,7 +29,7 @@ from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
-from auditlog.models import LogEntry
+from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
 from auditlog.signals import post_log, pre_log
 from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
@@ -435,6 +435,15 @@ class ManyRelatedModelTest(TestCase):
         self.obj.related.add(self.related)
         latest_log_entry = self.obj.history.first()
         self.assertEqual(log_entry.id, latest_log_entry.id)
+
+    def test_object_repr_related_deleted(self):
+        """No error is raised when __str__() raises ObjectDoesNotExist."""
+        # monkey-patching to avoid extra logic in the model
+        with mock.patch.object(self.obj.__class__, "__str__") as mock_str:
+            mock_str.side_effect = self.related.DoesNotExist("I am fake")
+            self.obj.related.add(self.related)
+            log_entry = self.obj.history.first()
+            self.assertEqual(log_entry.object_repr, DEFAULT_OBJECT_REPR)
 
 
 class MiddlewareTest(TestCase):
@@ -1859,6 +1868,25 @@ class ModelInstanceDiffTest(TestCase):
 
         model_instance_diff(simple2, simple1)
         model_instance_diff(simple1, simple2)
+
+    def test_object_repr_related_deleted(self):
+        """No error is raised when __str__() loads a related object that has been deleted."""
+        simple = SimpleModel()
+        simple.save()
+        related = RelatedModel(related=simple, one_to_one=simple)
+        related.save()
+        related_id = related.id
+
+        related.refresh_from_db()
+        simple.delete()
+        related.delete()
+
+        log_entry = (
+            LogEntry.objects.get_for_model(RelatedModel)
+            .filter(object_id=related_id)
+            .get(action=LogEntry.Action.DELETE)
+        )
+        self.assertEqual(log_entry.object_repr, DEFAULT_OBJECT_REPR)
 
     def test_when_field_doesnt_exist(self):
         """No error is raised and the default is returned."""
