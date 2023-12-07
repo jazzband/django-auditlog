@@ -2,6 +2,9 @@
 
 ## Next Release
 
+#### Improvements
+- feat: If any receiver returns False, no logging will be made. This can be useful if logging should be conditionally enabled / disabled ([#590](https://github.com/jazzband/django-auditlog/pull/590))
+
 ## 3.0.0-beta.3 (2023-11-13)
 
 #### Improvements
