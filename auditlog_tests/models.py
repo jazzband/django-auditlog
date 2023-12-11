@@ -86,6 +86,9 @@ class RelatedModel(RelatedModelParent):
 
     history = AuditlogHistoryField(delete_related=True)
 
+    def __str__(self):
+        return f"RelatedModel #{self.pk} -> {self.related.id}"
+
 
 class ManyRelatedModel(models.Model):
     """
