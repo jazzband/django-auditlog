@@ -9,11 +9,25 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name="logentry",
-            name="timestamp",
-            field=models.DateTimeField(
-                auto_now_add=True, db_index=True, verbose_name="timestamp"
-            ),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                sql="""
+                CREATE INDEX "auditlog_logentry_v2_timestamp_37867bb0" ON "auditlog_logentry" ("timestamp");
+                """,
+                reverse_sql="""
+                DROP INDEX CONCURRENTLY IF EXISTS "auditlog_logentry_v2_timestamp_37867bb0";
+                """
+                ),
+            ],
+            state_operations=[
+                migrations.AlterField(
+                    model_name="logentry",
+                    name="timestamp",
+                    field=models.DateTimeField(
+                        auto_now_add=True, db_index=True, verbose_name="timestamp"
+                    ),
+                ),
+            ],
         ),
     ]
