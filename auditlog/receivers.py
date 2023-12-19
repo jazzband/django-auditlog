@@ -152,11 +152,17 @@ def make_log_m2m_changes(field_name):
     @check_disable
     def log_m2m_changes(signal, action, **kwargs):
         """Handle m2m_changed and call LogEntry.objects.log_m2m_changes as needed."""
-        if action not in ["post_add", "post_clear", "post_remove"]:
+        if action not in ["post_add", "pre_clear", "post_remove"]:
             return
 
-        if action == "post_clear":
-            changed_queryset = kwargs["model"].objects.all()
+        if action == "pre_clear":
+            # UPDATE: This is making the log for all existing rows in the M2M model,
+            # resulting to low performance. Instead we will,
+            # 1. Catch pre-clear signal
+            # 2. Record M2M associated rows before clearing
+            # See known issue: https://github.com/jazzband/django-auditlog/issues/539
+            # changed_queryset = kwargs["model"].objects.all()
+            changed_queryset = getattr(kwargs["instance"], field_name).all()
         else:
             changed_queryset = kwargs["model"].objects.filter(pk__in=kwargs["pk_set"])
 
@@ -167,7 +173,7 @@ def make_log_m2m_changes(field_name):
                 "add",
                 field_name,
             )
-        elif action in ["post_remove", "post_clear"]:
+        elif action in ["post_remove", "pre_clear"]:
             LogEntry.objects.log_m2m_changes(
                 changed_queryset,
                 kwargs["instance"],
