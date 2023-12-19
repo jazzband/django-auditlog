@@ -55,6 +55,9 @@ class AuditlogModelRegistry:
         self._signals = {}
         self._m2m_signals = defaultdict(dict)
 
+        if settings.AUDITLOG_DISABLE_AUDITLOG:
+            return
+
         if create:
             self._signals[post_save] = log_create
         if update:
@@ -194,6 +197,9 @@ class AuditlogModelRegistry:
         Connect signals for the model.
         """
         from auditlog.receivers import make_log_m2m_changes
+
+        if settings.AUDITLOG_DISABLE_AUDITLOG:
+            return
 
         for signal, receiver in self._signals.items():
             signal.connect(

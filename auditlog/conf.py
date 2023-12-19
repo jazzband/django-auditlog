@@ -40,3 +40,6 @@ settings.AUDITLOG_TWO_STEP_MIGRATION = getattr(
 settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT = getattr(
     settings, "AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT", False
 )
+
+# Custom
+settings.AUDITLOG_DISABLE_AUDITLOG = getattr(settings, "AUDITLOG", {}).get("disable_auditlog", False)
