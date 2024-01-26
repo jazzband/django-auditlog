@@ -28,8 +28,8 @@ def _set_logger_data(actor, kwargs, remote_addr):
         context_data = auditlog_value.get()
     except LookupError:
         context_data = {}
-    actor = actor or context_data.get('actor')
-    custom_data = context_data.get('custom_data', {})
+    actor = actor or context_data.get("actor")
+    custom_data = context_data.get("custom_data", {})
     custom_data.update(kwargs)
     """Connect a signal receiver with current user attached."""
     context_data = {
@@ -38,7 +38,7 @@ def _set_logger_data(actor, kwargs, remote_addr):
         "custom_data": custom_data,
     }
     if actor:
-        context_data['actor'] = actor
+        context_data["actor"] = actor
     token = auditlog_value.set(context_data)
     # Connect signal for automatic logging
     set_auditlog_custom_data = partial(

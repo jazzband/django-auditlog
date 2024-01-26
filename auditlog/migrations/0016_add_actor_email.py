@@ -11,7 +11,10 @@ class Migration(migrations.Migration):
             model_name="logentry",
             name="actor_email",
             field=models.CharField(
-                null=True, verbose_name="actor email", blank=True, max_length=254,
+                null=True,
+                verbose_name="actor email",
+                blank=True,
+                max_length=254,
             ),
         ),
     ]

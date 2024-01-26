@@ -11,7 +11,9 @@ class Migration(migrations.Migration):
             model_name="logentry",
             name="custom_data",
             field=models.JSONField(
-                null=True, verbose_name="custom data", blank=True,
+                null=True,
+                verbose_name="custom data",
+                blank=True,
             ),
         ),
     ]

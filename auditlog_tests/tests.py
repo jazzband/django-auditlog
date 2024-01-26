@@ -604,7 +604,7 @@ class MiddlewareTest(TestCase):
 
             history = obj.history.get()
             self.assertEqual(history.actor_email, self.user.email)
-            self.assertEqual(history.custom_data, {'custom_data': {'foo': 'bar'}})
+            self.assertEqual(history.custom_data, {"custom_data": {"foo": "bar"}})
 
     def test_get_actor(self):
         params = [

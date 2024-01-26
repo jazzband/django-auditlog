@@ -29,9 +29,19 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         f"actor__{get_user_model().USERNAME_FIELD}",
     ]
     list_filter = ["action", ResourceTypeFilter, CIDFilter]
-    readonly_fields = ["created", "resource_url", "action", "user_url", "msg", "custom_data"]
+    readonly_fields = [
+        "created",
+        "resource_url",
+        "action",
+        "user_url",
+        "msg",
+        "custom_data",
+    ]
     fieldsets = [
-        (None, {"fields": ["created", "user_url", "resource_url", "custom_data", "cid"]}),
+        (
+            None,
+            {"fields": ["created", "user_url", "resource_url", "custom_data", "cid"]},
+        ),
         (_("Changes"), {"fields": ["action", "msg"]}),
     ]
 
