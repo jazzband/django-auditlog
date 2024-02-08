@@ -113,7 +113,7 @@ def _create_log_entry(
         return
 
     error = None
-    log_created = False
+    log_entry = None
     changes = None
     try:
         changes = model_instance_diff(
@@ -121,17 +121,16 @@ def _create_log_entry(
         )
 
         if force_log or changes:
-            LogEntry.objects.log_create(
+            log_entry = LogEntry.objects.log_create(
                 instance,
                 action=action,
                 changes=changes,
                 force_log=force_log,
             )
-            log_created = True
     except BaseException as e:
         error = e
     finally:
-        if log_created or error:
+        if log_entry or error:
             post_log.send(
                 sender,
                 instance=instance,
@@ -140,7 +139,8 @@ def _create_log_entry(
                 error=error,
                 pre_log_results=pre_log_results,
                 changes=changes,
-                log_created=log_created,
+                log_entry=log_entry,
+                log_created=log_entry is not None,
             )
         if error:
             raise error
