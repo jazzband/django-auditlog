@@ -2380,6 +2380,7 @@ class SignalTests(TestCase):
             "my_instance": None,
             "my_action": None,
             "my_error": None,
+            "my_log_entry": None,
         }
 
     def assertSignals(self, action):
@@ -2397,6 +2398,7 @@ class SignalTests(TestCase):
         self.assertIs(self.my_post_log_data["my_instance"], self.obj)
         self.assertEqual(self.my_post_log_data["my_action"], action)
         self.assertIsNone(self.my_post_log_data["my_error"])
+        self.assertIsNotNone(self.my_post_log_data["my_log_entry"])
 
     def test_custom_signals(self):
         my_ret_val = random.randint(0, 10000)
@@ -2413,13 +2415,14 @@ class SignalTests(TestCase):
             return my_other_ret_val
 
         def post_log_receiver(
-            sender, instance, action, error, pre_log_results, **_kwargs
+            sender, instance, action, error, log_entry, pre_log_results, **_kwargs
         ):
             self.my_post_log_data["is_called"] = True
             self.my_post_log_data["my_sender"] = sender
             self.my_post_log_data["my_instance"] = instance
             self.my_post_log_data["my_action"] = action
             self.my_post_log_data["my_error"] = error
+            self.my_post_log_data["my_log_entry"] = log_entry
 
             self.assertEqual(len(pre_log_results), 2)
 
@@ -2482,12 +2485,13 @@ class SignalTests(TestCase):
             self.my_pre_log_data["my_instance"] = instance
             self.my_pre_log_data["my_action"] = action
 
-        def post_log_receiver(sender, instance, action, error, **_kwargs):
+        def post_log_receiver(sender, instance, action, error, log_entry, **_kwargs):
             self.my_post_log_data["is_called"] = True
             self.my_post_log_data["my_sender"] = sender
             self.my_post_log_data["my_instance"] = instance
             self.my_post_log_data["my_action"] = action
             self.my_post_log_data["my_error"] = error
+            self.my_post_log_data["my_log_entry"] = log_entry
 
         pre_log.connect(pre_log_receiver)
         post_log.connect(post_log_receiver)
@@ -2504,12 +2508,13 @@ class SignalTests(TestCase):
             self.my_pre_log_data["my_instance"] = instance
             self.my_pre_log_data["my_action"] = action
 
-        def post_log_receiver(sender, instance, action, error, **_kwargs):
+        def post_log_receiver(sender, instance, action, error, log_entry, **_kwargs):
             self.my_post_log_data["is_called"] = True
             self.my_post_log_data["my_sender"] = sender
             self.my_post_log_data["my_instance"] = instance
             self.my_post_log_data["my_action"] = action
             self.my_post_log_data["my_error"] = error
+            self.my_post_log_data["my_log_entry"] = log_entry
 
         pre_log.connect(pre_log_receiver)
         post_log.connect(post_log_receiver)

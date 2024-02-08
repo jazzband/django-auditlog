@@ -48,6 +48,10 @@ Keyword arguments sent with this signal:
     this will be None. In some cases, such as when logging access to the instance,
     the changes will be an empty dict.
 
+:param Optional[LogEntry] log_entry:
+    The log entry that was created and stored in the database. If there was an error,
+    this will be None.
+
 :param bool log_created:
     Was the log actually created?
     This could be false if there was an error in creating the log.
