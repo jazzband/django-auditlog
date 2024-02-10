@@ -54,12 +54,12 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault(
                 "content_type", ContentType.objects.get_for_model(instance)
             )
-            kwargs.setdefault("object_pk", pk)
+            kwargs.setdefault("record", pk)
             try:
-                object_repr = smart_str(instance)
+                object_representation = smart_str(instance)
             except ObjectDoesNotExist:
-                object_repr = DEFAULT_OBJECT_REPR
-            kwargs.setdefault("object_repr", object_repr)
+                object_representation = DEFAULT_OBJECT_REPR
+            kwargs.setdefault("object_representation", object_representation)
 
             # set correlation id
             return self.create(**kwargs)
@@ -88,12 +88,12 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault(
                 "content_type", ContentType.objects.get_for_model(instance)
             )
-            kwargs.setdefault("object_pk", pk)
+            kwargs.setdefault("record", pk)
             try:
-                object_repr = smart_str(instance)
+                object_representation = smart_str(instance)
             except ObjectDoesNotExist:
-                object_repr = DEFAULT_OBJECT_REPR
-            kwargs.setdefault("object_repr", object_repr)
+                object_representation = DEFAULT_OBJECT_REPR
+            kwargs.setdefault("object_representation", object_representation)
             kwargs.setdefault("action", LogEntry.Action.UPDATE)
 
             objects = [smart_str(instance) for instance in changed_queryset]
@@ -128,7 +128,7 @@ class LogEntryManager(models.Manager):
         if isinstance(pk, int):
             return self.filter(content_type=content_type)
         else:
-            return self.filter(content_type=content_type, object_pk=smart_str(pk))
+            return self.filter(content_type=content_type, record=smart_str(pk))
 
     def get_for_objects(self, queryset):
         """
@@ -153,13 +153,13 @@ class LogEntryManager(models.Manager):
             primary_keys = [smart_str(pk) for pk in primary_keys]
             return (
                 self.filter(content_type=content_type)
-                .filter(Q(object_pk__in=primary_keys))
+                .filter(Q(record__in=primary_keys))
                 .distinct()
             )
         else:
             return (
                 self.filter(content_type=content_type)
-                .filter(Q(object_pk__in=primary_keys))
+                .filter(Q(record__in=primary_keys))
                 .distinct()
             )
 
@@ -293,10 +293,10 @@ class LogEntry(models.Model):
         related_name="+",
         verbose_name=_("content type"),
     )
-    object_pk = models.CharField(
+    record = models.CharField(
         db_index=True, max_length=255, verbose_name=_("object pk")
     )
-    object_repr = models.TextField(verbose_name=_("object representation"))
+    object_representation = models.TextField(verbose_name=_("object representation"))
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
@@ -326,7 +326,7 @@ class LogEntry(models.Model):
         else:
             fstring = _("Logged {repr:s}")
 
-        return fstring.format(repr=self.object_repr)
+        return fstring.format(repr=self.object_representation)
 
     @property
     def changes_dict(self):

@@ -35,13 +35,16 @@ class LogEntryAdminMixin:
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = f"admin:{app_label}_{model}_change"
         try:
-            args = [obj.object_pk]
+            args = [obj.record]
             link = urlresolvers.reverse(viewname, args=args)
         except NoReverseMatch:
-            return obj.object_repr
+            return obj.object_representation
         else:
             return format_html(
-                '<a href="{}">{} - {}</a>', link, obj.content_type, obj.object_repr
+                '<a href="{}">{} - {}</a>',
+                link,
+                obj.content_type,
+                obj.object_representation,
             )
 
     @admin.display(description=_("Changes"))

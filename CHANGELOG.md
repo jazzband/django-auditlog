@@ -283,7 +283,7 @@ _As it turns out, haste is never good. Due to the focus on quickly releasing thi
 
 ### Important notes
 
-- The `object_pk` field is now limited to 255 chars
+- The `record` field is now limited to 255 chars
 
 ## 0.3.2 (2015-10-19)
 

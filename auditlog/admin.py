@@ -21,7 +21,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     ]
     search_fields = [
         "timestamp",
-        "object_repr",
+        "object_representation",
         "changes",
     ]
     list_filter = ["action", ResourceTypeFilter]

@@ -50,18 +50,4 @@ class Migration(migrations.Migration):
                 verbose_name="developer name",
             ),
         ),
-        migrations.AlterField(
-            model_name="logentry",
-            name="action",
-            field=models.PositiveSmallIntegerField(
-                choices=[
-                    ("create", "create"),
-                    ("update", "update"),
-                    ("delete", "delete"),
-                    ("access", "access"),
-                ],
-                db_index=True,
-                verbose_name="action",
-            ),
-        ),
     ]
