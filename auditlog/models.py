@@ -300,7 +300,6 @@ class LogEntry(models.Model):
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
-    changes_text = models.TextField(blank=True, verbose_name=_("change message"))
     changes = models.JSONField(null=True, verbose_name=_("change message"))
     timestamp = models.DateTimeField(
         default=django_timezone.now,
@@ -510,9 +509,6 @@ def _changes_func() -> Callable[[LogEntry], Dict]:
     def json_then_text(instance: LogEntry) -> Dict:
         if instance.changes:
             return instance.changes
-        elif instance.changes_text:
-            with contextlib.suppress(ValueError):
-                return json.loads(instance.changes_text)
         return {}
 
     def default(instance: LogEntry) -> Dict:

@@ -79,9 +79,7 @@ class Command(BaseCommand):
         return False
 
     def get_logs(self):
-        return LogEntry.objects.filter(
-            changes_text__isnull=False, changes__isnull=True
-        ).exclude(changes_text__exact="")
+        return LogEntry.objects.filter(changes__isnull=True)
 
     def migrate_using_django(self, batch_size):
         def _apply_django_migration(_logs) -> int:
@@ -89,13 +87,6 @@ class Command(BaseCommand):
 
             updated = []
             errors = []
-            for log in _logs:
-                try:
-                    log.changes = json.loads(log.changes_text)
-                except ValueError:
-                    errors.append(log.id)
-                else:
-                    updated.append(log)
 
             LogEntry.objects.bulk_update(updated, fields=["changes"])
             if errors:
