@@ -320,10 +320,10 @@ class LogEntry(models.Model):
         :py:attr:`Action.DELETE` and :py:attr:`Action.ACCESS`.
         """
 
-        CREATE = 0
-        UPDATE = 1
-        DELETE = 2
-        ACCESS = 3
+        CREATE = "create"
+        UPDATE = "update"
+        DELETE = "delete"
+        ACCESS = "access"
 
         choices = (
             (CREATE, _("create")),
@@ -332,50 +332,25 @@ class LogEntry(models.Model):
             (ACCESS, _("access")),
         )
 
-    content_type = models.ForeignKey(
-        to="contenttypes.ContentType",
-        on_delete=models.CASCADE,
-        related_name="+",
-        verbose_name=_("content type"),
+    developer_name = models.CharField(
+        max_length=255, verbose_name=_("developer name"), default="willisaplication"
+    )
+    database_name = models.CharField(
+        max_length=255, verbose_name=_("database name"), default="RDS"
     )
     object_pk = models.CharField(
         db_index=True, max_length=255, verbose_name=_("object pk")
     )
-    object_id = models.BigIntegerField(
-        blank=True, db_index=True, null=True, verbose_name=_("object id")
-    )
     object_repr = models.TextField(verbose_name=_("object representation"))
-    serialized_data = models.JSONField(null=True)
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
     changes_text = models.TextField(blank=True, verbose_name=_("change message"))
     changes = models.JSONField(null=True, verbose_name=_("change message"))
-    actor = models.ForeignKey(
-        to=settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="+",
-        verbose_name=_("actor"),
-    )
-    cid = models.CharField(
-        max_length=255,
-        db_index=True,
-        blank=True,
-        null=True,
-        verbose_name=_("Correlation ID"),
-    )
-    remote_addr = models.GenericIPAddressField(
-        blank=True, null=True, verbose_name=_("remote address")
-    )
     timestamp = models.DateTimeField(
         default=django_timezone.now,
         db_index=True,
         verbose_name=_("timestamp"),
-    )
-    additional_data = models.JSONField(
-        blank=True, null=True, verbose_name=_("additional data")
     )
 
     objects = LogEntryManager()
