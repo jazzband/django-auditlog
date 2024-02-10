@@ -7,7 +7,7 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as readme_file:
     long_description = readme_file.read()
 
 setup(
-    name="django-auditlog",
+    name="django-auditlog-bklynhlth",
     use_scm_version={"version_scheme": "post-release"},
     setup_requires=["setuptools_scm"],
     packages=[
@@ -23,8 +23,8 @@ setup(
         "Tracker": "https://github.com/bklynhlth/django-auditlog/",
     },
     license="MIT",
-    author="Jan-Jelle Kester",
-    description="Audit log app for Django",
+    author="Brooklyn Health",
+    description="Customised version of django-auditlog app for Django as per requirements at Brooklyn Health",
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.8",
