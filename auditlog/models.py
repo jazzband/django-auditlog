@@ -46,7 +46,6 @@ class LogEntryManager(models.Manager):
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
         """
-        from auditlog.cid import get_cid
 
         changes = kwargs.get("changes", None)
         pk = self._get_pk_value(instance)
@@ -61,19 +60,8 @@ class LogEntryManager(models.Manager):
             except ObjectDoesNotExist:
                 object_repr = DEFAULT_OBJECT_REPR
             kwargs.setdefault("object_repr", object_repr)
-            kwargs.setdefault(
-                "serialized_data", self._get_serialized_data_or_none(instance)
-            )
-
-            if isinstance(pk, int):
-                kwargs.setdefault("object_id", pk)
-
-            get_additional_data = getattr(instance, "get_additional_data", None)
-            if callable(get_additional_data):
-                kwargs.setdefault("additional_data", get_additional_data())
 
             # set correlation id
-            kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
         return None
 
@@ -94,7 +82,6 @@ class LogEntryManager(models.Manager):
         :return: The new log entry or `None` if there were no changes.
         :rtype: LogEntry
         """
-        from auditlog.cid import get_cid
 
         pk = self._get_pk_value(instance)
         if changed_queryset:
@@ -109,13 +96,6 @@ class LogEntryManager(models.Manager):
             kwargs.setdefault("object_repr", object_repr)
             kwargs.setdefault("action", LogEntry.Action.UPDATE)
 
-            if isinstance(pk, int):
-                kwargs.setdefault("object_id", pk)
-
-            get_additional_data = getattr(instance, "get_additional_data", None)
-            if callable(get_additional_data):
-                kwargs.setdefault("additional_data", get_additional_data())
-
             objects = [smart_str(instance) for instance in changed_queryset]
             kwargs["changes"] = {
                 field_name: {
@@ -125,7 +105,6 @@ class LogEntryManager(models.Manager):
                 }
             }
 
-            kwargs.setdefault("cid", get_cid())
             return self.create(**kwargs)
 
         return None
@@ -147,7 +126,7 @@ class LogEntryManager(models.Manager):
         pk = self._get_pk_value(instance)
 
         if isinstance(pk, int):
-            return self.filter(content_type=content_type, object_id=pk)
+            return self.filter(content_type=content_type)
         else:
             return self.filter(content_type=content_type, object_pk=smart_str(pk))
 
@@ -169,11 +148,7 @@ class LogEntryManager(models.Manager):
         )
 
         if isinstance(primary_keys[0], int):
-            return (
-                self.filter(content_type=content_type)
-                .filter(Q(object_id__in=primary_keys))
-                .distinct()
-            )
+            return self.filter(content_type=content_type).distinct()
         elif isinstance(queryset.model._meta.pk, models.UUIDField):
             primary_keys = [smart_str(pk) for pk in primary_keys]
             return (
@@ -220,32 +195,6 @@ class LogEntryManager(models.Manager):
         if isinstance(pk, models.Model):
             pk = self._get_pk_value(pk)
         return pk
-
-    def _get_serialized_data_or_none(self, instance):
-        from auditlog.registry import auditlog
-
-        opts = auditlog.get_serialize_options(instance.__class__)
-        if not opts["serialize_data"]:
-            return None
-
-        model_fields = auditlog.get_model_fields(instance.__class__)
-        kwargs = opts.get("serialize_kwargs", {})
-
-        if opts["serialize_auditlog_fields_only"]:
-            kwargs.setdefault(
-                "fields", self._get_applicable_model_fields(instance, model_fields)
-            )
-
-        instance_copy = self._get_copy_with_python_typed_fields(instance)
-        data = dict(
-            json.loads(serializers.serialize("json", (instance_copy,), **kwargs))[0]
-        )
-
-        mask_fields = model_fields["mask_fields"]
-        if mask_fields:
-            data = self._mask_serialized_fields(data, mask_fields)
-
-        return data
 
     def _get_copy_with_python_typed_fields(self, instance):
         """
@@ -535,11 +484,6 @@ class AuditlogHistoryField(GenericRelation):
 
     def __init__(self, pk_indexable=True, delete_related=False, **kwargs):
         kwargs["to"] = LogEntry
-
-        if pk_indexable:
-            kwargs["object_id_field"] = "object_id"
-        else:
-            kwargs["object_id_field"] = "object_pk"
 
         kwargs["content_type_field"] = "content_type"
         self.delete_related = delete_related

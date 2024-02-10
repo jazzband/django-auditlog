@@ -100,10 +100,6 @@ class ManyRelatedModel(models.Model):
 
     history = AuditlogHistoryField(delete_related=True)
 
-    def get_additional_data(self):
-        related = self.related.first()
-        return {"related_model_id": related.id if related else None}
-
 
 class ManyRelatedOtherModel(models.Model):
     """
@@ -171,18 +167,6 @@ class AdditionalDataIncludedModel(models.Model):
     related = models.ForeignKey(to=SimpleModel, on_delete=models.CASCADE)
 
     history = AuditlogHistoryField(delete_related=True)
-
-    def get_additional_data(self):
-        """
-        Returns JSON that captures a snapshot of additional details of the
-        model instance. This method, if defined, is accessed by auditlog
-        manager and added to each logentry instance on creation.
-        """
-        object_details = {
-            "related_model_id": self.related.id,
-            "related_model_text": self.related.text,
-        }
-        return object_details
 
 
 class DateTimeFieldModel(models.Model):

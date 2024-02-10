@@ -1,3 +1,3 @@
 from importlib.metadata import version
 
-__version__ = version("django-auditlog")
+__version__ = version("django-auditlog-bklynhlth")

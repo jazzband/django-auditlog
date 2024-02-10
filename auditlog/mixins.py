@@ -19,7 +19,6 @@ MAX = 75
 
 class LogEntryAdminMixin:
     request: HttpRequest
-    CID_TITLE = _("Click to filter by records with this correlation id")
 
     @admin.display(description=_("Created"))
     def created(self, obj):
@@ -29,15 +28,6 @@ class LogEntryAdminMixin:
 
     @admin.display(description=_("User"))
     def user_url(self, obj):
-        if obj.actor:
-            app_label, model = settings.AUTH_USER_MODEL.split(".")
-            viewname = f"admin:{app_label}_{model.lower()}_change"
-            try:
-                link = urlresolvers.reverse(viewname, args=[obj.actor.pk])
-            except NoReverseMatch:
-                return "%s" % (obj.actor)
-            return format_html('<a href="{}">{}</a>', link, obj.actor)
-
         return "system"
 
     @admin.display(description=_("Resource"))
@@ -45,7 +35,7 @@ class LogEntryAdminMixin:
         app_label, model = obj.content_type.app_label, obj.content_type.model
         viewname = f"admin:{app_label}_{model}_change"
         try:
-            args = [obj.object_pk] if obj.object_id is None else [obj.object_id]
+            args = [obj.object_pk]
             link = urlresolvers.reverse(viewname, args=args)
         except NoReverseMatch:
             return obj.object_repr
@@ -117,15 +107,6 @@ class LogEntryAdminMixin:
             msg.append("</table>")
 
         return mark_safe("".join(msg))
-
-    @admin.display(description="Correlation ID")
-    def cid_url(self, obj):
-        cid = obj.cid
-        if cid:
-            url = self._add_query_parameter("cid", cid)
-            return format_html(
-                '<a href="{}" title="{}">{}</a>', url, self.CID_TITLE, cid
-            )
 
     def _format_header(self, *labels):
         return format_html(
