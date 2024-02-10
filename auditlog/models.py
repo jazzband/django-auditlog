@@ -269,10 +269,10 @@ class LogEntry(models.Model):
         :py:attr:`Action.DELETE` and :py:attr:`Action.ACCESS`.
         """
 
-        CREATE = "create"
-        UPDATE = "update"
-        DELETE = "delete"
-        ACCESS = "access"
+        CREATE = 0
+        UPDATE = 1
+        DELETE = 2
+        ACCESS = 3
 
         choices = (
             (CREATE, _("create")),
