@@ -1,6 +1,8 @@
 django-auditlog
 ===============
 
+This is the forked version to django-auditlog library customised as per the requirements as Brooklyn Health.
+
 [![Jazzband](https://jazzband.co/static/img/badge.svg)](https://jazzband.co/)
 [![Build Status](https://github.com/jazzband/django-auditlog/workflows/Test/badge.svg)](https://github.com/jazzband/django-auditlog/actions)
 [![Docs](https://readthedocs.org/projects/django-auditlog/badge/?version=latest)](https://django-auditlog.readthedocs.org/en/latest/?badge=latest)

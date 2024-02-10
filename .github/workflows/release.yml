@@ -3,11 +3,11 @@ name: Release
 on:
   push:
     tags:
-    - '*'
+      - "*"
 
 jobs:
   build:
-    if: github.repository == 'jazzband/django-auditlog'
+    if: github.repository == 'bklynhlth/django-auditlog'
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: "3.8"
 
       - name: Get pip cache dir
         id: pip-cache
@@ -43,11 +43,3 @@ jobs:
           python setup.py --version
           python setup.py sdist --format=gztar bdist_wheel
           twine check dist/*
-
-      - name: Upload packages to Jazzband
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: jazzband
-          password: ${{ secrets.JAZZBAND_RELEASE_KEY }}
-          repository-url: https://jazzband.co/projects/django-auditlog/upload
