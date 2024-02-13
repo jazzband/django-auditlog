@@ -2379,3 +2379,19 @@ class DisableTest(TestCase):
         self.assertEqual(0, LogEntry.objects.get_for_object(recursive).count())
         related = ManyRelatedOtherModel.objects.get(pk=1)
         self.assertEqual(0, LogEntry.objects.get_for_object(related).count())
+
+
+class MissingModelTest(TestCase):
+    def setUp(self):
+        # Create a log entry, then unregister the model
+        self.obj = SimpleModel.objects.create(text="I am old.")
+        auditlog.unregister(SimpleModel)
+
+    def tearDown(self):
+        # Re-register the model for other tests
+        auditlog.register(SimpleModel)
+
+    def test_get_changes_for_missing_model(self):
+        history = self.obj.history.latest()
+        self.assertEqual(history.changes_dict["text"][1], self.obj.text)
+        self.assertEqual(history.changes_display_dict["text"][1], self.obj.text)

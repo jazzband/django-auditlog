@@ -423,11 +423,14 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry intended for display to users as a dictionary object.
         """
-        # Get the model and model_fields
         from auditlog.registry import auditlog
 
+        # Get the model and model_fields, but gracefully handle the case where the model no longer exists
         model = self.content_type.model_class()
-        model_fields = auditlog.get_model_fields(model._meta.model)
+        model_fields = None
+        if auditlog.contains(model._meta.model):
+            model_fields = auditlog.get_model_fields(model._meta.model)
+
         changes_display_dict = {}
         # grab the changes_dict and iterate through
         for field_name, values in self.changes_dict.items():
@@ -485,9 +488,13 @@ class LogEntry(models.Model):
                         value = f"{value[:140]}..."
 
                     values_display.append(value)
-            verbose_name = model_fields["mapping_fields"].get(
-                field.name, getattr(field, "verbose_name", field.name)
-            )
+
+            # Use verbose_name from mapping if available, otherwise determine from field
+            if model_fields and field.name in model_fields["mapping_fields"]:
+                verbose_name = model_fields["mapping_fields"][field.name]
+            else:
+                verbose_name = getattr(field, "verbose_name", field.name)
+
             changes_display_dict[verbose_name] = values_display
         return changes_display_dict
 
