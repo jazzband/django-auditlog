@@ -1,6 +1,6 @@
-from django.core.serializers.json import DjangoJSONEncoder
-
 from decimal import Decimal
+
+from django.core.serializers.json import DjangoJSONEncoder
 
 AUDITLOG_BUGGY_REPR_DATATYPES = (Decimal,)
 

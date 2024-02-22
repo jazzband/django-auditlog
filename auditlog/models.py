@@ -351,7 +351,9 @@ class LogEntry(models.Model):
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
     changes_text = models.TextField(blank=True, verbose_name=_("change message"))
-    changes = models.JSONField(null=True, verbose_name=_("change message"), encoder=AuditLogChangesJSONEncoder)
+    changes = models.JSONField(
+        null=True, verbose_name=_("change message"), encoder=AuditLogChangesJSONEncoder
+    )
     actor = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
