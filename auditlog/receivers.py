@@ -6,7 +6,7 @@ from auditlog.context import auditlog_disabled
 from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
 from auditlog.signals import post_log, pre_log
-
+from crum import get_current_user
 
 def check_disable(signal_handler):
     """
@@ -126,6 +126,7 @@ def _create_log_entry(
                 action=action,
                 changes=changes,
                 force_log=force_log,
+                actor=get_current_user()
             )
     except BaseException as e:
         error = e
