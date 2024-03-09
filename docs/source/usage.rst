@@ -233,7 +233,7 @@ It must be a list or tuple. Each item in this setting can be a:
     AUDITLOG_INCLUDE_TRACKING_MODELS = (
         "<appname>.<model1>",
         {
-            "model": "<appname>.<model1>",
+            "model": "<appname>.<model2>",
             "include_fields": ["field1", "field2"],
             "exclude_fields": ["field3", "field4"],
             "mapping_fields": {
