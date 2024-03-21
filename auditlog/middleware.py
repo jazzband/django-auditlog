@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from auditlog.cid import set_cid
@@ -12,6 +13,11 @@ class AuditlogMiddleware:
 
     def __init__(self, get_response=None):
         self.get_response = get_response
+        self.disable_remote_addr = getattr(
+            settings, "AUDITLOG_DISABLE_REMOTE_ADDR", False
+        )
+        if not isinstance(self.disable_remote_addr, bool):
+            raise ValueError("Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean")
 
     @staticmethod
     def _get_remote_addr(request):
@@ -38,7 +44,10 @@ class AuditlogMiddleware:
         return None
 
     def __call__(self, request):
-        remote_addr = self._get_remote_addr(request)
+        if self.disable_remote_addr:
+            remote_addr = None
+        else:
+            remote_addr = self._get_remote_addr(request)
         user = self._get_actor(request)
 
         set_cid(request)
