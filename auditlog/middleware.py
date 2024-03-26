@@ -17,7 +17,7 @@ class AuditlogMiddleware:
             settings, "AUDITLOG_DISABLE_REMOTE_ADDR", False
         )
         if not isinstance(self.disable_remote_addr, bool):
-            raise ValueError("Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean")
+            raise TypeError("Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean")
 
     @staticmethod
     def _get_remote_addr(request):
