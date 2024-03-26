@@ -40,3 +40,8 @@ settings.AUDITLOG_TWO_STEP_MIGRATION = getattr(
 settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT = getattr(
     settings, "AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT", False
 )
+
+# Disable remote_addr field in database
+settings.AUDITLOG_DISABLE_REMOTE_ADDR = getattr(
+    settings, "AUDITLOG_DISABLE_REMOTE_ADDR", False
+)
