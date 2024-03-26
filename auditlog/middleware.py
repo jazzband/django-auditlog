@@ -13,11 +13,9 @@ class AuditlogMiddleware:
 
     def __init__(self, get_response=None):
         self.get_response = get_response
-        self.disable_remote_addr = getattr(
-            settings, "AUDITLOG_DISABLE_REMOTE_ADDR", False
-        )
-        if not isinstance(self.disable_remote_addr, bool):
+        if not isinstance(settings. AUDITLOG_DISABLE_REMOTE_ADDR, bool):
             raise TypeError("Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean")
+        self.disable_remote_addr = settings. AUDITLOG_DISABLE_REMOTE_ADDR
 
     @staticmethod
     def _get_remote_addr(request):
