@@ -513,6 +513,18 @@ class MiddlewareTest(TestCase):
 
         self.assert_no_listeners()
 
+    def test_init_middleware(self):
+        with override_settings(AUDITLOG_DISABLE_REMOTE_ADDR="str"):
+            with self.assertRaisesMessage(TypeError, "Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean"):
+                AuditlogMiddleware()
+
+    def test_disable_remote_addr(self):
+        with override_settings(AUDITLOG_DISABLE_REMOTE_ADDR=True):
+            headers = {"HTTP_X_FORWARDED_FOR": "127.0.0.2"}
+            request = self.factory.get("/", **headers)
+            remote_addr = self.middleware._get_remote_addr(request)
+            self.assertIsNone(remote_addr)
+
     def test_get_remote_addr(self):
         tests = [  # (headers, expected_remote_addr)
             ({}, "127.0.0.1"),
@@ -1270,12 +1282,6 @@ class RegisterModelSettingsTest(TestCase):
         with override_settings(AUDITLOG_DISABLE_ON_RAW_SAVE="bad value"):
             with self.assertRaisesMessage(
                 TypeError, "Setting 'AUDITLOG_DISABLE_ON_RAW_SAVE' must be a boolean"
-            ):
-                self.test_auditlog.register_from_settings()
-
-        with override_settings(AUDITLOG_DISABLE_REMOTE_ADDR="str"):
-            with self.assertRaisesMessage(
-                TypeError, "Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean"
             ):
                 self.test_auditlog.register_from_settings()
 

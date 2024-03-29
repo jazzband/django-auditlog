@@ -15,10 +15,12 @@ class AuditlogMiddleware:
         self.get_response = get_response
         if not isinstance(settings.AUDITLOG_DISABLE_REMOTE_ADDR, bool):
             raise TypeError("Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean")
-        self.disable_remote_addr = settings.AUDITLOG_DISABLE_REMOTE_ADDR
 
     @staticmethod
     def _get_remote_addr(request):
+        if settings.AUDITLOG_DISABLE_REMOTE_ADDR:
+            return None
+
         # In case there is no proxy, return the original address
         if not request.headers.get("X-Forwarded-For"):
             return request.META.get("REMOTE_ADDR")
@@ -42,10 +44,7 @@ class AuditlogMiddleware:
         return None
 
     def __call__(self, request):
-        if self.disable_remote_addr:
-            remote_addr = None
-        else:
-            remote_addr = self._get_remote_addr(request)
+        remote_addr = self._get_remote_addr(request)
         user = self._get_actor(request)
 
         set_cid(request)
