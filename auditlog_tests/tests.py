@@ -515,7 +515,9 @@ class MiddlewareTest(TestCase):
 
     def test_init_middleware(self):
         with override_settings(AUDITLOG_DISABLE_REMOTE_ADDR="str"):
-            with self.assertRaisesMessage(TypeError, "Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean"):
+            with self.assertRaisesMessage(
+                TypeError, "Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean"
+            ):
                 AuditlogMiddleware()
 
     def test_disable_remote_addr(self):
