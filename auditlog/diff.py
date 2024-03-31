@@ -124,7 +124,7 @@ def model_instance_diff(
             field values as value.
     :rtype: dict
     """
-    from auditlog.registry import auditlog
+    from auditlog.registry import AuditlogRegistry
 
     if not (old is None or isinstance(old, Model)):
         raise TypeError("The supplied old instance is not a valid model instance.")
@@ -135,13 +135,13 @@ def model_instance_diff(
 
     if old is not None and new is not None:
         fields = set(old._meta.fields + new._meta.fields)
-        model_fields = auditlog.get_model_fields(new._meta.model)
+        model_fields = AuditlogRegistry.get_model_fields(new._meta.model)
     elif old is not None:
         fields = set(get_fields_in_model(old))
-        model_fields = auditlog.get_model_fields(old._meta.model)
+        model_fields = AuditlogRegistry.get_model_fields(old._meta.model)
     elif new is not None:
         fields = set(get_fields_in_model(new))
-        model_fields = auditlog.get_model_fields(new._meta.model)
+        model_fields = AuditlogRegistry.get_model_fields(new._meta.model)
     else:
         fields = set()
         model_fields = None

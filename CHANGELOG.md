@@ -5,6 +5,7 @@
 ## 3.0.0-beta.4 (2024-01-02)
 
 #### Improvements
+- feat: Add `AUDITLOG_REGISTRY` settings attribute to have multiple auditlogs with custom configurations ([#623](https://github.com/jazzband/django-auditlog/pull/623))
 - feat: Excluding ip address when `AUDITLOG_DISABLE_REMOTE_ADDR` is set to True ([#620](https://github.com/jazzband/django-auditlog/pull/620))
 - feat: If any receiver returns False, no logging will be made. This can be useful if logging should be conditionally enabled / disabled ([#590](https://github.com/jazzband/django-auditlog/pull/590))
 - Django: Confirm Django 5.0 support ([#598](https://github.com/jazzband/django-auditlog/pull/598))

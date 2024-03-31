@@ -11,7 +11,7 @@ from django.utils.timezone import is_aware, localtime
 from django.utils.translation import gettext_lazy as _
 
 from auditlog.models import LogEntry
-from auditlog.registry import auditlog
+from auditlog.registry import AuditlogRegistry
 from auditlog.signals import accessed
 
 MAX = 75
@@ -142,7 +142,7 @@ class LogEntryAdminMixin:
         if model is None:
             return field_name
         try:
-            model_fields = auditlog.get_model_fields(model._meta.model)
+            model_fields = AuditlogRegistry.get_model_fields(model._meta.model)
             mapping_field_name = model_fields["mapping_fields"].get(field_name)
             if mapping_field_name:
                 return mapping_field_name

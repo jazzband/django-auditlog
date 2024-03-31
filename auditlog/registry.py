@@ -13,6 +13,7 @@ from typing import (
 )
 
 from django.apps import apps
+from django.core.exceptions import ImproperlyConfigured
 from django.db.models import ManyToManyField, Model
 from django.db.models.base import ModelBase
 from django.db.models.signals import (
@@ -22,6 +23,7 @@ from django.db.models.signals import (
     post_save,
     pre_save,
 )
+from django.utils.module_loading import import_string
 
 from auditlog.conf import settings
 from auditlog.signals import accessed
@@ -363,3 +365,56 @@ class AuditlogModelRegistry:
 
 
 auditlog = AuditlogModelRegistry()
+
+
+def get_default_auditlogs():
+    return get_auditlogs(settings.AUDITLOG_REGISTRY)
+
+
+def get_auditlogs(auditlog_config):
+    auditlogs = []
+
+    for auditlog in auditlog_config:
+        try:
+            audit_logger = import_string(auditlog)
+        except ImportError:
+            msg = (
+                "The module in NAME could not be imported: %s. Check your "
+                "AUDITLOG_REGISTRY setting."
+            )
+            raise ImproperlyConfigured(msg % auditlog["NAME"])
+        else:
+            auditlogs.append(audit_logger)
+    return auditlogs
+
+
+class AuditlogRegistry:
+    """
+    A registry that keeps track of AuditlogModelRegistry instances.
+    """
+
+    _registry = {}
+
+    @classmethod
+    def get_auditlog(cls, model: ModelBase):
+        """
+        Retrieve the auditlog object associated with a given model.
+        """
+        auditlogs = get_default_auditlogs()
+        for auditlog in auditlogs:
+            if auditlog.contains(model):
+                return auditlog
+
+    @classmethod
+    def get_model_fields(cls, model: ModelBase):
+        """
+        Wrapper of AuditlogModelRegistry.get_model_fields().
+        """
+        auditlog = cls.get_auditlog(model)
+        if auditlog:
+            model_fields = auditlog.get_model_fields(model)
+            return model_fields
+        return {}
+
+
+auditlog_registry = AuditlogRegistry()

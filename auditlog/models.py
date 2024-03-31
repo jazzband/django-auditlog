@@ -222,7 +222,9 @@ class LogEntryManager(models.Manager):
         return pk
 
     def _get_serialized_data_or_none(self, instance):
-        from auditlog.registry import auditlog
+        from auditlog.registry import AuditlogRegistry
+
+        auditlog = AuditlogRegistry.get_auditlog(model=instance.__class__)
 
         opts = auditlog.get_serialize_options(instance.__class__)
         if not opts["serialize_data"]:
@@ -436,12 +438,14 @@ class LogEntry(models.Model):
         """
         :return: The changes recorded in this log entry intended for display to users as a dictionary object.
         """
-        from auditlog.registry import auditlog
+        from auditlog.registry import AuditlogRegistry
 
         # Get the model and model_fields, but gracefully handle the case where the model no longer exists
         model = self.content_type.model_class()
+        auditlog = AuditlogRegistry.get_auditlog(model=model)
+
         model_fields = None
-        if auditlog.contains(model._meta.model):
+        if auditlog:
             model_fields = auditlog.get_model_fields(model._meta.model)
 
         changes_display_dict = {}

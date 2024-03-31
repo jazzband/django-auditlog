@@ -59,6 +59,7 @@ from auditlog_tests.models import (
     SimpleNonManagedModel,
     UUIDPrimaryKeyModel,
 )
+from auditlog_tests.test_registry import create_only_auditlog, update_only_auditlog
 
 
 class SimpleModelTest(TestCase):
@@ -2643,3 +2644,75 @@ class MissingModelTest(TestCase):
         history = self.obj.history.latest()
         self.assertEqual(history.changes_dict["text"][1], self.obj.text)
         self.assertEqual(history.changes_display_dict["text"][1], self.obj.text)
+
+
+class CustomAuditlogTest(TestCase):
+    def setUp(self):
+        super().setUp()
+        if auditlog.contains(SimpleModel):
+            auditlog.unregister(SimpleModel)
+
+    def tearDown(self):
+        for model in create_only_auditlog.get_models():
+            create_only_auditlog.unregister(model)
+        for model in update_only_auditlog.get_models():
+            update_only_auditlog.unregister(model)
+        auditlog.register(SimpleModel)
+
+    def make_object(self):
+        return SimpleModel.objects.create(text="I am not difficult.")
+
+    def update_object(self, obj):
+        obj.text = "Changed"
+        obj.save()
+        return obj
+
+    def test_create_only_auditlog(self):
+        with override_settings(
+            AUDITLOG_REGISTRY=[
+                "auditlog_tests.test_registry.create_only_auditlog",
+            ]
+        ):
+            create_only_auditlog.register(SimpleModel, include_fields=["text"])
+
+            # Get the object to work with
+            obj = self.make_object()
+
+            # Check for log entries
+            self.assertEqual(obj.history.count(), 1, msg="There is one log entry")
+
+            history = obj.history.get()
+            self.check_create_log_entry(obj, history)
+
+            updated_obj = self.update_object(obj)
+            self.check_no_update_entry(updated_obj)
+
+    def test_update_only_auditlog(self):
+        with override_settings(
+            AUDITLOG_REGISTRY=[
+                "auditlog_tests.test_registry.update_only_auditlog",
+            ]
+        ):
+            update_only_auditlog.register(SimpleModel, include_fields=["text"])
+
+            # Get the object to work with
+            obj = self.make_object()
+            self.assertEqual(obj.history.all().count(), 0)
+            updated_obj = self.update_object(obj)
+            self.assertEqual(updated_obj.history.all().count(), 1)
+            history = updated_obj.history.get()
+            self.assertEqual(
+                history.action,
+                LogEntry.Action.UPDATE,
+            )
+
+    def check_create_log_entry(self, obj, history):
+        self.assertEqual(
+            history.action, LogEntry.Action.CREATE, msg="Action is 'CREATE'"
+        )
+        self.assertEqual(history.object_repr, str(obj), msg="Representation is equal")
+
+    def check_no_update_entry(self, obj):
+        self.assertEqual(
+            obj.history.all().filter(action=LogEntry.Action.UPDATE).count(), 0
+        )

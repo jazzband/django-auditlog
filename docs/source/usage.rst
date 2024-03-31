@@ -289,6 +289,17 @@ If the value is `None`, the default getter will be used.
 
 .. versionadded:: 3.0.0
 
+**AUDITLOG_REGISTRY**
+A list or tuple of AuditlogModelRegistry instances.
+This settings allow to configure multiple auditlogs with conditionally disabled logging per action
+or to have custom signal receivers.
+
+If not specified, this setting defaults to:
+.. code-block:: python
+    AUDITLOG_REGISTRY = ["auditlog.registry.auditlog"]
+
+.. versionadded:: 3.0.0
+
 Actors
 ------
 

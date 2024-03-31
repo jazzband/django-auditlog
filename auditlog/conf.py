@@ -45,3 +45,8 @@ settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT = getattr(
 settings.AUDITLOG_DISABLE_REMOTE_ADDR = getattr(
     settings, "AUDITLOG_DISABLE_REMOTE_ADDR", False
 )
+
+# List of paths to auditlogs
+settings.AUDITLOG_REGISTRY = getattr(
+    settings, "AUDITLOG_REGISTRY", ["auditlog.registry.auditlog"]
+)
