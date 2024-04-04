@@ -24,7 +24,7 @@ class SimpleModel(models.Model):
     history = AuditlogHistoryField(delete_related=True)
 
     def __str__(self):
-        return self.text
+        return str(self.text)
 
 
 class AltPrimaryKeyModel(models.Model):
