@@ -23,6 +23,7 @@ from django.urls import resolve, reverse
 from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
+from django.utils.translation import gettext_lazy as _
 
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
@@ -1640,6 +1641,15 @@ class DiffMsgTest(TestCase):
                 "</table>"
             ),
         )
+
+    def test_instance_translation_and_history_logging(self):
+        first = SimpleModel()
+        second = SimpleModel(text=_("test"))
+        changes = model_instance_diff(first, second)
+        self.assertEqual(changes, {"text": ("", "test")})
+        second.save()
+        log_one = second.history.last()
+        self.assertTrue(isinstance(log_one, LogEntry))
 
     def test_changes_msg_create(self):
         log_entry = self._create_log_entry(
