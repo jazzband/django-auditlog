@@ -1646,10 +1646,7 @@ class DiffMsgTest(TestCase):
         first = SimpleModel()
         second = SimpleModel(text=_("test"))
         changes = model_instance_diff(first, second)
-        self.assertEqual(
-            changes,
-            {'text': ('', 'test')}
-        )
+        self.assertEqual(changes, {"text": ("", "test")})
         second.save()
         log_one = second.history.last()
         self.assertTrue(isinstance(log_one, LogEntry))
