@@ -4,6 +4,7 @@
 #### Fixes
 
 - Fixed logging problem related to django translation before logging ([#624](https://github.com/jazzband/django-auditlog/pull/624))
+- Fixed manuall logging when model is not registered ([#627](https://github.com/jazzband/django-auditlog/pull/627))
 
 ## 3.0.0-beta.4 (2024-01-02)
 

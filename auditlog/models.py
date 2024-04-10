@@ -224,6 +224,9 @@ class LogEntryManager(models.Manager):
     def _get_serialized_data_or_none(self, instance):
         from auditlog.registry import auditlog
 
+        if not auditlog.contains(instance.__class__):
+            return None
+
         opts = auditlog.get_serialize_options(instance.__class__)
         if not opts["serialize_data"]:
             return None
