@@ -1112,6 +1112,21 @@ class UnregisterTest(TestCase):
         # Check for log entries
         self.assertEqual(LogEntry.objects.count(), 0, msg="There are no log entries")
 
+    def test_manual_logging(self):
+        obj = self.obj
+        obj.boolean = True
+        obj.save()
+        LogEntry.objects.log_create(
+            instance=obj,
+            action=LogEntry.Action.UPDATE,
+            changes="",
+        )
+        self.assertEqual(
+            obj.history.filter(action=LogEntry.Action.UPDATE).count(),
+            1,
+            msg="There is one log entry for 'UPDATE'",
+        )
+
 
 class RegisterModelSettingsTest(TestCase):
     def setUp(self):
