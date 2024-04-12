@@ -1,6 +1,9 @@
 # Changes
 
 ## Next Release
+
+## 3.0.0 (2024-04-12)
+
 #### Fixes
 
 - Fixed manuall logging when model is not registered ([#627](https://github.com/jazzband/django-auditlog/pull/627))
