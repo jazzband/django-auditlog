@@ -1,6 +1,9 @@
 # Changes
 
 ## Next Release
+
+## 3.0.0 (2024-04-12)
+
 #### Fixes
 
 - Fixed logging problem related to django translation before logging ([#624](https://github.com/jazzband/django-auditlog/pull/624))
