@@ -17,6 +17,7 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.core import management
 from django.db import models
+from django.db.models.functions import Now
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import resolve, reverse
@@ -1060,6 +1061,24 @@ class DateTimeFieldModelTest(TestCase):
             django_timezone.now(), timezone=timezone.utc
         )
         dtm.save()
+
+    def test_datetime_field_functions_now(self):
+        timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+
+        dtm = DateTimeFieldModel(
+            label="DateTimeField model",
+            timestamp=timestamp,
+            date=date,
+            time=time,
+            naive_dt=Now(),
+        )
+        dtm.save()
+        dtm.naive_dt = Now()
+        self.assertEqual(dtm.naive_dt, Now())
+        dtm.save()
+        self.assertEqual(dtm.naive_dt, Now())
 
 
 class UnregisterTest(TestCase):

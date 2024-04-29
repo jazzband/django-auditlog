@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Fixes
+
+- Fixed problem when setting `django.db.models.functions.Now()` in `DateTimeField` ([#635](https://github.com/jazzband/django-auditlog/pull/635))
+
 ## 3.0.0 (2024-04-12)
 
 #### Fixes

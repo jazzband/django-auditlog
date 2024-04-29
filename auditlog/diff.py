@@ -66,7 +66,11 @@ def get_field_value(obj, field):
         if isinstance(field, DateTimeField):
             # DateTimeFields are timezone-aware, so we need to convert the field
             # to its naive form before we can accurately compare them for changes.
-            value = field.to_python(getattr(obj, field.name, None))
+            value = getattr(obj, field.name, None)
+            try:
+                value = field.to_python(value)
+            except TypeError:
+                return value
             if (
                 value is not None
                 and settings.USE_TZ
