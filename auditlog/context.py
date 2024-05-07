@@ -24,7 +24,9 @@ def set_actor(actor, remote_addr=None):
 
     # Connect signal for automatic logging
     set_actor = partial(
-        _set_actor, user=actor, signal_duid=context_data["signal_duid"],
+        _set_actor,
+        user=actor,
+        signal_duid=context_data["signal_duid"],
     )
     pre_save.connect(
         set_actor,

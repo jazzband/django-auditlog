@@ -381,7 +381,6 @@ class LogEntry(models.Model):
 
     objects = LogEntryManager()
 
-
     class Meta:
         get_latest_by = "timestamp"
         ordering = ["-timestamp"]
