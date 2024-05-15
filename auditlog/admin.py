@@ -1,5 +1,6 @@
 from functools import cached_property
 
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
@@ -9,7 +10,6 @@ from auditlog.mixins import LogEntryAdminMixin
 from auditlog.models import LogEntry
 
 
-@admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     list_select_related = ["content_type", "actor"]
     list_display = [
@@ -57,3 +57,7 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     def get_queryset(self, request):
         self.request = request
         return super().get_queryset(request=request)
+
+
+if not settings.AUDITLOG_DISABLE_ADMIN_INTERFACE:
+    admin.site.register(LogEntry, LogEntryAdmin)

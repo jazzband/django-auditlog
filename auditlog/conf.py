@@ -26,6 +26,11 @@ settings.AUDITLOG_DISABLE_ON_RAW_SAVE = getattr(
     settings, "AUDITLOG_DISABLE_ON_RAW_SAVE", False
 )
 
+# Disable django admin interface
+settings.AUDITLOG_DISABLE_ADMIN_INTERFACE = getattr(
+    settings, "AUDITLOG_DISABLE_ADMIN_INTERFACE", False
+)
+
 # CID
 
 settings.AUDITLOG_CID_HEADER = getattr(
