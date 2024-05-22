@@ -269,6 +269,12 @@ class JSONModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class NullableJSONModel(models.Model):
+    json = models.JSONField(null=True, blank=True)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 class SerializeThisModel(models.Model):
     label = models.CharField(max_length=24, unique=True)
     timestamp = models.DateTimeField()
@@ -346,6 +352,7 @@ auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
 auditlog.register(JSONModel)
+auditlog.register(NullableJSONModel)
 auditlog.register(
     SerializeThisModel,
     serialize_data=True,

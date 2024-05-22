@@ -17,6 +17,7 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.core import management
 from django.db import models
+from django.db.models import JSONField, Value
 from django.db.models.functions import Now
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, override_settings
@@ -46,6 +47,7 @@ from auditlog_tests.models import (
     ManyRelatedModel,
     ManyRelatedOtherModel,
     NoDeleteHistoryModel,
+    NullableJSONModel,
     PostgresArrayFieldModel,
     ProxyModel,
     RelatedModel,
@@ -1090,6 +1092,14 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
         self.assertEqual(dtm.naive_dt, Now())
 
+    def test_json_field_value_none(self):
+        json_model = NullableJSONModel(json=Value(None, JSONField()))
+        json_model.save()
+        self.assertEqual(json_model.history.count(), 1)
+        self.assertEqual(
+            json_model.history.latest().changes_dict["json"][1], "Value(None)"
+        )
+
 
 class UnregisterTest(TestCase):
     def setUp(self):
@@ -1196,7 +1206,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 25)
+        self.assertEqual(len(self.test_auditlog.get_models()), 26)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
