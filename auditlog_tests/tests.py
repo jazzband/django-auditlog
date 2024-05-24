@@ -4,7 +4,6 @@ import json
 import random
 import warnings
 from datetime import timezone
-from decimal import Decimal
 from unittest import mock
 from unittest.mock import patch
 
