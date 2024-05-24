@@ -6,6 +6,7 @@ import warnings
 from datetime import timezone
 from unittest import mock
 from unittest.mock import patch
+from decimal import Decimal
 
 import freezegun
 from dateutil.tz import gettz
@@ -41,6 +42,7 @@ from auditlog_tests.models import (
     AutoManyRelatedModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
+    DecimalFieldModel,
     DateTimeFieldModel,
     JSONModel,
     ManyRelatedModel,
@@ -1196,7 +1198,8 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 25)
+        self.assertTrue(self.test_auditlog.contains(DecimalFieldModel))
+        self.assertEqual(len(self.test_auditlog.get_models()), 26)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -1461,6 +1464,17 @@ class ChoicesFieldModelTest(TestCase):
         obj.save()
         history = obj.history.get()
         assert "related_models" in history.changes_display_dict
+
+
+class DecimalFieldModelTest(TestCase):
+
+    def setUp(self):
+        self.obj = DecimalFieldModel.objects.create(decimal=0)
+
+    def test_no_changes_detected_after_saving_again(self):
+        self.assertEqual(self.obj.history.count(), 1)
+        self.obj.save()
+        self.assertEqual(self.obj.history.count(), 1)
 
 
 class CharFieldTextFieldModelTest(TestCase):

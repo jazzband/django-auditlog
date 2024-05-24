@@ -200,6 +200,16 @@ class DateTimeFieldModel(models.Model):
     history = AuditlogHistoryField(delete_related=True)
 
 
+class DecimalFieldModel(models.Model):
+    """
+    A model with a DecimalField, used to test DecimalField changes
+    are detected properly.
+    """
+    decimal = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+
+    history = AuditlogHistoryField(delete_related=True)
+
+
 class ChoicesFieldModel(models.Model):
     """
     A model with a CharField restricted to a set of choices.
@@ -341,6 +351,7 @@ auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
+auditlog.register(DecimalFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
 auditlog.register(PostgresArrayFieldModel)
