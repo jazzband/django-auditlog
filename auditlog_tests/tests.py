@@ -4,9 +4,9 @@ import json
 import random
 import warnings
 from datetime import timezone
+from decimal import Decimal
 from unittest import mock
 from unittest.mock import patch
-from decimal import Decimal
 
 import freezegun
 from dateutil.tz import gettz
@@ -42,8 +42,8 @@ from auditlog_tests.models import (
     AutoManyRelatedModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
-    DecimalFieldModel,
     DateTimeFieldModel,
+    DecimalFieldModel,
     JSONModel,
     ManyRelatedModel,
     ManyRelatedOtherModel,
