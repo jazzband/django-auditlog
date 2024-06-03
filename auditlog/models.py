@@ -213,12 +213,11 @@ class LogEntryManager(models.Manager):
         :type instance: Model
         :return: The primary key value of the given model instance.
         """
-        pk_field = instance._meta.pk.name
+        pk_field = instance._meta.pk.attname
         pk = getattr(instance, pk_field, None)
 
         # Check to make sure that we got a pk not a model object.
-        if isinstance(pk, models.Model):
-            pk = self._get_pk_value(pk)
+        assert not isinstance(pk, models.Model)
         return pk
 
     def _get_serialized_data_or_none(self, instance):
