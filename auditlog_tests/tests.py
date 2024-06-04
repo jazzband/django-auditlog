@@ -20,7 +20,7 @@ from django.db import models
 from django.db.models import JSONField, Value
 from django.db.models.functions import Now
 from django.db.models.signals import pre_save
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import resolve, reverse
 from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
@@ -46,6 +46,7 @@ from auditlog_tests.models import (
     JSONModel,
     ManyRelatedModel,
     ManyRelatedOtherModel,
+    ModelPrimaryKeyModel,
     NoDeleteHistoryModel,
     NullableJSONModel,
     PostgresArrayFieldModel,
@@ -330,6 +331,45 @@ class UUIDPrimaryKeyModelModelWithActorTest(
     WithActorMixin, UUIDPrimaryKeyModelModelBase
 ):
     pass
+
+
+class ModelPrimaryKeyModelBase(SimpleModelTest):
+    def make_object(self):
+        self.key = super().make_object()
+        return ModelPrimaryKeyModel.objects.create(
+            key=self.key, text="I am strange."
+        )
+
+
+class ModelPrimaryKeyModelTest(NoActorMixin, ModelPrimaryKeyModelBase):
+    pass
+
+
+class ModelPrimaryKeyModelWithActorTest(WithActorMixin, ModelPrimaryKeyModelBase):
+    pass
+
+
+# Must inherit from TransactionTestCase to use self.assertNumQueries.
+class ModelPrimaryKeyTest(TransactionTestCase):
+    def test_get_pk_value(self):
+        """
+        Test that the primary key can be retrieved without additional database queries.
+        """
+        key = SimpleModel.objects.create(text="I am not difficult.")
+        obj = ModelPrimaryKeyModel.objects.create(
+            key=key, text="I am strange."
+        )
+        # Refresh the object so the primary key object is not cached.
+        obj.refresh_from_db()
+        with self.assertNumQueries(0):
+            pk = LogEntry.objects._get_pk_value(obj)
+        self.assertEqual(pk, obj.pk)
+        self.assertEqual(pk, key.pk)
+        # Sanity check: verify accessing obj.key causes database access.
+        with self.assertNumQueries(1):
+            pk = obj.key.pk
+        self.assertEqual(pk, obj.pk)
+        self.assertEqual(pk, key.pk)
 
 
 class ProxyModelBase(SimpleModelTest):
@@ -1206,7 +1246,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 26)
+        self.assertEqual(len(self.test_auditlog.get_models()), 27)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
