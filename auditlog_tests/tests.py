@@ -336,9 +336,7 @@ class UUIDPrimaryKeyModelModelWithActorTest(
 class ModelPrimaryKeyModelBase(SimpleModelTest):
     def make_object(self):
         self.key = super().make_object()
-        return ModelPrimaryKeyModel.objects.create(
-            key=self.key, text="I am strange."
-        )
+        return ModelPrimaryKeyModel.objects.create(key=self.key, text="I am strange.")
 
 
 class ModelPrimaryKeyModelTest(NoActorMixin, ModelPrimaryKeyModelBase):
@@ -356,9 +354,7 @@ class ModelPrimaryKeyTest(TransactionTestCase):
         Test that the primary key can be retrieved without additional database queries.
         """
         key = SimpleModel.objects.create(text="I am not difficult.")
-        obj = ModelPrimaryKeyModel.objects.create(
-            key=key, text="I am strange."
-        )
+        obj = ModelPrimaryKeyModel.objects.create(key=key, text="I am strange.")
         # Refresh the object so the primary key object is not cached.
         obj.refresh_from_db()
         with self.assertNumQueries(0):

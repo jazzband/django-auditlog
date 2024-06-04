@@ -63,7 +63,10 @@ class ModelPrimaryKeyModel(models.Model):
     """
 
     key = models.OneToOneField(
-        "SimpleModel", primary_key=True, on_delete=models.CASCADE, related_name="reverse_primary_key"
+        "SimpleModel",
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name="reverse_primary_key",
     )
 
     text = models.TextField(blank=True)
