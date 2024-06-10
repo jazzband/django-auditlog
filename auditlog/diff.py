@@ -83,7 +83,7 @@ def get_field_value(obj, field):
                 value = json.dumps(value, sort_keys=True, cls=field.encoder)
             except TypeError:
                 pass
-        elif (field.one_to_one or field.many_to_one) and hasattr(field, "rel_class"):
+        elif hasattr(field, "rel_class") and (field.one_to_one or field.many_to_one):
             value = smart_str(
                 getattr(obj, field.get_attname(), None), strings_only=True
             )
