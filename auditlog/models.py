@@ -213,10 +213,12 @@ class LogEntryManager(models.Manager):
         :type instance: Model
         :return: The primary key value of the given model instance.
         """
+        # Should be equivalent to `instance.pk`.
         pk_field = instance._meta.pk.attname
         pk = getattr(instance, pk_field, None)
 
         # Check to make sure that we got a pk not a model object.
+        # Should be guaranteed as we used `attname` above, not `name`.
         assert not isinstance(pk, models.Model)
         return pk
 
