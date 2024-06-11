@@ -57,6 +57,26 @@ class UUIDPrimaryKeyModel(models.Model):
     history = AuditlogHistoryField(delete_related=True, pk_indexable=False)
 
 
+class ModelPrimaryKeyModel(models.Model):
+    """
+    A model with another model as primary key.
+    """
+
+    key = models.OneToOneField(
+        "SimpleModel",
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name="reverse_primary_key",
+    )
+
+    text = models.TextField(blank=True)
+    boolean = models.BooleanField(default=False)
+    integer = models.IntegerField(blank=True, null=True)
+    datetime = models.DateTimeField(auto_now=True)
+
+    history = AuditlogHistoryField(delete_related=True, pk_indexable=False)
+
+
 class ProxyModel(SimpleModel):
     """
     A model that is a proxy for another model.
@@ -338,6 +358,7 @@ class AutoManyRelatedModel(models.Model):
 
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
+auditlog.register(ModelPrimaryKeyModel)
 auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
