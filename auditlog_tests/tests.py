@@ -30,7 +30,7 @@ from django.utils.translation import gettext_lazy as _
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
-from auditlog.diff import model_instance_diff
+from auditlog.diff import model_instance_diff, get_field_value
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
@@ -2163,6 +2163,19 @@ class TestRelatedDiffs(TestCase):
         log_update = instance.history.filter(timestamp=t2).first()
         self.assertEqual(int(log_create.changes_dict["related"][1]), one_simple.id)
         self.assertEqual(int(log_update.changes_dict["related"][1]), two_simple.id)
+
+    def test_rel_class_checked_first(self):
+        mock_field = mock.Mock()
+
+        type(mock_field).rel_class = mock.PropertyMock(return_value=None)
+        type(mock_field).one_to_one = mock.PropertyMock(return_value=True)
+        type(mock_field).many_to_one = mock.PropertyMock(return_value=True)
+
+        mock_obj = mock.Mock()
+
+        get_field_value(mock_obj, mock_field)
+
+        assert "rel_class" == mock_field.method_calls[0]
 
 
 class TestModelSerialization(TestCase):
