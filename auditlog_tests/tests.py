@@ -30,7 +30,7 @@ from django.utils.translation import gettext_lazy as _
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
-from auditlog.diff import model_instance_diff, get_field_value
+from auditlog.diff import get_field_value, model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
