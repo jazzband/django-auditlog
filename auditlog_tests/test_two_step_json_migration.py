@@ -136,6 +136,21 @@ class AuditlogMigrateJsonTest(TestCase):
         self.assertEqual(errbuf, "")
         self.assertIsNotNone(log_entry.changes)
 
+    def test_native_postgres_changes_not_overwritten(self):
+        # Arrange
+        log_entry = self.make_logentry()
+        log_entry.changes = original_changes = {"key": "value"}
+        log_entry.changes_text = '{"key": "new value"}'
+        log_entry.save()
+
+        # Act
+        outbuf, errbuf = self.call_command("-d=postgres")
+        log_entry.refresh_from_db()
+
+        # Assert
+        self.assertEqual(errbuf, "")
+        self.assertEqual(log_entry.changes, original_changes)
+
     def test_native_unsupported(self):
         # Arrange
         log_entry = self.make_logentry()
