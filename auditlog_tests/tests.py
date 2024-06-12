@@ -2175,7 +2175,7 @@ class TestRelatedDiffs(TestCase):
 
         get_field_value(mock_obj, mock_field)
 
-        assert "rel_class" == mock_field.method_calls[0]
+        self.assertEqual("rel_class", mock_field.method_calls[0])
 
 
 class TestModelSerialization(TestCase):
