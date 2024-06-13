@@ -6,7 +6,7 @@
 
 - Fixed a problem when setting `Value(None)` in `JSONField` ([#646](https://github.com/jazzband/django-auditlog/pull/646))
 - Fixed a problem when setting `django.db.models.functions.Now()` in `DateTimeField` ([#635](https://github.com/jazzband/django-auditlog/pull/635))
-- Changed the order of `rel_class` and `one_to_one` and `many_to_one` in `get_field_value` function. ([#XXX](https://github.com/jazzband/django-auditlog/pull/652))
+- Changed the order of `rel_class` and `one_to_one` and `many_to_one` in `get_field_value` function. ([#652](https://github.com/jazzband/django-auditlog/pull/652))
 
 ## 3.0.0 (2024-04-12)
 
