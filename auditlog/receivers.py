@@ -1,5 +1,6 @@
 from functools import wraps
 
+from crum import get_current_user
 from django.conf import settings
 
 from auditlog.context import auditlog_disabled
@@ -126,6 +127,7 @@ def _create_log_entry(
                 action=action,
                 changes=changes,
                 force_log=force_log,
+                actor=get_current_user(),
             )
     except BaseException as e:
         error = e
