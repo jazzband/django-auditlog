@@ -463,3 +463,10 @@ Django Admin integration
 
 When ``auditlog`` is added to your ``INSTALLED_APPS`` setting a customized admin class is active providing an enhanced
 Django Admin interface for log entries.
+
+
+If you want to not register the django admin interface, you can set the following setting:
+
+.. code-block:: python
+
+    AUDITLOG_DISABLE_ADMIN_INTERFACE = True
