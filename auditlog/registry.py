@@ -3,14 +3,13 @@ from collections import defaultdict
 from typing import (
     Any,
     Callable,
-    Collection,
     Dict,
-    Iterable,
     List,
     Optional,
     Tuple,
     Union,
 )
+from collections.abc import Collection, Iterable
 
 from django.apps import apps
 from django.db.models import ManyToManyField, Model
@@ -26,7 +25,7 @@ from django.db.models.signals import (
 from auditlog.conf import settings
 from auditlog.signals import accessed
 
-DispatchUID = Tuple[int, int, int]
+DispatchUID = tuple[int, int, int]
 
 
 class AuditLogRegistrationError(Exception):
@@ -47,7 +46,7 @@ class AuditlogModelRegistry:
         delete: bool = True,
         access: bool = True,
         m2m: bool = True,
-        custom: Optional[Dict[ModelSignal, Callable]] = None,
+        custom: Optional[dict[ModelSignal, Callable]] = None,
     ):
         from auditlog.receivers import log_access, log_create, log_delete, log_update
 
@@ -71,13 +70,13 @@ class AuditlogModelRegistry:
     def register(
         self,
         model: ModelBase = None,
-        include_fields: Optional[List[str]] = None,
-        exclude_fields: Optional[List[str]] = None,
-        mapping_fields: Optional[Dict[str, str]] = None,
-        mask_fields: Optional[List[str]] = None,
+        include_fields: Optional[list[str]] = None,
+        exclude_fields: Optional[list[str]] = None,
+        mapping_fields: Optional[dict[str, str]] = None,
+        mask_fields: Optional[list[str]] = None,
         m2m_fields: Optional[Collection[str]] = None,
         serialize_data: bool = False,
-        serialize_kwargs: Optional[Dict[str, Any]] = None,
+        serialize_kwargs: Optional[dict[str, Any]] = None,
         serialize_auditlog_fields_only: bool = False,
     ):
         """
@@ -169,7 +168,7 @@ class AuditlogModelRegistry:
         else:
             self._disconnect_signals(model)
 
-    def get_models(self) -> List[ModelBase]:
+    def get_models(self) -> list[ModelBase]:
         return list(self._registry.keys())
 
     def get_model_fields(self, model: ModelBase):
@@ -235,7 +234,7 @@ class AuditlogModelRegistry:
         """Generate a dispatch_uid which is unique for a combination of self, signal, and receiver."""
         return id(self), id(signal), id(receiver)
 
-    def _get_model_classes(self, app_model: str) -> List[ModelBase]:
+    def _get_model_classes(self, app_model: str) -> list[ModelBase]:
         try:
             try:
                 app_label, model_name = app_model.split(".")
@@ -247,7 +246,7 @@ class AuditlogModelRegistry:
 
     def _get_exclude_models(
         self, exclude_tracking_models: Iterable[str]
-    ) -> List[ModelBase]:
+    ) -> list[ModelBase]:
         exclude_models = [
             model
             for app_model in tuple(exclude_tracking_models)
@@ -256,7 +255,7 @@ class AuditlogModelRegistry:
         ]
         return exclude_models
 
-    def _register_models(self, models: Iterable[Union[str, Dict[str, Any]]]) -> None:
+    def _register_models(self, models: Iterable[Union[str, dict[str, Any]]]) -> None:
         models = copy.deepcopy(models)
         for model in models:
             if isinstance(model, str):

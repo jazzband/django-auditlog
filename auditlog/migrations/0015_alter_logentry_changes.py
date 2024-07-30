@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import migrations, models
 
 
-def two_step_migrations() -> List:
+def two_step_migrations() -> list:
     if settings.AUDITLOG_TWO_STEP_MIGRATION:
         return [
             migrations.RenameField(
