@@ -55,6 +55,22 @@ A DetailView utilizing the LogAccessMixin could look like the following example:
 
         # View code goes here
 
+You can also add log-access to function base views, as the following example illustrates:
+
+.. code-block:: python
+
+    from auditlog.signals import accessed
+
+    def profile_view(request, pk):
+        ## get the object you want to log access
+        user = User.objects.get(pk=pk)
+
+        ## log access
+        accessed.send(user.__class__, instance=user)
+
+        # View code goes here
+        ...
+
 
 **Excluding fields**
 
