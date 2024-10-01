@@ -44,6 +44,7 @@ class AuditlogMigrateJsonTest(TestCase):
     def call_command(self, *args, **kwargs):
         outbuf = StringIO()
         errbuf = StringIO()
+        args = ("--no-color",) + args
         call_command(
             "auditlogmigratejson", *args, stdout=outbuf, stderr=errbuf, **kwargs
         )
