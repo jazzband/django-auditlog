@@ -2,6 +2,9 @@
 
 ## Next Release
 
+#### Improvements
+- feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
+
 #### Fixes
 
 - Fixed a problem when setting `Value(None)` in `JSONField` ([#646](https://github.com/jazzband/django-auditlog/pull/646))
