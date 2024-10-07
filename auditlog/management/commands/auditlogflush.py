@@ -2,7 +2,9 @@ import datetime
 
 from django.core.management.base import BaseCommand
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
+
+LogEntry = get_logentry_model()
 
 
 class Command(BaseCommand):

@@ -2,10 +2,12 @@ from functools import wraps
 
 from django.conf import settings
 
+from auditlog import get_logentry_model
 from auditlog.context import auditlog_disabled
 from auditlog.diff import model_instance_diff
-from auditlog.models import LogEntry
 from auditlog.signals import post_log, pre_log
+
+LogEntry = get_logentry_model()
 
 
 def check_disable(signal_handler):

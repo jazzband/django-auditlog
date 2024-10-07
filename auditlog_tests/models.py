@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
-from auditlog.models import AuditlogHistoryField
+from auditlog.models import AbstractLogEntry, AuditlogHistoryField
 from auditlog.registry import AuditlogModelRegistry, auditlog
 
 m2m_only_auditlog = AuditlogModelRegistry(create=False, update=False, delete=False)
@@ -354,6 +354,10 @@ class SimpleNonManagedModel(models.Model):
 
 class AutoManyRelatedModel(models.Model):
     related = models.ManyToManyField(SimpleModel)
+
+
+class CustomLogEntryModel(AbstractLogEntry):
+    pass
 
 
 auditlog.register(AltPrimaryKeyModel)
