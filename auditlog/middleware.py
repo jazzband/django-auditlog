@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
@@ -37,6 +39,17 @@ class AuditlogMiddleware:
         return remote_addr
 
     @staticmethod
+    def _get_remote_port(request) -> Optional[int]:
+        remote_port = request.headers.get("X-Forwarded-Port", "")
+
+        try:
+            remote_port = int(remote_port)
+        except ValueError:
+            remote_port = None
+
+        return remote_port
+
+    @staticmethod
     def _get_actor(request):
         user = getattr(request, "user", None)
         if isinstance(user, get_user_model()) and user.is_authenticated:
@@ -45,9 +58,10 @@ class AuditlogMiddleware:
 
     def __call__(self, request):
         remote_addr = self._get_remote_addr(request)
+        remote_port = self._get_remote_port(request)
         user = self._get_actor(request)
 
         set_cid(request)
 
-        with set_actor(actor=user, remote_addr=remote_addr):
+        with set_actor(actor=user, remote_addr=remote_addr, remote_port=remote_port):
             return self.get_response(request)
