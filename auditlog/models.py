@@ -23,6 +23,7 @@ from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
+from auditlog import get_logentry_model
 from auditlog.diff import mask_str
 
 DEFAULT_OBJECT_REPR = "<error forming object repr>"
@@ -107,7 +108,7 @@ class LogEntryManager(models.Manager):
             except ObjectDoesNotExist:
                 object_repr = DEFAULT_OBJECT_REPR
             kwargs.setdefault("object_repr", object_repr)
-            kwargs.setdefault("action", LogEntry.Action.UPDATE)
+            kwargs.setdefault("action", get_logentry_model().Action.UPDATE)
 
             if isinstance(pk, int):
                 kwargs.setdefault("object_id", pk)
@@ -302,17 +303,7 @@ class LogEntryManager(models.Manager):
         return data
 
 
-class LogEntry(models.Model):
-    """
-    Represents an entry in the audit log. The content type is saved along with the textual and numeric
-    (if available) primary key, as well as the textual representation of the object when it was saved.
-    It holds the action performed and the fields that were changed in the transaction.
-
-    If AuditlogMiddleware is used, the actor will be set automatically. Keep in mind that
-    editing / re-saving LogEntry instances may set the actor to a wrong value - editing LogEntry
-    instances is not recommended (and it should not be necessary).
-    """
-
+class AbstractLogEntry(models.Model):
     class Action:
         """
         The actions that Auditlog distinguishes: creating, updating and deleting objects. Viewing objects
@@ -391,6 +382,7 @@ class LogEntry(models.Model):
     objects = LogEntryManager()
 
     class Meta:
+        abstract = True
         get_latest_by = "timestamp"
         ordering = ["-timestamp"]
         verbose_name = _("log entry")
@@ -550,6 +542,21 @@ class LogEntry(models.Model):
             return f"Deleted '{field.related_model.__name__}' ({value})"
 
 
+class LogEntry(AbstractLogEntry):
+    """
+    Represents an entry in the audit log. The content type is saved along with the textual and numeric
+    (if available) primary key, as well as the textual representation of the object when it was saved.
+    It holds the action performed and the fields that were changed in the transaction.
+
+    If AuditlogMiddleware is used, the actor will be set automatically. Keep in mind that
+    editing / re-saving LogEntry instances may set the actor to a wrong value - editing LogEntry
+    instances is not recommended (and it should not be necessary).
+    """
+
+    class Meta(AbstractLogEntry.Meta):
+        swappable = "AUDITLOG_LOGENTRY_MODEL"
+
+
 class AuditlogHistoryField(GenericRelation):
     """
     A subclass of py:class:`django.contrib.contenttypes.fields.GenericRelation` that sets some default
@@ -570,7 +577,7 @@ class AuditlogHistoryField(GenericRelation):
     """
 
     def __init__(self, pk_indexable=True, delete_related=False, **kwargs):
-        kwargs["to"] = LogEntry
+        kwargs["to"] = get_logentry_model()
 
         if pk_indexable:
             kwargs["object_id_field"] = "object_id"

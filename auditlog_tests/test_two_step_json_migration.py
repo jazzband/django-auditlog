@@ -6,7 +6,9 @@ from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
 from test_app.models import SimpleModel
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
+
+LogEntry = get_logentry_model()
 
 
 class TwoStepMigrationTest(TestCase):

@@ -67,6 +67,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
+                "swappable": "AUDITLOG_LOGENTRY_MODEL",
                 "ordering": ["-timestamp"],
                 "get_latest_by": "timestamp",
                 "verbose_name": "log entry",

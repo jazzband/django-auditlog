@@ -6,10 +6,13 @@ from functools import partial
 from django.contrib.auth import get_user_model
 from django.db.models.signals import pre_save
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
 
 auditlog_value = ContextVar("auditlog_value")
 auditlog_disabled = ContextVar("auditlog_disabled", default=False)
+
+
+LogEntry = get_logentry_model()
 
 
 @contextlib.contextmanager

@@ -4,7 +4,9 @@ from django.conf import settings
 from django.core.management import CommandError, CommandParser
 from django.core.management.base import BaseCommand
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
+
+LogEntry = get_logentry_model()
 
 
 class Command(BaseCommand):
