@@ -302,17 +302,7 @@ class LogEntryManager(models.Manager):
         return data
 
 
-class LogEntry(models.Model):
-    """
-    Represents an entry in the audit log. The content type is saved along with the textual and numeric
-    (if available) primary key, as well as the textual representation of the object when it was saved.
-    It holds the action performed and the fields that were changed in the transaction.
-
-    If AuditlogMiddleware is used, the actor will be set automatically. Keep in mind that
-    editing / re-saving LogEntry instances may set the actor to a wrong value - editing LogEntry
-    instances is not recommended (and it should not be necessary).
-    """
-
+class AbstractLogEntry(models.Model):
     class Action:
         """
         The actions that Auditlog distinguishes: creating, updating and deleting objects. Viewing objects
@@ -388,6 +378,7 @@ class LogEntry(models.Model):
     objects = LogEntryManager()
 
     class Meta:
+        abstract = True
         get_latest_by = "timestamp"
         ordering = ["-timestamp"]
         verbose_name = _("log entry")
@@ -545,6 +536,21 @@ class LogEntry(models.Model):
         # ObjectDoesNotExist will be raised if the object was deleted.
         except ObjectDoesNotExist:
             return f"Deleted '{field.related_model.__name__}' ({value})"
+
+
+class LogEntry(AbstractLogEntry):
+    """
+    Represents an entry in the audit log. The content type is saved along with the textual and numeric
+    (if available) primary key, as well as the textual representation of the object when it was saved.
+    It holds the action performed and the fields that were changed in the transaction.
+
+    If AuditlogMiddleware is used, the actor will be set automatically. Keep in mind that
+    editing / re-saving LogEntry instances may set the actor to a wrong value - editing LogEntry
+    instances is not recommended (and it should not be necessary).
+    """
+
+    class Meta(AbstractLogEntry.Meta):
+        swappable = "AUDITLOG_LOGENTRY_MODEL"
 
 
 class AuditlogHistoryField(GenericRelation):

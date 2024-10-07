@@ -27,12 +27,13 @@ from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
+from auditlog import get_logentry_model
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
-from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
+from auditlog.models import DEFAULT_OBJECT_REPR
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
 from auditlog.signals import post_log, pre_log
 from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
@@ -42,6 +43,7 @@ from auditlog_tests.models import (
     AutoManyRelatedModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
+    CustomLogEntryModel,
     DateTimeFieldModel,
     JSONModel,
     ManyRelatedModel,
@@ -64,6 +66,8 @@ from auditlog_tests.models import (
     SimpleNonManagedModel,
     UUIDPrimaryKeyModel,
 )
+
+LogEntry = get_logentry_model()
 
 
 class SimpleModelTest(TestCase):
@@ -2746,3 +2750,15 @@ class MissingModelTest(TestCase):
         history = self.obj.history.latest()
         self.assertEqual(history.changes_dict["text"][1], self.obj.text)
         self.assertEqual(history.changes_display_dict["text"][1], self.obj.text)
+
+
+class SwappableLogEntryModelTest(TestCase):
+
+    def test_log_changes(self):
+        with override_settings(
+            AUDITLOG_LOGENTRY_MODEL="auditlog_tests.CustomLogEntryModel"
+        ):
+            self.assertIsInstance(get_logentry_model(), CustomLogEntryModel)
+            obj = SimpleModel.objects.create(text="Hi!")
+            history = obj.history.latest()
+            self.assertEqual(history, CustomLogEntryModel.objects.first())
