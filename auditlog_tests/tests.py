@@ -537,6 +537,13 @@ class MiddlewareTest(TestCase):
                     self.middleware._get_remote_addr(request), expected_remote_addr
                 )
 
+    def test_get_remote_port(self):
+        headers = {
+            "HTTP_X_FORWARDED_PORT": "12345",
+        }
+        request = self.factory.get("/", **headers)
+        self.assertEqual(self.middleware._get_remote_port(request), 12345)
+
     def test_cid(self):
         header = str(settings.AUDITLOG_CID_HEADER).lstrip("HTTP_").replace("_", "-")
         header_meta = "HTTP_" + header.upper().replace("-", "_")
@@ -574,9 +581,10 @@ class MiddlewareTest(TestCase):
         The remote address will be set even when there is no actor
         """
         remote_addr = "123.213.145.99"
+        remote_port = 12345
         actor = None
 
-        with set_actor(actor=actor, remote_addr=remote_addr):
+        with set_actor(actor=actor, remote_addr=remote_addr, remote_port=remote_port):
             obj = SimpleModel.objects.create(text="I am not difficult.")
 
             history = obj.history.get()
@@ -584,6 +592,11 @@ class MiddlewareTest(TestCase):
                 history.remote_addr,
                 remote_addr,
                 msg=f"Remote address is {remote_addr}",
+            )
+            self.assertEqual(
+                history.remote_port,
+                remote_port,
+                msg=f"Remote port is {remote_port}",
             )
             self.assertIsNone(history.actor, msg="Actor is `None` for anonymous user")
 

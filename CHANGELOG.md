@@ -2,6 +2,9 @@
 
 ## Next Release
 
+#### Improvements
+- feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
+
 #### Fixes
 
 - Fixed problem when setting `django.db.models.functions.Now()` in `DateTimeField` ([#635](https://github.com/jazzband/django-auditlog/pull/635))

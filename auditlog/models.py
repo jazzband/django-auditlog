@@ -358,6 +358,9 @@ class LogEntry(models.Model):
     remote_addr = models.GenericIPAddressField(
         blank=True, null=True, verbose_name=_("remote address")
     )
+    remote_port = models.PositiveIntegerField(
+        blank=True, null=True, verbose_name=_("remote port")
+    )
     timestamp = models.DateTimeField(
         default=django_timezone.now,
         db_index=True,
