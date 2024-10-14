@@ -2,9 +2,9 @@ from functools import wraps
 
 from django.conf import settings
 
+from auditlog import get_logentry_model
 from auditlog.context import auditlog_disabled
 from auditlog.diff import model_instance_diff
-from auditlog.models import LogEntry
 from auditlog.signals import post_log, pre_log
 
 
@@ -38,7 +38,7 @@ def log_create(sender, instance, created, **kwargs):
     """
     if created:
         _create_log_entry(
-            action=LogEntry.Action.CREATE,
+            action=get_logentry_model().Action.CREATE,
             instance=instance,
             sender=sender,
             diff_old=None,
@@ -57,7 +57,7 @@ def log_update(sender, instance, **kwargs):
         update_fields = kwargs.get("update_fields", None)
         old = sender.objects.filter(pk=instance.pk).first()
         _create_log_entry(
-            action=LogEntry.Action.UPDATE,
+            action=get_logentry_model().Action.UPDATE,
             instance=instance,
             sender=sender,
             diff_old=old,
@@ -75,7 +75,7 @@ def log_delete(sender, instance, **kwargs):
     """
     if instance.pk is not None:
         _create_log_entry(
-            action=LogEntry.Action.DELETE,
+            action=get_logentry_model().Action.DELETE,
             instance=instance,
             sender=sender,
             diff_old=instance,
@@ -91,7 +91,7 @@ def log_access(sender, instance, **kwargs):
     """
     if instance.pk is not None:
         _create_log_entry(
-            action=LogEntry.Action.ACCESS,
+            action=get_logentry_model().Action.ACCESS,
             instance=instance,
             sender=sender,
             diff_old=None,
@@ -121,7 +121,7 @@ def _create_log_entry(
         )
 
         if force_log or changes:
-            log_entry = LogEntry.objects.log_create(
+            log_entry = get_logentry_model().objects.log_create(
                 instance,
                 action=action,
                 changes=changes,
@@ -161,14 +161,14 @@ def make_log_m2m_changes(field_name):
             changed_queryset = kwargs["model"].objects.filter(pk__in=kwargs["pk_set"])
 
         if action in ["post_add"]:
-            LogEntry.objects.log_m2m_changes(
+            get_logentry_model().objects.log_m2m_changes(
                 changed_queryset,
                 kwargs["instance"],
                 "add",
                 field_name,
             )
         elif action in ["post_remove", "post_clear"]:
-            LogEntry.objects.log_m2m_changes(
+            get_logentry_model().objects.log_m2m_changes(
                 changed_queryset,
                 kwargs["instance"],
                 "delete",

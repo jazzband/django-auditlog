@@ -4,6 +4,16 @@ Settings file for the Auditlog test suite.
 
 import os
 
+
+class DisableMigrations:
+
+    def __contains__(self, item):
+        return True
+
+    def __getitem__(self, item):
+        return None
+
+
 DEBUG = True
 
 SECRET_KEY = "test"
@@ -62,3 +72,5 @@ ROOT_URLCONF = "auditlog_tests.urls"
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+MIGRATION_MODULES = DisableMigrations()

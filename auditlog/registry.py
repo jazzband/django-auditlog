@@ -38,7 +38,7 @@ class AuditlogModelRegistry:
     A registry that keeps track of the models that use Auditlog to track changes.
     """
 
-    DEFAULT_EXCLUDE_MODELS = ("auditlog.LogEntry", "admin.LogEntry")
+    DEFAULT_EXCLUDE_MODELS = (settings.AUDITLOG_LOGENTRY_MODEL, "admin.LogEntry")
 
     def __init__(
         self,
