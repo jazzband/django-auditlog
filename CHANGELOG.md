@@ -4,6 +4,7 @@
 
 #### Improvements
 - feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
+- Drop Python 3.8 support. ([#678](https://github.com/jazzband/django-auditlog/pull/678))
 
 #### Fixes
 
