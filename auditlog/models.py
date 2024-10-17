@@ -3,7 +3,7 @@ import contextlib
 import json
 from copy import deepcopy
 from datetime import timezone
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Union
 
 from dateutil import parser
 from dateutil.tz import gettz
@@ -275,8 +275,8 @@ class LogEntryManager(models.Manager):
         return instance_copy
 
     def _get_applicable_model_fields(
-        self, instance, model_fields: Dict[str, List[str]]
-    ) -> List[str]:
+        self, instance, model_fields: dict[str, list[str]]
+    ) -> list[str]:
         include_fields = model_fields["include_fields"]
         exclude_fields = model_fields["exclude_fields"]
         all_field_names = [field.name for field in instance._meta.fields]
@@ -287,8 +287,8 @@ class LogEntryManager(models.Manager):
         return list(set(include_fields or all_field_names).difference(exclude_fields))
 
     def _mask_serialized_fields(
-        self, data: Dict[str, Any], mask_fields: List[str]
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any], mask_fields: list[str]
+    ) -> dict[str, Any]:
         all_field_data = data.pop("fields")
 
         masked_field_data = {}
@@ -595,8 +595,8 @@ class AuditlogHistoryField(GenericRelation):
 changes_func = None
 
 
-def _changes_func() -> Callable[[LogEntry], Dict]:
-    def json_then_text(instance: LogEntry) -> Dict:
+def _changes_func() -> Callable[[LogEntry], dict]:
+    def json_then_text(instance: LogEntry) -> dict:
         if instance.changes:
             return instance.changes
         elif instance.changes_text:
@@ -604,7 +604,7 @@ def _changes_func() -> Callable[[LogEntry], Dict]:
                 return json.loads(instance.changes_text)
         return {}
 
-    def default(instance: LogEntry) -> Dict:
+    def default(instance: LogEntry) -> dict:
         return instance.changes or {}
 
     if settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT:
