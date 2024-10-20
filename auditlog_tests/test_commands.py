@@ -166,3 +166,26 @@ class AuditlogFlushWithTruncateTest(TransactionTestCase):
             msg="Output shows warning and table gets truncate",
         )
         self.assertEqual(err, "", msg="No stderr")
+
+    @mock.patch(
+        "django.db.connection.vendor",
+        new_callable=mock.PropertyMock(return_value="unknown"),
+    )
+    @mock.patch(
+        "django.db.connection.display_name",
+        new_callable=mock.PropertyMock(return_value="Unknown"),
+    )
+    def test_flush_with_truncate_for_unsupported_database_vendor(
+        self, mocked_vendor, mocked_db_name
+    ):
+        obj = self.make_object()
+        self.assertEqual(obj.history.count(), 1, msg="There is one log entry.")
+        out, err = self.call_command("--truncate", "--y")
+
+        self.assertEqual(obj.history.count(), 1, msg="There is still one log entry.")
+        self.assertEqual(
+            out,
+            "Database Unknown does not support truncate statement.",
+            msg="Output shows error",
+        )
+        self.assertEqual(err, "", msg="No stderr")
