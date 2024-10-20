@@ -66,21 +66,18 @@ class Command(BaseCommand):
                 entries = entries.filter(timestamp__date__lt=before)
             count, _ = entries.delete()
             self.stdout.write("Deleted %d objects." % count)
-            return
-
         else:
             database_vendor = connection.vendor
             database_display_name = connection.display_name
             table_name = LogEntry._meta.db_table
-            truncate_query = TruncateQuery(database_vendor, table_name)
-            if truncate_query.is_not_supported:
+            if not TruncateQuery.support_truncate_statement(database_vendor):
                 self.stdout.write(
                     "Database %s does not support truncate statement."
                     % database_display_name
                 )
                 return
             with connection.cursor() as cursor:
-                query = truncate_query.to_sql()
+                query = TruncateQuery.to_sql(table_name)
                 cursor.execute(query)
             self.stdout.write("Truncated log entry table.")
 
@@ -88,13 +85,10 @@ class Command(BaseCommand):
 class TruncateQuery:
     SUPPORTED_VENDORS = ("postgresql", "mysql", "sqlite", "oracle", "microsoft")
 
-    def __init__(self, database_vendor: str, table_name: str):
-        self.database_vendor = database_vendor
-        self.table_name = table_name
+    @classmethod
+    def support_truncate_statement(cls, database_vendor) -> bool:
+        return database_vendor in cls.SUPPORTED_VENDORS
 
-    @property
-    def is_not_supported(self):
-        return self.database_vendor not in self.SUPPORTED_VENDORS
-
-    def to_sql(self):
-        return f"TRUNCATE TABLE {self.table_name};"
+    @staticmethod
+    def to_sql(table_name) -> str:
+        return f"TRUNCATE TABLE {table_name};"
