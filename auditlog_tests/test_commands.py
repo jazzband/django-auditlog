@@ -6,7 +6,7 @@ from unittest import mock
 
 import freezegun
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 
 from auditlog_tests.models import SimpleModel
 
@@ -108,5 +108,61 @@ class AuditlogFlushTest(TestCase):
         )
         self.assertEqual(
             out, "Deleted 1 objects.", msg="Output shows deleted 1 object."
+        )
+        self.assertEqual(err, "", msg="No stderr")
+
+
+class AuditlogFlushWithTruncateTest(TransactionTestCase):
+    def setUp(self):
+        input_patcher = mock.patch("builtins.input")
+        self.mock_input = input_patcher.start()
+        self.addCleanup(input_patcher.stop)
+
+    def make_object(self):
+        return SimpleModel.objects.create(text="I am a simple model.")
+
+    def call_command(self, *args, **kwargs):
+        outbuf = StringIO()
+        errbuf = StringIO()
+        call_command("auditlogflush", *args, stdout=outbuf, stderr=errbuf, **kwargs)
+        return outbuf.getvalue().strip(), errbuf.getvalue().strip()
+
+    def test_flush_with_both_truncate_and_before_date_options(self):
+        obj = self.make_object()
+        self.assertEqual(obj.history.count(), 1, msg="There is one log entry.")
+        out, err = self.call_command("--truncate", "--before-date=2000-01-01")
+
+        self.assertEqual(obj.history.count(), 1, msg="There is still one log entry.")
+        self.assertEqual(
+            out,
+            "Truncate deletes all log entries and can not be passed with before-date.",
+            msg="Output shows error",
+        )
+        self.assertEqual(err, "", msg="No stderr")
+
+    def test_flush_with_truncate_and_yes(self):
+        obj = self.make_object()
+        self.assertEqual(obj.history.count(), 1, msg="There is one log entry.")
+        out, err = self.call_command("--truncate", "--y")
+
+        self.assertEqual(obj.history.count(), 0, msg="There is no log entry.")
+        self.assertEqual(
+            out,
+            "Truncated log entry table.",
+            msg="Output shows table gets truncate",
+        )
+        self.assertEqual(err, "", msg="No stderr")
+
+    def test_flush_with_truncate_with_input_yes(self):
+        obj = self.make_object()
+        self.assertEqual(obj.history.count(), 1, msg="There is one log entry.")
+        self.mock_input.return_value = "Y\n"
+        out, err = self.call_command("--truncate")
+
+        self.assertEqual(obj.history.count(), 0, msg="There is no log entry.")
+        self.assertEqual(
+            out,
+            "This action will clear all log entries from the database.\nTruncated log entry table.",
+            msg="Output shows warning and table gets truncate",
         )
         self.assertEqual(err, "", msg="No stderr")
