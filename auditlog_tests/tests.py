@@ -19,7 +19,7 @@ from django.core import management
 from django.db import models
 from django.db.models import JSONField, Value
 from django.db.models.functions import Now
-from django.db.models.signals import pre_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import resolve, reverse
 from django.utils import dateformat, formats
@@ -34,7 +34,7 @@ from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
-from auditlog.signals import post_log, pre_log
+from auditlog.signals import accessed, post_log, pre_log
 from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
 from auditlog_tests.models import (
     AdditionalDataIncludedModel,
@@ -1437,6 +1437,24 @@ class RegisterModelSettingsTest(TestCase):
         fields = self.test_auditlog.get_model_fields(SimpleExcludeModel)
         self.assertEqual(fields["include_fields"], ["label"])
         self.assertEqual(fields["exclude_fields"], ["text"])
+
+    @override_settings(
+        AUDITLOG_INCLUDE_TRACKING_MODELS=(
+            {
+                "model": "auditlog_tests.SimpleModel",
+                "actions": {
+                    "delete": False,
+                },
+            },
+        )
+    )
+    def test_register_actions_from_settings_models(self):
+        self.test_auditlog.register_from_settings()
+
+        self.assertTrue(self.test_auditlog.contains(SimpleModel))
+        self.assertTrue(post_save in self.test_auditlog._signals)
+        self.assertTrue(accessed in self.test_auditlog._signals)
+        self.assertFalse(post_delete in self.test_auditlog._signals)
 
     def test_registration_error_if_bad_serialize_params(self):
         with self.assertRaisesMessage(
