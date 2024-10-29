@@ -5,9 +5,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 from auditlog.models import AuditlogHistoryField
-from auditlog.registry import AuditlogModelRegistry, auditlog
-
-m2m_only_auditlog = AuditlogModelRegistry(create=False, update=False, delete=False)
+from auditlog.registry import auditlog
 
 
 @auditlog.register()
@@ -363,7 +361,15 @@ auditlog.register(ProxyModel)
 auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.recursive.through)
-m2m_only_auditlog.register(ManyRelatedModel, m2m_fields={"related"})
+auditlog.register(
+    ManyRelatedModel,
+    m2m_fields=["related"],
+    actions={
+        "create": False,
+        "update": False,
+        "delete": False,
+    },
+)
 auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)

@@ -15,6 +15,7 @@ from django.db.models.signals import (
 )
 
 from auditlog.conf import settings
+from auditlog.receivers import log_access, log_create, log_delete, log_update
 from auditlog.signals import accessed
 
 DispatchUID = tuple[int, int, int]
@@ -31,33 +32,10 @@ class AuditlogModelRegistry:
 
     DEFAULT_EXCLUDE_MODELS = ("auditlog.LogEntry", "admin.LogEntry")
 
-    def __init__(
-        self,
-        create: bool = True,
-        update: bool = True,
-        delete: bool = True,
-        access: bool = True,
-        m2m: bool = True,
-        custom: Optional[dict[ModelSignal, Callable]] = None,
-    ):
-        from auditlog.receivers import log_access, log_create, log_delete, log_update
-
+    def __init__(self):
         self._registry = {}
         self._signals = {}
         self._m2m_signals = defaultdict(dict)
-
-        if create:
-            self._signals[post_save] = log_create
-        if update:
-            self._signals[pre_save] = log_update
-        if delete:
-            self._signals[post_delete] = log_delete
-        if access:
-            self._signals[accessed] = log_access
-        self._m2m = m2m
-
-        if custom is not None:
-            self._signals.update(custom)
 
     def register(
         self,
@@ -70,6 +48,8 @@ class AuditlogModelRegistry:
         serialize_data: bool = False,
         serialize_kwargs: Optional[dict[str, Any]] = None,
         serialize_auditlog_fields_only: bool = False,
+        actions: Optional[dict[str, bool]] = None,
+        custom: Optional[dict[ModelSignal, Callable]] = None,
     ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
@@ -81,9 +61,30 @@ class AuditlogModelRegistry:
         :param mask_fields: The fields to mask for sensitive info.
         :param m2m_fields: The fields to handle as many to many.
         :param serialize_data: Option to include a dictionary of the objects state in the auditlog.
-        :param serialize_kwargs: Optional kwargs to pass to Django serializer
+        :param serialize_kwargs: Optional kwargs to pass to Django serializer.
         :param serialize_auditlog_fields_only: Only fields being considered in changes will be serialized.
+        :param actions: Enble log entry on create, update, delete, access and m2m fields.
+        :param custom: Configure a custom signal when register.
         """
+
+        actions = actions or {}
+        create = actions.get("create", True)
+        update = actions.get("update", True)
+        delete = actions.get("delete", True)
+        access = actions.get("access", True)
+        m2m = actions.get("m2m", True)
+
+        if create:
+            self._signals[post_save] = log_create
+        if update:
+            self._signals[pre_save] = log_update
+        if delete:
+            self._signals[post_delete] = log_delete
+        if access:
+            self._signals[accessed] = log_access
+
+        if custom is not None:
+            self._signals.update(custom)
 
         if include_fields is None:
             include_fields = []
@@ -122,7 +123,7 @@ class AuditlogModelRegistry:
                 "serialize_kwargs": serialize_kwargs,
                 "serialize_auditlog_fields_only": serialize_auditlog_fields_only,
             }
-            self._connect_signals(cls)
+            self._connect_signals(cls, m2m=m2m)
 
             # We need to return the class, as the decorator is basically
             # syntactic sugar for:
@@ -180,7 +181,7 @@ class AuditlogModelRegistry:
             ),
         }
 
-    def _connect_signals(self, model):
+    def _connect_signals(self, model, m2m: bool = False):
         """
         Connect signals for the model.
         """
@@ -192,7 +193,7 @@ class AuditlogModelRegistry:
                 sender=model,
                 dispatch_uid=self._dispatch_uid(signal, receiver),
             )
-        if self._m2m:
+        if m2m:
             for field_name in self._registry[model]["m2m_fields"]:
                 receiver = make_log_m2m_changes(field_name)
                 self._m2m_signals[model][field_name] = receiver

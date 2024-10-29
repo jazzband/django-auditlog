@@ -6,6 +6,7 @@
 
 - feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
 - feat: Added `truncate` option to `auditlogflush` management command. ([#681](https://github.com/jazzband/django-auditlog/pull/681))
+- feat: Added `actions` param in `auditlog.register`. ([#682](https://github.com/jazzband/django-auditlog/pull/682))
 - Drop Python 3.8 support. ([#678](https://github.com/jazzband/django-auditlog/pull/678))
 - Confirm Django 5.1 support and drop Django 3.2 support. ([#677](https://github.com/jazzband/django-auditlog/pull/677))
 
