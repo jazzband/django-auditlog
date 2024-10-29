@@ -207,7 +207,7 @@ def model_instance_diff(
         if old_value != new_value:
             if field.name in custom_fields_callbacks:
                 deepdiff_result = custom_fields_callbacks[field.name](
-                    json.dumps(old_value), json.dumps(new_value)
+                    old_value, new_value
                 )
                 diff[field.name] = (
                     "[CUSTOM FIELD] Showing only the differences ->",
