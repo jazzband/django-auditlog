@@ -4,7 +4,13 @@ from typing import Optional
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import NOT_PROVIDED, DateTimeField, ForeignKey, JSONField, Model
+from django.db.models import (
+    NOT_PROVIDED,
+    DateTimeField,
+    ForeignKey,
+    JSONField,
+    Model,
+)
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 
@@ -76,7 +82,9 @@ def get_field_value(obj, field):
         elif isinstance(field, JSONField):
             value = field.to_python(getattr(obj, field.name, None))
             value = json.dumps(value, sort_keys=True, cls=field.encoder)
-        elif (field.one_to_one or field.many_to_one) and hasattr(field, "rel_class"):
+        elif (field.one_to_one or field.many_to_one) and hasattr(
+            field, "rel_class"
+        ):
             value = smart_str(
                 getattr(obj, field.get_attname(), None), strings_only=True
             )
@@ -129,9 +137,13 @@ def model_instance_diff(
     from auditlog.registry import auditlog
 
     if not (old is None or isinstance(old, Model)):
-        raise TypeError("The supplied old instance is not a valid model instance.")
+        raise TypeError(
+            "The supplied old instance is not a valid model instance."
+        )
     if not (new is None or isinstance(new, Model)):
-        raise TypeError("The supplied new instance is not a valid model instance.")
+        raise TypeError(
+            "The supplied new instance is not a valid model instance."
+        )
 
     diff = {}
 
@@ -153,7 +165,10 @@ def model_instance_diff(
             field
             for field in fields
             if (
-                (isinstance(field, ForeignKey) and field.attname in fields_to_check)
+                (
+                    isinstance(field, ForeignKey)
+                    and field.attname in fields_to_check
+                )
                 or (field.name in fields_to_check)
             )
         }
@@ -181,12 +196,22 @@ def model_instance_diff(
             ]
         fields = filtered_fields
 
+    custom_fields_callbacks = auditlog.get_custom_fields_callbacks(
+        new._meta.model
+    )
+
     for field in fields:
         old_value = get_field_value(old, field)
         new_value = get_field_value(new, field)
 
         if old_value != new_value:
-            if model_fields and field.name in model_fields["mask_fields"]:
+            if field.name in custom_fields_callbacks:
+                old_value = " FIELD TOO LARGE "
+                new_value = custom_fields_callbacks[field.name](
+                    old_value, new_value
+                )
+                diff[field.name] = (smart_str(old_value), smart_str(new_value))
+            elif model_fields and field.name in model_fields["mask_fields"]:
                 diff[field.name] = (
                     mask_str(smart_str(old_value)),
                     mask_str(smart_str(new_value)),

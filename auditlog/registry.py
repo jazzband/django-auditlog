@@ -84,7 +84,7 @@ class AuditlogModelRegistry:
         serialize_data: bool = False,
         serialize_kwargs: Optional[Dict[str, Any]] = None,
         serialize_auditlog_fields_only: bool = False,
-        serialize_fields_callbacks: Optional[Dict[str, Callable]] = None,
+        custom_fields_callbacks: Optional[Dict[str, Callable]] = None,
     ):
         """
         Register a model with auditlog. Auditlog will then track mutations on this model's instances.
@@ -112,13 +112,11 @@ class AuditlogModelRegistry:
             m2m_fields = set()
         if serialize_kwargs is None:
             serialize_kwargs = {}
-        if serialize_fields_callbacks is None:
-            serialize_fields_callbacks = []
+        if custom_fields_callbacks is None:
+            custom_fields_callbacks = []
 
         if (
-            serialize_kwargs
-            or serialize_auditlog_fields_only
-            or serialize_fields_callbacks
+            serialize_kwargs or serialize_auditlog_fields_only
         ) and not serialize_data:
             raise AuditLogRegistrationError(
                 "Serializer options were given but the 'serialize_data' option is not "
@@ -142,7 +140,7 @@ class AuditlogModelRegistry:
                 "serialize_data": serialize_data,
                 "serialize_kwargs": serialize_kwargs,
                 "serialize_auditlog_fields_only": serialize_auditlog_fields_only,
-                "serialize_fields_callbacks": serialize_fields_callbacks,
+                "custom_fields_callbacks": custom_fields_callbacks,
             }
             self._connect_signals(cls)
 
@@ -200,10 +198,10 @@ class AuditlogModelRegistry:
             "serialize_auditlog_fields_only": bool(
                 self._registry[model]["serialize_auditlog_fields_only"]
             ),
-            "serialize_fields_callbacks": dict(
-                self._registry[model]["serialize_fields_callbacks"]
-            ),
         }
+
+    def get_custom_fields_callbacks(self, model: ModelBase):
+        return dict(self._registry[model]["custom_fields_callbacks"])
 
     def _connect_signals(self, model):
         """
