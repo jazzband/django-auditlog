@@ -42,10 +42,12 @@ class AuditlogMiddleware:
 
     @staticmethod
     def _get_actor(request):
-        print(" ACTOR DEBUG ")
-        print(request)
+
+        import madbg
+
+        madbg.set_trace(ip="0.0.0.0", port=8889)
+
         user = getattr(request, "user", None)
-        print(user)
         if isinstance(user, get_user_model()) and user.is_authenticated:
             return user
         return None
