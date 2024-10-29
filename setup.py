@@ -31,7 +31,6 @@ setup(
     install_requires=[
         "Django>=3.2",
         "python-dateutil>=2.7.0",
-        "deepdiff==7.0.*",
     ],
     zip_safe=False,
     classifiers=[
