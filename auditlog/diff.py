@@ -57,7 +57,7 @@ def get_fields_in_model(instance):
     return [f for f in instance._meta.get_fields() if track_field(f)]
 
 
-def get_field_value(obj, field):
+def get_field_value(obj, field, skip_json_dumps=False):
     """
     Gets the value of a given model instance field.
 
@@ -81,7 +81,8 @@ def get_field_value(obj, field):
                 value = django_timezone.make_naive(value, timezone=timezone.utc)
         elif isinstance(field, JSONField):
             value = field.to_python(getattr(obj, field.name, None))
-            value = json.dumps(value, sort_keys=True, cls=field.encoder)
+            if not skip_json_dumps:
+                value = json.dumps(value, sort_keys=True, cls=field.encoder)
         elif (field.one_to_one or field.many_to_one) and hasattr(
             field, "rel_class"
         ):
@@ -201,8 +202,12 @@ def model_instance_diff(
     )
 
     for field in fields:
-        old_value = get_field_value(old, field)
-        new_value = get_field_value(new, field)
+        old_value = get_field_value(
+            old, field, field.name in custom_fields_callbacks
+        )
+        new_value = get_field_value(
+            new, field, field.name in custom_fields_callbacks
+        )
 
         if old_value != new_value:
             if field.name in custom_fields_callbacks:
