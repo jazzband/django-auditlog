@@ -14,7 +14,9 @@ class AuditlogMiddleware:
     def __init__(self, get_response=None):
         self.get_response = get_response
         if not isinstance(settings.AUDITLOG_DISABLE_REMOTE_ADDR, bool):
-            raise TypeError("Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean")
+            raise TypeError(
+                "Setting 'AUDITLOG_DISABLE_REMOTE_ADDR' must be a boolean"
+            )
 
     @staticmethod
     def _get_remote_addr(request):
@@ -29,7 +31,9 @@ class AuditlogMiddleware:
         remote_addr: str = request.headers.get("X-Forwarded-For").split(",")[0]
 
         # Remove port number from remote_addr
-        if "." in remote_addr and ":" in remote_addr:  # IPv4 with port (`x.x.x.x:x`)
+        if (
+            "." in remote_addr and ":" in remote_addr
+        ):  # IPv4 with port (`x.x.x.x:x`)
             remote_addr = remote_addr.split(":")[0]
         elif "[" in remote_addr:  # IPv6 with port (`[:::]:x`)
             remote_addr = remote_addr[1:].split("]")[0]
@@ -38,7 +42,10 @@ class AuditlogMiddleware:
 
     @staticmethod
     def _get_actor(request):
+        print(" ACTOR DEBUG ")
+        print(request)
         user = getattr(request, "user", None)
+        print(user)
         if isinstance(user, get_user_model()) and user.is_authenticated:
             return user
         return None
