@@ -211,12 +211,12 @@ def model_instance_diff(
 
         if old_value != new_value:
             if field.name in custom_fields_callbacks:
-                deepdiff_result = custom_fields_callbacks[field.name](
+                custom_diff_result = custom_fields_callbacks[field.name](
                     old_value, new_value
                 )
                 diff[field.name] = (
-                    "[CUSTOM FIELD] Showing only the differences ->",
-                    deepdiff_result,
+                    "[CUSTOM FIELD] Showing only the differences in the 'To' field ->",
+                    custom_diff_result,
                 )
             elif model_fields and field.name in model_fields["mask_fields"]:
                 diff[field.name] = (
