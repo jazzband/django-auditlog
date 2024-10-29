@@ -206,10 +206,10 @@ def model_instance_diff(
 
         if old_value != new_value:
             if field.name in custom_fields_callbacks:
-                old_value = " FIELD TOO LARGE "
                 new_value = custom_fields_callbacks[field.name](
-                    old_value, new_value
+                    json.dumps(old_value), json.dumps(new_value)
                 )
+                old_value = " FIELD TOO LARGE "
                 diff[field.name] = (smart_str(old_value), smart_str(new_value))
             elif model_fields and field.name in model_fields["mask_fields"]:
                 diff[field.name] = (
