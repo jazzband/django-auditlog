@@ -3,6 +3,7 @@ from functools import cached_property
 from django.apps import apps
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
@@ -69,11 +70,13 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
                 object_id = int(object_id)
             except (ValueError, TypeError):
                 # If the format is incorrect, return an empty queryset and show a message
-                self.message_user(
-                    request,
-                    "Structured search format must be 'ModelName:id'.",
-                    level="warning",
-                )
+                if not getattr(request, "_message_shown", False):
+                    self.message_user(
+                        request,
+                        "Structured search format must be 'ModelName:id'.",
+                        level="warning",
+                    )
+                    request._message_shown = True
                 return queryset.none()
 
             # Attempt to retrieve the specified model
@@ -82,23 +85,30 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
                 if not model:
                     raise LookupError
             except LookupError:
-                self.message_user(
-                    request,
-                    f"Model '{model_name}' does not exist.",
-                    level="warning",
-                )
+                if not getattr(request, "_message_shown", False):
+                    self.message_user(
+                        request,
+                        f"Model '{model_name}' does not exist.",
+                        level="warning",
+                    )
+                    request._message_shown = True
                 return queryset.none()
 
             # Attempt to retrieve the object and filter log entries
             try:
-                instance = model.objects.get(pk=object_id)
-                queryset = LogEntry.objects.get_for_object(instance)
-            except ObjectDoesNotExist:
-                self.message_user(
-                    request,
-                    f"{model_name} instance with ID {object_id} does not exist.",
-                    level="warning",
+                model.objects.only("id").get(pk=object_id)  # Lookup.
+                content_type = ContentType.objects.get_for_model(model)
+                queryset = queryset.filter(
+                    content_type=content_type, object_id=object_id
                 )
+            except ObjectDoesNotExist:
+                if not getattr(request, "_message_shown", False):
+                    self.message_user(
+                        request,
+                        f"{model_name} instance with ID {object_id} does not exist.",
+                        level="warning",
+                    )
+                    request._message_shown = True
                 return queryset.none()
 
         return queryset  # Return filtered or default queryset based on the presence of `ss`
