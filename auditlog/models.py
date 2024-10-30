@@ -149,7 +149,9 @@ class LogEntryManager(models.Manager):
         if isinstance(pk, int):
             return self.filter(content_type=content_type, object_id=pk)
         else:
-            return self.filter(content_type=content_type, object_pk=smart_str(pk))
+            return self.filter(
+                content_type=content_type, object_pk=smart_str(pk)
+            )
 
     def get_for_objects(self, queryset):
         """
@@ -236,12 +238,15 @@ class LogEntryManager(models.Manager):
 
         if opts["serialize_auditlog_fields_only"]:
             kwargs.setdefault(
-                "fields", self._get_applicable_model_fields(instance, model_fields)
+                "fields",
+                self._get_applicable_model_fields(instance, model_fields),
             )
 
         instance_copy = self._get_copy_with_python_typed_fields(instance)
         data = dict(
-            json.loads(serializers.serialize("json", (instance_copy,), **kwargs))[0]
+            json.loads(
+                serializers.serialize("json", (instance_copy,), **kwargs)
+            )[0]
         )
 
         mask_fields = model_fields["mask_fields"]
@@ -283,7 +288,9 @@ class LogEntryManager(models.Manager):
         if not include_fields and not exclude_fields:
             return all_field_names
 
-        return list(set(include_fields or all_field_names).difference(exclude_fields))
+        return list(
+            set(include_fields or all_field_names).difference(exclude_fields)
+        )
 
     def _mask_serialized_fields(
         self, data: Dict[str, Any], mask_fields: List[str]
@@ -348,11 +355,13 @@ class LogEntry(models.Model):
         blank=True, db_index=True, null=True, verbose_name=_("object id")
     )
     object_repr = models.TextField(verbose_name=_("object representation"))
-    serialized_data = models.JSONField(null=True)
+    serialized_data = models.JSONField(null=True, blank=True)
     action = models.PositiveSmallIntegerField(
         choices=Action.choices, verbose_name=_("action"), db_index=True
     )
-    changes_text = models.TextField(blank=True, verbose_name=_("change message"))
+    changes_text = models.TextField(
+        blank=True, verbose_name=_("change message")
+    )
     changes = models.JSONField(null=True, verbose_name=_("change message"))
     actor = models.ForeignKey(
         to=settings.AUTH_USER_MODEL,
@@ -471,11 +480,16 @@ class LogEntry(models.Model):
                         if type(value) is [].__class__:
                             values_display.append(
                                 ", ".join(
-                                    [choices_dict.get(val, "None") for val in value]
+                                    [
+                                        choices_dict.get(val, "None")
+                                        for val in value
+                                    ]
                                 )
                             )
                         else:
-                            values_display.append(choices_dict.get(value, "None"))
+                            values_display.append(
+                                choices_dict.get(value, "None")
+                            )
                     except Exception:
                         values_display.append(choices_dict.get(value, "None"))
             else:
@@ -486,7 +500,11 @@ class LogEntry(models.Model):
                     continue
                 for value in values:
                     # handle case where field is a datetime, date, or time type
-                    if field_type in ["DateTimeField", "DateField", "TimeField"]:
+                    if field_type in [
+                        "DateTimeField",
+                        "DateField",
+                        "TimeField",
+                    ]:
                         try:
                             value = parser.parse(value)
                             if field_type == "DateField":
@@ -495,12 +513,16 @@ class LogEntry(models.Model):
                                 value = value.time()
                             elif field_type == "DateTimeField":
                                 value = value.replace(tzinfo=timezone.utc)
-                                value = value.astimezone(gettz(settings.TIME_ZONE))
+                                value = value.astimezone(
+                                    gettz(settings.TIME_ZONE)
+                                )
                             value = formats.localize(value)
                         except ValueError:
                             pass
                     elif field_type in ["ForeignKey", "OneToOneField"]:
-                        value = self._get_changes_display_for_fk_field(field, value)
+                        value = self._get_changes_display_for_fk_field(
+                            field, value
+                        )
 
                     # check if length is longer than 140 and truncate with ellipsis
                     if len(value) > 140:
