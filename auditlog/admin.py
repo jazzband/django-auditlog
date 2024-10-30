@@ -1,7 +1,9 @@
 from functools import cached_property
 
+from django.apps import apps
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils.translation import gettext_lazy as _
 
 from auditlog.filters import CIDFilter, ResourceTypeFilter
@@ -56,4 +58,47 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
 
     def get_queryset(self, request):
         self.request = request
-        return super().get_queryset(request=request)
+        queryset = super().get_queryset(request=request)
+
+        # Check for the `ss` parameter for structured search
+        structured_search = request.GET.get("ss")
+        if structured_search:
+            # Parse structured search term as 'ModelName:id'
+            try:
+                model_name, object_id = structured_search.split(":")
+                object_id = int(object_id)
+            except (ValueError, TypeError):
+                # If the format is incorrect, return an empty queryset and show a message
+                self.message_user(
+                    request,
+                    "Structured search format must be 'ModelName:id'.",
+                    level="warning",
+                )
+                return queryset.none()
+
+            # Attempt to retrieve the specified model
+            try:
+                model = apps.get_model(app_label="api", model_name=model_name)
+                if not model:
+                    raise LookupError
+            except LookupError:
+                self.message_user(
+                    request,
+                    f"Model '{model_name}' does not exist.",
+                    level="warning",
+                )
+                return queryset.none()
+
+            # Attempt to retrieve the object and filter log entries
+            try:
+                instance = model.objects.get(pk=object_id)
+                queryset = LogEntry.objects.get_for_object(instance)
+            except ObjectDoesNotExist:
+                self.message_user(
+                    request,
+                    f"{model_name} instance with ID {object_id} does not exist.",
+                    level="warning",
+                )
+                return queryset.none()
+
+        return queryset  # Return filtered or default queryset based on the presence of `ss`
