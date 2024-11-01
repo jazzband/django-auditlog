@@ -1561,29 +1561,34 @@ class CharFieldTextFieldModelTest(TestCase):
             msg="The field should display the entire string because it is less than 140 characters",
         )
 
-    def test_changes_display_dict_longtextfield_to_be_truncated_with_custom_limit(self):
-        with override_settings(
-            AUDITLOG_TRUNCATE_CHANGES_DISPLAY=True,
-            AUDITLOG_TRUNCATE_LIMIT=10,
-        ):
-            limit = settings.AUDITLOG_TRUNCATE_LIMIT
+    def test_changes_display_dict_longtextfield_to_be_truncated_at_custom_length(self):
+        with override_settings(AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH=10):
+            length = settings.AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH
             self.assertEqual(
                 self.obj.history.latest().changes_display_dict["longtextfield"][1],
-                f"{self.PLACEHOLDER_LONGCHAR[:limit]}...",
-                msg=f"The string should be truncated at {limit} characters with an ellipsis at the end.",
+                f"{self.PLACEHOLDER_LONGCHAR[:length]}...",
+                msg=f"The string should be truncated at {length} characters with an ellipsis at the end.",
+            )
+
+    def test_changes_display_dict_longtextfield_to_be_truncated_to_empty_string(self):
+        with override_settings(AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH=0):
+            length = settings.AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH
+            self.assertEqual(
+                self.obj.history.latest().changes_display_dict["longtextfield"][1],
+                "",
+                msg=f"The string should be empty as AUDITLOG_TRUNCATE_CHANGES_DISPLAY is set to {length}.",
             )
 
     def test_changes_display_dict_longtextfield_with_truncation_disabled(self):
-        with override_settings(AUDITLOG_TRUNCATE_CHANGES_DISPLAY=False):
-            limit = settings.AUDITLOG_TRUNCATE_LIMIT
-            self.assertTrue(len(self.PLACEHOLDER_LONGTEXTFIELD) > limit)
+        with override_settings(AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH=-1):
+            length = settings.AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH
             self.assertEqual(
                 self.obj.history.latest().changes_display_dict["longtextfield"][1],
                 self.PLACEHOLDER_LONGTEXTFIELD,
                 msg=(
                     "The field should display the entire string "
-                    f"even though it is longer than {limit} characters"
-                    "as AUDITLOG_TRUNCATE_CHANGES_DISPLAY is set to False"
+                    f"even though it is longer than {length} characters"
+                    "as AUDITLOG_TRUNCATE_CHANGES_DISPLAY is set to a negative number"
                 ),
             )
 
