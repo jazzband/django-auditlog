@@ -24,6 +24,7 @@ from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
 from auditlog.diff import mask_str
+from auditlog.text import truncatechars
 
 DEFAULT_OBJECT_REPR = "<error forming object repr>"
 
@@ -506,9 +507,11 @@ class LogEntry(models.Model):
                     elif field_type in ["ForeignKey", "OneToOneField"]:
                         value = self._get_changes_display_for_fk_field(field, value)
 
-                    # check if length is longer than 140 and truncate with ellipsis
-                    if len(value) > 140:
-                        value = f"{value[:140]}..."
+                    if (
+                        settings.AUDITLOG_TRUNCATE_CHANGES_DISPLAY
+                        and len(value) > settings.AUDITLOG_TRUNCATE_LIMIT
+                    ):
+                        value = truncatechars(value, settings.AUDITLOG_TRUNCATE_LIMIT)
 
                     values_display.append(value)
 

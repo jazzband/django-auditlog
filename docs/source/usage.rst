@@ -305,6 +305,14 @@ If the value is `None`, the default getter will be used.
 
 .. versionadded:: 3.0.0
 
+**AUDITLOG_TRUNCATE_CHANGES_DISPLAY**
+
+You can use this settings to truncate characters in `changes_display_dict` property, True by default
+
+**AUDITLOG_TRUNCATE_LIMIT**
+
+Number of characters at which `changes_display_dict` property should be truncated
+
 Actors
 ------
 

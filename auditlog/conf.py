@@ -45,3 +45,11 @@ settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT = getattr(
 settings.AUDITLOG_DISABLE_REMOTE_ADDR = getattr(
     settings, "AUDITLOG_DISABLE_REMOTE_ADDR", False
 )
+
+# Enable changes_display_dict truncator
+settings.AUDITLOG_TRUNCATE_CHANGES_DISPLAY = getattr(
+    settings, "AUDITLOG_TRUNCATE_CHANGES_DISPLAY", True
+)
+
+# Number of characters at which changes_display_dict property should be shown
+settings.AUDITLOG_TRUNCATE_LIMIT = getattr(settings, "AUDITLOG_TRUNCATE_LIMIT", 140)
