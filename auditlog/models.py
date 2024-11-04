@@ -506,9 +506,9 @@ class LogEntry(models.Model):
                     elif field_type in ["ForeignKey", "OneToOneField"]:
                         value = self._get_changes_display_for_fk_field(field, value)
 
-                    # check if length is longer than 140 and truncate with ellipsis
-                    if len(value) > 140:
-                        value = f"{value[:140]}..."
+                    truncate_at = settings.AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH
+                    if 0 <= truncate_at < len(value):
+                        value = value[:truncate_at] + ("..." if truncate_at > 0 else "")
 
                     values_display.append(value)
 

@@ -305,6 +305,16 @@ If the value is `None`, the default getter will be used.
 
 .. versionadded:: 3.0.0
 
+**AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH**
+
+This configuration variable defines the truncation behavior for strings in `changes_display_dict`, with a default value of `140` characters.
+
+0: The entire string is truncated, resulting in an empty output.
+Positive values (e.g., 5): Truncates the string, keeping only the specified number of characters followed by an ellipsis (...) after the limit.
+Negative values: No truncation occurs, and the full string is displayed.
+
+.. versionadded:: 3.1.0
+
 Actors
 ------
 
