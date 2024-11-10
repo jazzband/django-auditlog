@@ -225,7 +225,7 @@ class AuditlogModelRegistry:
     def _dispatch_uid(self, signal, receiver) -> DispatchUID:
         """Generate a dispatch_uid which is unique for a combination of self, signal, and receiver."""
         return id(self), id(signal), id(receiver)
-    
+
     def _m2m_dispatch_uid(self, signal, sender) -> DispatchUID:
         """Generate a dispatch_uid which is unique for a combination of self, signal, and sender."""
         return id(self), id(signal), id(sender)
