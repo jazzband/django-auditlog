@@ -47,7 +47,6 @@ from auditlog_tests.models import (
     ManyRelatedModel,
     ManyRelatedOtherModel,
     ModelForReusableThroughModel,
-    OtherModelForReusableThroughModel,
     ReusableThroughRelatedModel,
     ModelPrimaryKeyModel,
     NoDeleteHistoryModel,
