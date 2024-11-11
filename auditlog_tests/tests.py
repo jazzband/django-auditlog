@@ -46,6 +46,9 @@ from auditlog_tests.models import (
     JSONModel,
     ManyRelatedModel,
     ManyRelatedOtherModel,
+    ModelForReusableThroughModel,
+    OtherModelForReusableThroughModel,
+    ReusableThroughRelatedModel,
     ModelPrimaryKeyModel,
     NoDeleteHistoryModel,
     NullableJSONModel,
@@ -390,6 +393,8 @@ class ManyRelatedModelTest(TestCase):
         self.obj = ManyRelatedModel.objects.create()
         self.recursive = ManyRelatedModel.objects.create()
         self.related = ManyRelatedOtherModel.objects.create()
+        self.obj_reusable = ModelForReusableThroughModel.objects.create()
+        self.obj_reusable_related = ReusableThroughRelatedModel.objects.create()
         self.base_log_entry_count = (
             LogEntry.objects.count()
         )  # created by the create() calls above
@@ -484,6 +489,11 @@ class ManyRelatedModelTest(TestCase):
             self.obj.related.add(self.related)
             log_entry = self.obj.history.first()
             self.assertEqual(log_entry.object_repr, DEFAULT_OBJECT_REPR)
+
+    def test_changes_not_duplicated_with_reusable_through_model(self):
+        self.obj_reusable.related.add(self.obj_reusable_related)
+        entries = self.obj_reusable.history.all()
+        self.assertEqual(len(entries), 1)
 
 
 class MiddlewareTest(TestCase):
@@ -1255,7 +1265,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 27)
+        self.assertEqual(len(self.test_auditlog.get_models()), 31)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
