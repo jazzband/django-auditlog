@@ -7,12 +7,12 @@
 - feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
 - feat: Added `truncate` option to `auditlogflush` management command. ([#681](https://github.com/jazzband/django-auditlog/pull/681))
 - feat: Added `AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH` settings to keep or truncate strings of `changes_display_dict` property at variable length. ([#684](https://github.com/jazzband/django-auditlog/pull/684))
-- fix: Use sender instead of receiver for `m2m_changed` signal ID to prevent duplicate entries for models that share a related model. ([#686](https://github.com/jazzband/django-auditlog/pull/686))
 - Drop Python 3.8 support. ([#678](https://github.com/jazzband/django-auditlog/pull/678))
 - Confirm Django 5.1 support and drop Django 3.2 support. ([#677](https://github.com/jazzband/django-auditlog/pull/677))
 
 #### Fixes
 
+- fix: Use sender instead of receiver for `m2m_changed` signal ID to prevent duplicate entries for models that share a related model. ([#686](https://github.com/jazzband/django-auditlog/pull/686))
 - Fixed a problem when setting `Value(None)` in `JSONField` ([#646](https://github.com/jazzband/django-auditlog/pull/646))
 - Fixed a problem when setting `django.db.models.functions.Now()` in `DateTimeField` ([#635](https://github.com/jazzband/django-auditlog/pull/635))
 
