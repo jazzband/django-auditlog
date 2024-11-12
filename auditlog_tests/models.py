@@ -133,6 +133,61 @@ class ManyRelatedOtherModel(models.Model):
     history = AuditlogHistoryField(delete_related=True)
 
 
+class ReusableThroughRelatedModel(models.Model):
+    """
+    A model related to multiple other models through a model.
+    """
+
+    label = models.CharField(max_length=100)
+
+
+class ReusableThroughModel(models.Model):
+    """
+    A through model that can be associated multiple different models.
+    """
+
+    label = models.ForeignKey(
+        ReusableThroughRelatedModel,
+        on_delete=models.CASCADE,
+        related_name="%(app_label)s_%(class)s_items",
+    )
+    one = models.ForeignKey(
+        "ModelForReusableThroughModel", on_delete=models.CASCADE, null=True, blank=True
+    )
+    two = models.ForeignKey(
+        "OtherModelForReusableThroughModel",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+
+
+class ModelForReusableThroughModel(models.Model):
+    """
+    A model with many-to-many relations through a shared model.
+    """
+
+    name = models.CharField(max_length=200)
+    related = models.ManyToManyField(
+        ReusableThroughRelatedModel, through=ReusableThroughModel
+    )
+
+    history = AuditlogHistoryField(delete_related=True)
+
+
+class OtherModelForReusableThroughModel(models.Model):
+    """
+    Another model with many-to-many relations through a shared model.
+    """
+
+    name = models.CharField(max_length=200)
+    related = models.ManyToManyField(
+        ReusableThroughRelatedModel, through=ReusableThroughModel
+    )
+
+    history = AuditlogHistoryField(delete_related=True)
+
+
 @auditlog.register(include_fields=["label"])
 class SimpleIncludeModel(models.Model):
     """
@@ -364,6 +419,8 @@ auditlog.register(RelatedModel)
 auditlog.register(ManyRelatedModel)
 auditlog.register(ManyRelatedModel.recursive.through)
 m2m_only_auditlog.register(ManyRelatedModel, m2m_fields={"related"})
+m2m_only_auditlog.register(ModelForReusableThroughModel, m2m_fields={"related"})
+m2m_only_auditlog.register(OtherModelForReusableThroughModel, m2m_fields={"related"})
 auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)

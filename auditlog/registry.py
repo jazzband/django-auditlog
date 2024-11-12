@@ -202,7 +202,7 @@ class AuditlogModelRegistry:
                 m2m_changed.connect(
                     receiver,
                     sender=m2m_model,
-                    dispatch_uid=self._dispatch_uid(m2m_changed, receiver),
+                    dispatch_uid=self._m2m_dispatch_uid(m2m_changed, m2m_model),
                 )
 
     def _disconnect_signals(self, model):
@@ -218,13 +218,17 @@ class AuditlogModelRegistry:
             m2m_model = getattr(field, "through")
             m2m_changed.disconnect(
                 sender=m2m_model,
-                dispatch_uid=self._dispatch_uid(m2m_changed, receiver),
+                dispatch_uid=self._m2m_dispatch_uid(m2m_changed, m2m_model),
             )
         del self._m2m_signals[model]
 
     def _dispatch_uid(self, signal, receiver) -> DispatchUID:
         """Generate a dispatch_uid which is unique for a combination of self, signal, and receiver."""
         return id(self), id(signal), id(receiver)
+
+    def _m2m_dispatch_uid(self, signal, sender) -> DispatchUID:
+        """Generate a dispatch_uid which is unique for a combination of self, signal, and sender."""
+        return id(self), id(signal), id(sender)
 
     def _get_model_classes(self, app_model: str) -> list[ModelBase]:
         try:
