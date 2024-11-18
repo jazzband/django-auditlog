@@ -64,6 +64,6 @@ jobs:
         TEST_DB_PORT: ${{ job.services.postgres.ports[5432] }}
 
     - name: Upload coverage
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         name: Python ${{ matrix.python-version }}
