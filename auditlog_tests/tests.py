@@ -40,6 +40,7 @@ from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
     AutoManyRelatedModel,
+    BinaryModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
@@ -1159,6 +1160,27 @@ class DateTimeFieldModelTest(TestCase):
         )
 
 
+class BinaryModelTest(TestCase):
+    def test_model_with_binary_field(self):
+        instance = BinaryModel.objects.create(binary=b"\xde\xad\xbe\xef")
+        self.assertEqual(instance.history.count(), 1)
+
+        obj_log_entry = instance.history.latest()
+
+        self.assertEqual(obj_log_entry.changes_dict["binary"][0], "None")
+        self.assertEqual(obj_log_entry.changes_dict["binary"][1], "deadbeef")
+
+        instance.binary = None
+        instance.save()
+
+        self.assertEqual(instance.history.count(), 2)
+
+        obj_log_entry = instance.history.latest()
+
+        self.assertEqual(obj_log_entry.changes_dict["binary"][0], "deadbeef")
+        self.assertEqual(obj_log_entry.changes_dict["binary"][1], "None")
+
+
 class UnregisterTest(TestCase):
     def setUp(self):
         auditlog.unregister(SimpleModel)
@@ -1264,7 +1286,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 31)
+        self.assertEqual(len(self.test_auditlog.get_models()), 32)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(

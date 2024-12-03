@@ -350,6 +350,12 @@ class NullableJSONModel(models.Model):
     history = AuditlogHistoryField(delete_related=False)
 
 
+class BinaryModel(models.Model):
+    binary = models.BinaryField(null=True, blank=True)
+
+    history = AuditlogHistoryField(delete_related=False)
+
+
 class SerializeThisModel(models.Model):
     label = models.CharField(max_length=24, unique=True)
     timestamp = models.DateTimeField()
@@ -431,6 +437,7 @@ auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
 auditlog.register(JSONModel)
 auditlog.register(NullableJSONModel)
+auditlog.register(BinaryModel)
 auditlog.register(
     SerializeThisModel,
     serialize_data=True,
