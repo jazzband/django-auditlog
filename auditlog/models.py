@@ -3,7 +3,7 @@ import contextlib
 import json
 from copy import deepcopy
 from datetime import timezone
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 from dateutil import parser
 from dateutil.tz import gettz

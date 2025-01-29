@@ -1,6 +1,7 @@
 """
 Settings file for the Auditlog test suite.
 """
+
 import os
 
 DEBUG = True
@@ -14,6 +15,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.admin",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     "auditlog",
     "auditlog_tests",
 ]
