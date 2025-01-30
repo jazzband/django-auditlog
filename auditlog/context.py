@@ -24,7 +24,11 @@ def set_actor(actor, remote_addr=None, remote_port=None):
     auditlog_value.set(context_data)
 
     # Connect signal for automatic logging
-    set_actor = partial(_set_actor, user=actor, signal_duid=context_data["signal_duid"])
+    set_actor = partial(
+        _set_actor,
+        user=actor,
+        signal_duid=context_data["signal_duid"],
+    )
     pre_save.connect(
         set_actor,
         sender=LogEntry,
@@ -62,6 +66,7 @@ def _set_actor(user, sender, instance, signal_duid, **kwargs):
             and instance.actor is None
         ):
             instance.actor = user
+            instance.actor_email = hasattr(user, "email") and user.email or None
 
         instance.remote_addr = auditlog["remote_addr"]
         instance.remote_port = auditlog["remote_port"]

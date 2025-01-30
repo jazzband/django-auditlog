@@ -4,6 +4,7 @@
 
 #### Improvements
 
+- feat: Added 'LogEntry.actor_email` field. ([#641](https://github.com/jazzband/django-auditlog/pull/641))
 - Add Python 3.13 support. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
 - feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
 - feat: Added `truncate` option to `auditlogflush` management command. ([#681](https://github.com/jazzband/django-auditlog/pull/681))
