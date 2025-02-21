@@ -235,6 +235,28 @@ It will be considered when ``AUDITLOG_DISABLE_REMOTE_ADDR`` is `True`.
 
 .. versionadded:: 3.0.0
 
+**AUDITLOG_MASK_TRACKING_FIELDS**
+
+You can use this setting to mask specific field values in all tracked models
+while still logging changes. This is useful when models contain sensitive fields
+like `password`, `api_key`, or `secret_token`` that should not be logged
+in plain text but need to be auditable.
+
+When a masked field changes, its value will be replaced with a masked
+representation (e.g., `****`) in the audit log instead of storing the actual value.
+
+This setting will be applied only when `AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
+
+.. code-block:: python
+
+    AUDITLOG_MASK_TRACKING_FIELDS = (
+    "password",
+    "api_key",
+    "secret_token"
+    )
+
+.. versionadded:: 3.1.0
+
 **AUDITLOG_EXCLUDE_TRACKING_MODELS**
 
 You can use this setting to exclude models in registration process.
