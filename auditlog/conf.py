@@ -21,6 +21,11 @@ settings.AUDITLOG_EXCLUDE_TRACKING_FIELDS = getattr(
     settings, "AUDITLOG_EXCLUDE_TRACKING_FIELDS", ()
 )
 
+# Mask named fields across all models
+settings.AUDITLOG_MASK_TRACKING_FIELDS = getattr(
+    settings, "AUDITLOG_MASK_TRACKING_FIELDS", ()
+)
+
 # Disable on raw save to avoid logging imports and similar
 settings.AUDITLOG_DISABLE_ON_RAW_SAVE = getattr(
     settings, "AUDITLOG_DISABLE_ON_RAW_SAVE", False

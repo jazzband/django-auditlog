@@ -107,6 +107,9 @@ class AuditlogModelRegistry:
         for fld in settings.AUDITLOG_EXCLUDE_TRACKING_FIELDS:
             exclude_fields.append(fld)
 
+        for fld in settings.AUDITLOG_MASK_TRACKING_FIELDS:
+            mask_fields.append(fld)
+
         def registrar(cls):
             """Register models for a given class."""
             if not issubclass(cls, Model):
@@ -300,6 +303,15 @@ class AuditlogModelRegistry:
                 "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'"
             )
 
+        if (
+            settings.AUDITLOG_MASK_TRACKING_FIELDS
+            and not settings.AUDITLOG_INCLUDE_ALL_MODELS
+        ):
+            raise ValueError(
+                "In order to use 'AUDITLOG_MASK_TRACKING_FIELDS', "
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'"
+            )
+
         if not isinstance(settings.AUDITLOG_INCLUDE_TRACKING_MODELS, (list, tuple)):
             raise TypeError(
                 "Setting 'AUDITLOG_INCLUDE_TRACKING_MODELS' must be a list or tuple"
@@ -308,6 +320,11 @@ class AuditlogModelRegistry:
         if not isinstance(settings.AUDITLOG_EXCLUDE_TRACKING_FIELDS, (list, tuple)):
             raise TypeError(
                 "Setting 'AUDITLOG_EXCLUDE_TRACKING_FIELDS' must be a list or tuple"
+            )
+
+        if not isinstance(settings.AUDITLOG_MASK_TRACKING_FIELDS, (list, tuple)):
+            raise TypeError(
+                "Setting 'AUDITLOG_MASK_TRACKING_FIELDS' must be a list or tuple"
             )
 
         for item in settings.AUDITLOG_INCLUDE_TRACKING_MODELS:
