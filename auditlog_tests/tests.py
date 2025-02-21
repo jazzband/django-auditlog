@@ -1347,6 +1347,24 @@ class RegisterModelSettingsTest(TestCase):
             ):
                 self.test_auditlog.register_from_settings()
 
+        with override_settings(
+            AUDITLOG_INCLUDE_ALL_MODELS=True,
+            AUDITLOG_MASK_TRACKING_FIELDS="badvalue",
+        ):
+            with self.assertRaisesMessage(
+                TypeError,
+                "Setting 'AUDITLOG_MASK_TRACKING_FIELDS' must be a list or tuple",
+            ):
+                self.test_auditlog.register_from_settings()
+
+        with override_settings(AUDITLOG_MASK_TRACKING_FIELDS=("token", "otp_secret")):
+            with self.assertRaisesMessage(
+                ValueError,
+                "In order to use 'AUDITLOG_MASK_TRACKING_FIELDS', "
+                "setting 'AUDITLOG_INCLUDE_ALL_MODELS' must be set to 'True'",
+            ):
+                self.test_auditlog.register_from_settings()
+
         with override_settings(AUDITLOG_INCLUDE_TRACKING_MODELS="str"):
             with self.assertRaisesMessage(
                 TypeError,
@@ -1422,6 +1440,24 @@ class RegisterModelSettingsTest(TestCase):
         self.assertEqual(
             self.test_auditlog.get_model_fields(AltPrimaryKeyModel)["exclude_fields"],
             ["datetime"],
+        )
+
+    @override_settings(
+        AUDITLOG_INCLUDE_ALL_MODELS=True,
+        AUDITLOG_MASK_TRACKING_FIELDS=("secret",),
+    )
+    def test_register_from_settings_register_all_models_with_mask_tracking_fields(
+        self,
+    ):
+        self.test_auditlog.register_from_settings()
+
+        self.assertEqual(
+            self.test_auditlog.get_model_fields(SimpleModel)["mask_fields"],
+            ["secret"],
+        )
+        self.assertEqual(
+            self.test_auditlog.get_model_fields(AltPrimaryKeyModel)["mask_fields"],
+            ["secret"],
         )
 
     @override_settings(
