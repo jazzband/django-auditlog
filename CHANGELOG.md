@@ -4,6 +4,8 @@
 
 #### Improvements
 
+- feat: Support masking field names globally when ```AUDITLOG_INCLUDE_ALL_MODELS``` is enabled
+via `AUDITLOG_MASK_TRACKING_FIELDS` setting. ([#702](https://github.com/jazzband/django-auditlog/pull/702))
 - feat: Added 'LogEntry.actor_email` field. ([#641](https://github.com/jazzband/django-auditlog/pull/641))
 - Add Python 3.13 support. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
 - feat: Added `LogEntry.remote_port` field. ([#671](https://github.com/jazzband/django-auditlog/pull/671))
