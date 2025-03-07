@@ -19,6 +19,7 @@ via `AUDITLOG_MASK_TRACKING_FIELDS` setting. ([#702](https://github.com/jazzband
 - fix: Use sender instead of receiver for `m2m_changed` signal ID to prevent duplicate entries for models that share a related model. ([#686](https://github.com/jazzband/django-auditlog/pull/686))
 - Fixed a problem when setting `Value(None)` in `JSONField` ([#646](https://github.com/jazzband/django-auditlog/pull/646))
 - Fixed a problem when setting `django.db.models.functions.Now()` in `DateTimeField` ([#635](https://github.com/jazzband/django-auditlog/pull/635))
+- Use the [default manager](https://docs.djangoproject.com/en/5.1/topics/db/managers/#default-managers) instead of `objects` to support custom model managers. ([#705](https://github.com/jazzband/django-auditlog/pull/705))
 
 ## 3.0.0 (2024-04-12)
 

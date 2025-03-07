@@ -407,6 +407,19 @@ class SimpleNonManagedModel(models.Model):
         managed = False
 
 
+class SecretManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_secret=False)
+
+
+@auditlog.register()
+class SwappedManagerModel(models.Model):
+    is_secret = models.BooleanField(default=False)
+    name = models.CharField(max_length=255)
+
+    objects = SecretManager()
+
+
 class AutoManyRelatedModel(models.Model):
     related = models.ManyToManyField(SimpleModel)
 

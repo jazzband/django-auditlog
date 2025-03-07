@@ -64,6 +64,7 @@ from auditlog_tests.models import (
     SimpleMaskedModel,
     SimpleModel,
     SimpleNonManagedModel,
+    SwappedManagerModel,
     UUIDPrimaryKeyModel,
 )
 
@@ -1270,7 +1271,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 31)
+        self.assertEqual(len(self.test_auditlog.get_models()), 32)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -2828,3 +2829,28 @@ class MissingModelTest(TestCase):
         history = self.obj.history.latest()
         self.assertEqual(history.changes_dict["text"][1], self.obj.text)
         self.assertEqual(history.changes_display_dict["text"][1], self.obj.text)
+
+
+class ModelManagerTest(TestCase):
+    """
+    This does not directly assert the configured manager, but its behaviour.
+    The "secret" object should not be accessible, as the queryset is overridden.
+    """
+
+    def setUp(self):
+        self.secret = SwappedManagerModel.objects.create(is_secret=True, name="Secret")
+        self.public = SwappedManagerModel.objects.create(is_secret=False, name="Public")
+
+    def test_update_secret(self):
+        self.secret.name = "Updated"
+        self.secret.save()
+        log = LogEntry.objects.get_for_object(self.secret).first()
+        self.assertEqual(log.action, LogEntry.Action.UPDATE)
+        self.assertEqual(log.changes_dict["name"], ["None", "Updated"])
+
+    def test_update_public(self):
+        self.public.name = "Updated"
+        self.public.save()
+        log = LogEntry.objects.get_for_object(self.public).first()
+        self.assertEqual(log.action, LogEntry.Action.UPDATE)
+        self.assertEqual(log.changes_dict["name"], ["Public", "Updated"])
