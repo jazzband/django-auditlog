@@ -542,7 +542,7 @@ class LogEntry(models.Model):
             return value
         # Attempt to return the string representation of the object
         try:
-            return smart_str(field.related_model.objects.get(pk=pk_value))
+            return smart_str(field.related_model._default_manager.get(pk=pk_value))
         # ObjectDoesNotExist will be raised if the object was deleted.
         except ObjectDoesNotExist:
             return f"Deleted '{field.related_model.__name__}' ({value})"

@@ -55,7 +55,7 @@ def log_update(sender, instance, **kwargs):
     """
     if not instance._state.adding:
         update_fields = kwargs.get("update_fields", None)
-        old = sender.objects.filter(pk=instance.pk).first()
+        old = sender._default_manager.filter(pk=instance.pk).first()
         _create_log_entry(
             action=LogEntry.Action.UPDATE,
             instance=instance,
@@ -156,9 +156,11 @@ def make_log_m2m_changes(field_name):
             return
 
         if action == "post_clear":
-            changed_queryset = kwargs["model"].objects.all()
+            changed_queryset = kwargs["model"]._default_manager.all()
         else:
-            changed_queryset = kwargs["model"].objects.filter(pk__in=kwargs["pk_set"])
+            changed_queryset = kwargs["model"]._default_manager.filter(
+                pk__in=kwargs["pk_set"]
+            )
 
         if action in ["post_add"]:
             LogEntry.objects.log_m2m_changes(
