@@ -1,9 +1,10 @@
 from django.views.generic import DetailView
 
 from auditlog.mixins import LogAccessMixin
-from auditlog_tests.models import SimpleModel
+
+from .models import SimpleModel
 
 
-class SimpleModelDetailview(LogAccessMixin, DetailView):
+class SimpleModelDetailView(LogAccessMixin, DetailView):
     model = SimpleModel
     template_name = "simplemodel_detail.html"
