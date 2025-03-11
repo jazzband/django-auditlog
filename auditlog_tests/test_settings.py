@@ -16,7 +16,7 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.staticfiles",
     "auditlog",
-    "auditlog_tests",
+    "test_app",
 ]
 
 MIDDLEWARE = [
@@ -57,7 +57,7 @@ TEMPLATES = [
 
 STATIC_URL = "/static/"
 
-ROOT_URLCONF = "auditlog_tests.urls"
+ROOT_URLCONF = "test_app.urls"
 
 USE_TZ = True
 

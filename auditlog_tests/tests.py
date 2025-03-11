@@ -26,17 +26,8 @@ from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
-
-from auditlog.admin import LogEntryAdmin
-from auditlog.cid import get_cid
-from auditlog.context import disable_auditlog, set_actor
-from auditlog.diff import model_instance_diff
-from auditlog.middleware import AuditlogMiddleware
-from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
-from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
-from auditlog.signals import post_log, pre_log
-from auditlog_tests.fixtures.custom_get_cid import get_cid as custom_get_cid
-from auditlog_tests.models import (
+from test_app.fixtures.custom_get_cid import get_cid as custom_get_cid
+from test_app.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
     AutoManyRelatedModel,
@@ -67,6 +58,15 @@ from auditlog_tests.models import (
     SwappedManagerModel,
     UUIDPrimaryKeyModel,
 )
+
+from auditlog.admin import LogEntryAdmin
+from auditlog.cid import get_cid
+from auditlog.context import disable_auditlog, set_actor
+from auditlog.diff import model_instance_diff
+from auditlog.middleware import AuditlogMiddleware
+from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
+from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
+from auditlog.signals import post_log, pre_log
 
 
 class SimpleModelTest(TestCase):
@@ -621,9 +621,7 @@ class MiddlewareTest(TestCase):
             # these two tuples test using a custom getter.
             # Here, we don't necessarily care about the cid that was set in set_cid
             (
-                {
-                    "AUDITLOG_CID_GETTER": "auditlog_tests.fixtures.custom_get_cid.get_cid"
-                },
+                {"AUDITLOG_CID_GETTER": "test_app.fixtures.custom_get_cid.get_cid"},
                 custom_get_cid(),
             ),
             ({"AUDITLOG_CID_GETTER": custom_get_cid}, custom_get_cid()),
@@ -1244,15 +1242,12 @@ class RegisterModelSettingsTest(TestCase):
         # Exclude just one model
         self.assertTrue(
             SimpleExcludeModel
-            in self.test_auditlog._get_exclude_models(
-                ("auditlog_tests.SimpleExcludeModel",)
-            )
+            in self.test_auditlog._get_exclude_models(("test_app.SimpleExcludeModel",))
         )
 
         # Exclude all model of an app
         self.assertTrue(
-            SimpleExcludeModel
-            in self.test_auditlog._get_exclude_models(("auditlog_tests",))
+            SimpleExcludeModel in self.test_auditlog._get_exclude_models(("test_app",))
         )
 
     def test_register_models_no_models(self):
@@ -1261,13 +1256,13 @@ class RegisterModelSettingsTest(TestCase):
         self.assertEqual(self.test_auditlog._registry, {})
 
     def test_register_models_register_single_model(self):
-        self.test_auditlog._register_models(("auditlog_tests.SimpleExcludeModel",))
+        self.test_auditlog._register_models(("test_app.SimpleExcludeModel",))
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertEqual(len(self.test_auditlog._registry), 1)
 
     def test_register_models_register_app(self):
-        self.test_auditlog._register_models(("auditlog_tests",))
+        self.test_auditlog._register_models(("test_app",))
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
@@ -1277,7 +1272,7 @@ class RegisterModelSettingsTest(TestCase):
         self.test_auditlog._register_models(
             (
                 {
-                    "model": "auditlog_tests.SimpleExcludeModel",
+                    "model": "test_app.SimpleExcludeModel",
                     "include_fields": ["label"],
                     "exclude_fields": [
                         "text",
@@ -1295,7 +1290,7 @@ class RegisterModelSettingsTest(TestCase):
         self.test_auditlog._register_models(
             (
                 {
-                    "model": "auditlog_tests.ManyRelatedModel",
+                    "model": "test_app.ManyRelatedModel",
                     "m2m_fields": {"related"},
                 },
             )
@@ -1417,7 +1412,7 @@ class RegisterModelSettingsTest(TestCase):
 
     @override_settings(
         AUDITLOG_INCLUDE_ALL_MODELS=True,
-        AUDITLOG_EXCLUDE_TRACKING_MODELS=("auditlog_tests.SimpleExcludeModel",),
+        AUDITLOG_EXCLUDE_TRACKING_MODELS=("test_app.SimpleExcludeModel",),
     )
     def test_register_from_settings_register_all_models_with_exclude_models_tuple(self):
         self.test_auditlog.register_from_settings()
@@ -1463,7 +1458,7 @@ class RegisterModelSettingsTest(TestCase):
 
     @override_settings(
         AUDITLOG_INCLUDE_ALL_MODELS=True,
-        AUDITLOG_EXCLUDE_TRACKING_MODELS=["auditlog_tests.SimpleExcludeModel"],
+        AUDITLOG_EXCLUDE_TRACKING_MODELS=["test_app.SimpleExcludeModel"],
     )
     def test_register_from_settings_register_all_models_with_exclude_models_list(self):
         self.test_auditlog.register_from_settings()
@@ -1474,7 +1469,7 @@ class RegisterModelSettingsTest(TestCase):
     @override_settings(
         AUDITLOG_INCLUDE_TRACKING_MODELS=(
             {
-                "model": "auditlog_tests.SimpleExcludeModel",
+                "model": "test_app.SimpleExcludeModel",
                 "include_fields": ["label"],
                 "exclude_fields": [
                     "text",
@@ -2808,7 +2803,9 @@ class DisableTest(TestCase):
         This only works with context manager
         """
         with disable_auditlog():
-            management.call_command("loaddata", "m2m_test_fixture.json", verbosity=0)
+            management.call_command(
+                "loaddata", "test_app/fixtures/m2m_test_fixture.json", verbosity=0
+            )
         recursive = ManyRelatedModel.objects.get(pk=1)
         self.assertEqual(0, LogEntry.objects.get_for_object(recursive).count())
         related = ManyRelatedOtherModel.objects.get(pk=1)

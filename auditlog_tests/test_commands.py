@@ -7,8 +7,7 @@ from unittest import mock
 import freezegun
 from django.core.management import call_command
 from django.test import TestCase, TransactionTestCase
-
-from auditlog_tests.models import SimpleModel
+from test_app.models import SimpleModel
 
 
 class AuditlogFlushTest(TestCase):

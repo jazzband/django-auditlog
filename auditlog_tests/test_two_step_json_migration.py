@@ -4,9 +4,9 @@ from unittest.mock import patch
 
 from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
+from test_app.models import SimpleModel
 
 from auditlog.models import LogEntry
-from auditlog_tests.models import SimpleModel
 
 
 class TwoStepMigrationTest(TestCase):
