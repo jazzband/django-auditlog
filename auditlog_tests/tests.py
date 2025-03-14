@@ -40,6 +40,7 @@ from auditlog_tests.models import (
     AdditionalDataIncludedModel,
     AltPrimaryKeyModel,
     AutoManyRelatedModel,
+    BinaryModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
     DateTimeFieldModel,
@@ -1164,6 +1165,27 @@ class DateTimeFieldModelTest(TestCase):
         self.assertEqual(
             json_model.history.latest().changes_dict["json"][1], "Value(None)"
         )
+
+
+class BinaryModelTest(TestCase):
+    def test_model_with_binary_field(self):
+        instance = BinaryModel.objects.create(binary=b"\xde\xad\xbe\xef")
+        self.assertEqual(instance.history.count(), 1)
+
+        obj_log_entry = instance.history.latest()
+
+        self.assertEqual(obj_log_entry.changes_dict["binary"][0], "None")
+        self.assertEqual(obj_log_entry.changes_dict["binary"][1], "deadbeef")
+
+        instance.binary = None
+        instance.save()
+
+        self.assertEqual(instance.history.count(), 2)
+
+        obj_log_entry = instance.history.latest()
+
+        self.assertEqual(obj_log_entry.changes_dict["binary"][0], "deadbeef")
+        self.assertEqual(obj_log_entry.changes_dict["binary"][1], "None")
 
 
 class UnregisterTest(TestCase):
