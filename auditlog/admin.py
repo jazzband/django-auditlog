@@ -8,6 +8,14 @@ from auditlog.filters import CIDFilter, ResourceTypeFilter
 from auditlog.mixins import LogEntryAdminMixin
 from auditlog.models import LogEntry
 
+user_model = get_user_model()
+
+user_model_fields = [field.name for field in user_model._meta.get_fields()]
+
+has_first_and_last_name_fields = (
+    "first_name" in user_model_fields and "last_name" in user_model_fields
+)
+
 
 @admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
@@ -25,10 +33,12 @@ class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
         "timestamp",
         "object_repr",
         "changes",
-        "actor__first_name",
-        "actor__last_name",
-        f"actor__{get_user_model().USERNAME_FIELD}",
-    ]
+        f"actor__{user_model.USERNAME_FIELD}",
+    ] + (
+        ["actor__first_name", "actor__last_name"]
+        if has_first_and_last_name_fields
+        else []
+    )
     list_filter = ["action", ResourceTypeFilter, CIDFilter]
     readonly_fields = ["created", "resource_url", "action", "user_url", "msg"]
     fieldsets = [
