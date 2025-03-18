@@ -242,6 +242,7 @@ class SimpleModelTest(TestCase):
         obj.save()
         self.assertEqual(LogEntry.objects.count(), initial_entries_count + 1)
 
+
 class NoActorMixin:
     def check_create_log_entry(self, obj, log_entry):
         super().check_create_log_entry(obj, log_entry)
