@@ -53,7 +53,7 @@ def log_update(sender, instance, **kwargs):
 
     Direct use is discouraged, connect your model through :py:func:`auditlog.registry.register` instead.
     """
-    if not instance._state.adding:
+    if not instance._state.adding and instance.pk is not None:
         update_fields = kwargs.get("update_fields", None)
         old = sender._default_manager.filter(pk=instance.pk).first()
         _create_log_entry(

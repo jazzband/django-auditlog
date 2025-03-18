@@ -235,6 +235,12 @@ class SimpleModelTest(TestCase):
         history = self.obj.history.filter(timestamp=timestamp, changes="foo bar")
         self.assertTrue(history.exists())
 
+    def test_create_duplicate_with_pk_none(self):
+        initial_entries_count = LogEntry.objects.count()
+        obj = self.obj
+        obj.pk = None
+        obj.save()
+        self.assertEqual(LogEntry.objects.count(), initial_entries_count + 1)
 
 class NoActorMixin:
     def check_create_log_entry(self, obj, log_entry):
@@ -346,6 +352,9 @@ class ModelPrimaryKeyModelBase(SimpleModelTest):
     def make_object(self):
         self.key = super().make_object()
         return ModelPrimaryKeyModel.objects.create(key=self.key, text="I am strange.")
+
+    def test_create_duplicate_with_pk_none(self):
+        pass
 
 
 class ModelPrimaryKeyModelTest(NoActorMixin, ModelPrimaryKeyModelBase):
