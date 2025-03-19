@@ -19,10 +19,11 @@ from auditlog import __version__
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 
 # Add sources folder
-sys.path.insert(0, os.path.abspath("../../"))
+
+sys.path.insert(0, os.path.abspath("../../auditlog_tests"))
 
 # Setup Django for autodoc
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "auditlog_tests.test_settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "test_settings")
 import django  # noqa: E402
 
 django.setup()
