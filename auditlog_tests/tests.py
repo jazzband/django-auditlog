@@ -72,6 +72,7 @@ from auditlog.signals import post_log, pre_log
 
 LogEntry = get_logentry_model()
 
+
 class SimpleModelTest(TestCase):
     def setUp(self):
         self.obj = self.make_object()
