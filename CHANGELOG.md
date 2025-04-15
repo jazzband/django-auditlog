@@ -6,6 +6,9 @@
 
 #### Fixes
 
+- CI: Add required pkginfo to release workflow
+
+
 ## 3.1.0 (2025-04-15)
 
 #### Improvements
