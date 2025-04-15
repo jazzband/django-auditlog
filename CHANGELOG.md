@@ -4,6 +4,12 @@
 
 #### Improvements
 
+#### Fixes
+
+## 3.1.0 (2025-04-15)
+
+#### Improvements
+
 - feat: Support masking field names globally when ```AUDITLOG_INCLUDE_ALL_MODELS``` is enabled
 via `AUDITLOG_MASK_TRACKING_FIELDS` setting. ([#702](https://github.com/jazzband/django-auditlog/pull/702))
 - feat: Added `LogEntry.actor_email` field. ([#641](https://github.com/jazzband/django-auditlog/pull/641))
