@@ -6,6 +6,12 @@
 
 #### Fixes
 
+## 3.1.01 (2025-04-16)
+
+#### Fixes
+
+- CI: Add required pkginfo to release workflow
+
 ## 3.1.0 (2025-04-15)
 
 #### Improvements
@@ -22,7 +28,6 @@ via `AUDITLOG_MASK_TRACKING_FIELDS` setting. ([#702](https://github.com/jazzband
 
 #### Fixes
 
-- CI: Add required pkginfo to release workflow
 - fix: Use sender instead of receiver for `m2m_changed` signal ID to prevent duplicate entries for models that share a related model. ([#686](https://github.com/jazzband/django-auditlog/pull/686))
 - Fixed a problem when setting `Value(None)` in `JSONField` ([#646](https://github.com/jazzband/django-auditlog/pull/646))
 - Fixed a problem when setting `django.db.models.functions.Now()` in `DateTimeField` ([#635](https://github.com/jazzband/django-auditlog/pull/635))
