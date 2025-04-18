@@ -10,11 +10,13 @@ from django.utils.safestring import mark_safe
 from django.utils.timezone import is_aware, localtime
 from django.utils.translation import gettext_lazy as _
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
 from auditlog.registry import auditlog
 from auditlog.signals import accessed
 
 MAX = 75
+
+LogEntry = get_logentry_model()
 
 
 class LogEntryAdminMixin:

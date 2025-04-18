@@ -20,7 +20,9 @@ def track_field(field):
     :return: Whether the given field should be tracked.
     :rtype: bool
     """
-    from auditlog.models import LogEntry
+    from auditlog import get_logentry_model
+
+    LogEntry = get_logentry_model()
 
     # Do not track many to many relations
     if field.many_to_many:
