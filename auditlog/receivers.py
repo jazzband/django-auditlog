@@ -1,3 +1,4 @@
+import logging
 from functools import wraps
 
 from django.conf import settings
@@ -99,27 +100,39 @@ def log_access(sender, instance, **kwargs):
 def _create_log_entry(
     action, instance, sender, diff_old, diff_new, fields_to_check=None, force_log=False
 ):
-    pre_log_results = pre_log.send(
-        sender,
-        instance=instance,
-        action=action,
-    )
+    pre_log_results = None
     error = None
+    logger = logging.getLogger(__name__)
+
+    try:
+        pre_log_results = pre_log.send(
+            sender,
+            instance=instance,
+            action=action,
+        )
+    except Exception as e:
+        logger.error(f"Error in pre_log signal for '{action}' on {instance}: {str(e)}")
     try:
         changes = model_instance_diff(
             diff_old, diff_new, fields_to_check=fields_to_check
         )
+    except Exception as e:
+        logger.error(f"Error in model_instance_diff for '{action}' on {instance}: {str(e)}")
+        error = e
 
-        if force_log or changes:
+    if error is None and (force_log or changes):
+        try:
             LogEntry.objects.log_create(
                 instance,
                 action=action,
                 changes=changes,
                 force_log=force_log,
             )
-    except BaseException as e:
-        error = e
-    finally:
+        except Exception as e:
+            logger.error(f"Error in log_create for '{action}' on {instance}: {str(e)}")
+            error = e
+
+    try:
         post_log.send(
             sender,
             instance=instance,
@@ -127,8 +140,13 @@ def _create_log_entry(
             error=error,
             pre_log_results=pre_log_results,
         )
-        if error:
-            raise error
+    except Exception as post_error:
+        # Log post_log signal errors but don't raise them.
+        logger.error(f"Error in post_log signal for '{action}' on {instance}: {str(post_error)}")
+        # Old
+        # if error:
+        #     raise error
+        return
 
 
 def make_log_m2m_changes(field_name):
