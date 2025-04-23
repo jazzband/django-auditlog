@@ -110,15 +110,15 @@ def _create_log_entry(
             instance=instance,
             action=action,
         )
-    except Exception as e:
-        logger.error(f"Error in pre_log signal for '{action}' on {instance}: {str(e)}")
+    except Exception as exc:
+        logger.error(f"Error in pre_log signal for '{action}' on {instance}: {str(exc)}")
     try:
         changes = model_instance_diff(
             diff_old, diff_new, fields_to_check=fields_to_check
         )
-    except Exception as e:
-        logger.error(f"Error in model_instance_diff for '{action}' on {instance}: {str(e)}")
-        error = e
+    except Exception as exc:
+        logger.error(f"Error in model_instance_diff for '{action}' on {instance}: {str(exc)}")
+        error = exc
 
     if error is None and (force_log or changes):
         try:
@@ -128,9 +128,9 @@ def _create_log_entry(
                 changes=changes,
                 force_log=force_log,
             )
-        except Exception as e:
-            logger.error(f"Error in log_create for '{action}' on {instance}: {str(e)}")
-            error = e
+        except Exception as exc:
+            logger.error(f"Error in log_create for '{action}' on {instance}: {str(exc)}")
+            error = exc
 
     try:
         post_log.send(
@@ -141,7 +141,6 @@ def _create_log_entry(
             pre_log_results=pre_log_results,
         )
     except Exception as post_error:
-        # Log post_log signal errors but don't raise them.
         logger.error(f"Error in post_log signal for '{action}' on {instance}: {str(post_error)}")
         # Old
         # if error:
