@@ -8,6 +8,8 @@ from auditlog.diff import model_instance_diff
 from auditlog.models import LogEntry
 from auditlog.signals import post_log, pre_log
 
+logger = logging.getLogger(__name__)
+
 
 def check_disable(signal_handler):
     """
@@ -100,18 +102,13 @@ def log_access(sender, instance, **kwargs):
 def _create_log_entry(
     action, instance, sender, diff_old, diff_new, fields_to_check=None, force_log=False
 ):
-    pre_log_results = None
     error = None
-    logger = logging.getLogger(__name__)
 
-    try:
-        pre_log_results = pre_log.send(
-            sender,
-            instance=instance,
-            action=action,
-        )
-    except Exception as exc:
-        logger.error(f"Error in pre_log signal for '{action}' on {instance}: {str(exc)}")
+    pre_log_results = pre_log.send(
+        sender,
+        instance=instance,
+        action=action,
+    )
     try:
         changes = model_instance_diff(
             diff_old, diff_new, fields_to_check=fields_to_check
@@ -132,20 +129,17 @@ def _create_log_entry(
             logger.error(f"Error in log_create for '{action}' on {instance}: {str(exc)}")
             error = exc
 
-    try:
-        post_log.send(
-            sender,
-            instance=instance,
-            action=action,
-            error=error,
-            pre_log_results=pre_log_results,
-        )
-    except Exception as post_error:
-        logger.error(f"Error in post_log signal for '{action}' on {instance}: {str(post_error)}")
-        # Old
-        # if error:
-        #     raise error
-        return
+    post_log.send(
+        sender,
+        instance=instance,
+        action=action,
+        error=error,
+        pre_log_results=pre_log_results,
+    )
+    # Old
+    # if error:
+    #     raise error
+    return
 
 
 def make_log_m2m_changes(field_name):
