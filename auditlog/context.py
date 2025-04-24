@@ -11,12 +11,13 @@ threadlocal = threading.local()
 
 
 @contextlib.contextmanager
-def set_actor(actor, remote_addr=None):
+def set_actor(actor, remote_addr=None, domain=None):
     """Connect a signal receiver with current user attached."""
     # Initialize thread local storage
     threadlocal.auditlog = {
         "signal_duid": ("set_actor", time.time()),
         "remote_addr": remote_addr,
+        "domain": domain,
     }
 
     # Connect signal for automatic logging
@@ -59,6 +60,7 @@ def _set_actor(user, sender, instance, signal_duid, **kwargs):
             instance.actor = user
 
         instance.remote_addr = auditlog["remote_addr"]
+        instance.domain = auditlog["domain"]
 
 
 @contextlib.contextmanager

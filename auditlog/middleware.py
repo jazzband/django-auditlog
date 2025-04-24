@@ -31,6 +31,13 @@ class AuditlogMiddleware:
         return remote_addr
 
     @staticmethod
+    def _get_domain(request):
+        """
+        Get the domain from the request.
+        """
+        return request.META.get("HTTP_HOST", "")
+
+    @staticmethod
     def _get_actor(request):
         user = getattr(request, "user", None)
         if isinstance(user, get_user_model()) and user.is_authenticated:
@@ -39,9 +46,10 @@ class AuditlogMiddleware:
 
     def __call__(self, request):
         remote_addr = self._get_remote_addr(request)
+        domain = self._get_domain(request)
         user = self._get_actor(request)
 
         set_cid(request)
 
-        with set_actor(actor=user, remote_addr=remote_addr):
+        with set_actor(actor=user, remote_addr=remote_addr, domain=domain):
             return self.get_response(request)
