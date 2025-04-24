@@ -1,5 +1,4 @@
 import os
-
 from setuptools import setup
 
 # Readme as long description
@@ -9,7 +8,10 @@ with open(os.path.join(os.path.dirname(__file__), "README.md")) as readme_file:
 setup(
     name="django-auditlog",
     use_scm_version={"version_scheme": "post-release"},
-    setup_requires=["setuptools_scm"],
+    setup_requires=[
+        "setuptools_scm",
+        "packaging>=23.0",  # <-- Added to avoid canonicalize_version error
+    ],
     packages=[
         "auditlog",
         "auditlog.migrations",
@@ -28,7 +30,11 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.7",
-    install_requires=["Django>=3.2", "python-dateutil>=2.7.0"],
+    install_requires=[
+        "Django>=3.2",
+        "python-dateutil>=2.7.0",
+        "packaging>=23.0",  # <-- Also added here to ensure runtime compatibility
+    ],
     zip_safe=False,
     classifiers=[
         "Programming Language :: Python :: 3",
