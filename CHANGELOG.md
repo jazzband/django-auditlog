@@ -6,7 +6,13 @@
 
 #### Fixes
 
-## 3.1.01 (2025-04-16)
+## 3.1.2 (2025-04-26)
+
+#### Fixes
+
+- CI: Pine twine and setuptools to fix release
+
+## 3.1.1 (2025-04-16)
 
 #### Fixes
 
