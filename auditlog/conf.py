@@ -55,3 +55,8 @@ settings.AUDITLOG_DISABLE_REMOTE_ADDR = getattr(
 settings.AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH = getattr(
     settings, "AUDITLOG_CHANGE_DISPLAY_TRUNCATE_LENGTH", 140
 )
+
+# Swap default model
+settings.AUDITLOG_LOGENTRY_MODEL = getattr(
+    settings, "AUDITLOG_LOGENTRY_MODEL", "auditlog.LogEntry"
+)

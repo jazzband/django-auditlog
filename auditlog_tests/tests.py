@@ -33,6 +33,7 @@ from test_app.models import (
     AutoManyRelatedModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
+    CustomLogEntryModel,
     DateTimeFieldModel,
     JSONModel,
     ManyRelatedModel,
@@ -59,14 +60,17 @@ from test_app.models import (
     UUIDPrimaryKeyModel,
 )
 
+from auditlog import get_logentry_model
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
 from auditlog.diff import model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
-from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
+from auditlog.models import DEFAULT_OBJECT_REPR
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
 from auditlog.signals import post_log, pre_log
+
+LogEntry = get_logentry_model()
 
 
 class SimpleModelTest(TestCase):
@@ -1276,7 +1280,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 32)
+        self.assertEqual(len(self.test_auditlog.get_models()), 33)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -2728,7 +2732,7 @@ class SignalTests(TestCase):
 
         self.assertSignals(LogEntry.Action.DELETE)
 
-    @patch("auditlog.receivers.LogEntry.objects")
+    @patch("auditlog.models.LogEntry.objects")
     def test_signals_errors(self, log_entry_objects_mock):
         class CustomSignalError(BaseException):
             pass
@@ -2861,3 +2865,12 @@ class ModelManagerTest(TestCase):
         log = LogEntry.objects.get_for_object(self.public).first()
         self.assertEqual(log.action, LogEntry.Action.UPDATE)
         self.assertEqual(log.changes_dict["name"], ["Public", "Updated"])
+
+
+class SwappableLogEntryModelTest(TestCase):
+
+    @override_settings(AUDITLOG_LOGENTRY_MODEL="test_app.CustomLogEntryModel")
+    def test_custom_log_entry_model(self):
+        self.assertEqual(get_logentry_model(), CustomLogEntryModel)
+        SimpleModel.objects.create(text="Hi!")
+        self.assertEqual(CustomLogEntryModel.objects.count(), 1)
