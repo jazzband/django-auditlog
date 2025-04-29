@@ -337,6 +337,15 @@ Negative values: No truncation occurs, and the full string is displayed.
 
 .. versionadded:: 3.1.0
 
+**AUDITLOG_STORE_JSON_CHANGES**
+
+This configuration variable defines whether to store changes as JSON.
+
+This means that primitives such as booleans, integers, etc. will be represented using their JSON equivalents.  For example, instead of storing
+`None` as a string, it will be stored as a JSON `null` in the `changes` field.  Same goes for other primitives.
+
+.. versionadded:: 3.2.0
+
 Actors
 ------
 
