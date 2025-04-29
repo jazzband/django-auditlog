@@ -1,5 +1,5 @@
 from django.test import TestCase, override_settings
-from test_app.models import JSONModel, SimpleModel
+from test_app.models import JSONModel, RelatedModel, SimpleModel
 
 from auditlog.registry import AuditlogModelRegistry
 
@@ -46,3 +46,53 @@ class JSONForChangesTest(TestCase):
 
         id_field_changes = changes_dict["json"]
         self.assertEqual(id_field_changes, [None, {"test_key": "test_value"}])
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
+    def test_use_json_for_changes_with_jsonmodel_with_empty_list(self):
+        self.test_auditlog.register_from_settings()
+
+        json_model = JSONModel()
+        json_model.json = []
+        json_model.save()
+        changes_dict = json_model.history.latest().changes_dict
+
+        id_field_changes = changes_dict["json"]
+        self.assertEqual(id_field_changes, [None, []])
+    
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
+    def test_use_json_for_changes_with_jsonmodel_with_complex_data(self):
+        self.test_auditlog.register_from_settings()
+
+        json_model = JSONModel()
+        json_model.json = {
+            "key": "test_value",
+            "key_dict": {"inner_key": "inner_value"},
+            "key_tuple": ("item1", "item2", "item3")
+        }
+        json_model.save()
+        changes_dict = json_model.history.latest().changes_dict
+
+        id_field_changes = changes_dict["json"]
+        self.assertEqual(id_field_changes, [None, {
+            "key": "test_value",
+            "key_dict": {"inner_key": "inner_value"},
+            "key_tuple": ["item1", "item2", "item3"] # tuple is converted to list, that's ok
+        }])
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
+    def test_use_json_for_changes_with_jsonmodel_with_related_model(self):
+        self.test_auditlog.register_from_settings()
+
+        simple = SimpleModel.objects.create()
+        one_simple = SimpleModel.objects.create()
+        related_model = RelatedModel.objects.create(
+            one_to_one=simple, related=one_simple
+        )
+        related_model.save()
+        changes_dict = related_model.history.latest().changes_dict
+
+        field_related_changes = changes_dict["related"]
+        self.assertEqual(field_related_changes, [None, one_simple.id])
+
+        field_one_to_one_changes = changes_dict["one_to_one"]
+        self.assertEqual(field_one_to_one_changes, [None, simple.id])
