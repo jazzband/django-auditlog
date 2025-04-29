@@ -58,7 +58,7 @@ class JSONForChangesTest(TestCase):
 
         id_field_changes = changes_dict["json"]
         self.assertEqual(id_field_changes, [None, []])
-    
+
     @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
     def test_use_json_for_changes_with_jsonmodel_with_complex_data(self):
         self.test_auditlog.register_from_settings()
@@ -67,17 +67,27 @@ class JSONForChangesTest(TestCase):
         json_model.json = {
             "key": "test_value",
             "key_dict": {"inner_key": "inner_value"},
-            "key_tuple": ("item1", "item2", "item3")
+            "key_tuple": ("item1", "item2", "item3"),
         }
         json_model.save()
         changes_dict = json_model.history.latest().changes_dict
 
         id_field_changes = changes_dict["json"]
-        self.assertEqual(id_field_changes, [None, {
-            "key": "test_value",
-            "key_dict": {"inner_key": "inner_value"},
-            "key_tuple": ["item1", "item2", "item3"] # tuple is converted to list, that's ok
-        }])
+        self.assertEqual(
+            id_field_changes,
+            [
+                None,
+                {
+                    "key": "test_value",
+                    "key_dict": {"inner_key": "inner_value"},
+                    "key_tuple": [
+                        "item1",
+                        "item2",
+                        "item3",
+                    ],  # tuple is converted to list, that's ok
+                },
+            ],
+        )
 
     @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
     def test_use_json_for_changes_with_jsonmodel_with_related_model(self):
