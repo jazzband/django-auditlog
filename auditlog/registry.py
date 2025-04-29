@@ -370,6 +370,9 @@ class AuditlogModelRegistry:
                 self.register(
                     model=model, m2m_fields=m2m_fields, exclude_fields=exclude_fields
                 )
+        
+        if not isinstance(settings.AUDITLOG_STORE_JSON_CHANGES, bool):
+            raise TypeError("Setting 'AUDITLOG_STORE_JSON_CHANGES' must be a boolean")
 
         self._register_models(settings.AUDITLOG_INCLUDE_TRACKING_MODELS)
 

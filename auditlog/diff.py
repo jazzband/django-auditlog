@@ -51,7 +51,7 @@ def get_fields_in_model(instance):
     return [f for f in instance._meta.get_fields() if track_field(f)]
 
 
-def get_field_value(obj, field):
+def get_field_value(obj, field, use_json_for_changes=False):
     """
     Gets the value of a given model instance field.
 
@@ -79,18 +79,24 @@ def get_field_value(obj, field):
                 value = django_timezone.make_naive(value, timezone=timezone.utc)
         elif isinstance(field, JSONField):
             value = field.to_python(getattr(obj, field.name, None))
-            try:
-                value = json.dumps(value, sort_keys=True, cls=field.encoder)
-            except TypeError:
-                pass
+            if not use_json_for_changes:
+                try:
+                    value = json.dumps(value, sort_keys=True, cls=field.encoder)
+                except TypeError:
+                    pass
         elif (field.one_to_one or field.many_to_one) and hasattr(field, "rel_class"):
             value = smart_str(
                 getattr(obj, field.get_attname(), None), strings_only=True
             )
         else:
-            value = smart_str(getattr(obj, field.name, None))
-            if type(value).__name__ == "__proxy__":
-                value = str(value)
+            value = getattr(obj, field.name, None)
+
+            if not use_json_for_changes:
+                value = smart_str(value)
+                if type(value).__name__ == "__proxy__":
+                    value = str(value)
+            
+            
     except ObjectDoesNotExist:
         value = (
             field.default
@@ -99,6 +105,27 @@ def get_field_value(obj, field):
         )
 
     return value
+
+def is_primitive(obj) -> bool:
+    """
+    Checks if the given object is a primitive Python type that can be safely serialized to JSON.
+    
+    :param obj: The object to check
+    :return: True if the object is a primitive type, False otherwise
+    :rtype: bool
+    """
+    primitive_types = (
+        type(None),
+        bool,
+        int,
+        float,
+        str,
+        list,
+        tuple,
+        dict,
+        set
+    )
+    return isinstance(obj, primitive_types)
 
 
 def mask_str(value: str) -> str:
@@ -115,7 +142,7 @@ def mask_str(value: str) -> str:
 
 
 def model_instance_diff(
-    old: Optional[Model], new: Optional[Model], fields_to_check=None
+    old: Optional[Model], new: Optional[Model], fields_to_check=None, use_json_for_changes=False
 ):
     """
     Calculates the differences between two model instances. One of the instances may be ``None``
@@ -189,8 +216,8 @@ def model_instance_diff(
         fields = filtered_fields
 
     for field in fields:
-        old_value = get_field_value(old, field)
-        new_value = get_field_value(new, field)
+        old_value = get_field_value(old, field, use_json_for_changes)
+        new_value = get_field_value(new, field, use_json_for_changes)
 
         if old_value != new_value:
             if model_fields and field.name in model_fields["mask_fields"]:
@@ -199,7 +226,18 @@ def model_instance_diff(
                     mask_str(smart_str(new_value)),
                 )
             else:
-                diff[field.name] = (smart_str(old_value), smart_str(new_value))
+                if not use_json_for_changes:
+                    diff[field.name] = (smart_str(old_value), smart_str(new_value))
+                else:
+                    # TODO: should we handle the case where the value is a django Model specifically?
+                    #       for example, could create a list of ids for ManyToMany fields
+
+                    # this maintains the behavior of the original code
+                    if not is_primitive(old_value):
+                        old_value = smart_str(old_value)
+                    if not is_primitive(new_value):
+                        new_value = smart_str(new_value)
+                    diff[field.name] = (old_value, new_value)
 
     if len(diff) == 0:
         diff = None
