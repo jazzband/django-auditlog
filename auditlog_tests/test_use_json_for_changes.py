@@ -1,6 +1,7 @@
 from django.test import TestCase, override_settings
-from auditlog.registry import AuditlogModelRegistry
 from test_app.models import JSONModel, SimpleModel
+
+from auditlog.registry import AuditlogModelRegistry
 
 
 class JSONForChangesTest(TestCase):
@@ -21,7 +22,9 @@ class JSONForChangesTest(TestCase):
         # compare the id, text, boolean and datetime fields
         id_field_changes = changes_dict["id"]
         self.assertIsNone(id_field_changes[0])
-        self.assertIsInstance(id_field_changes[1], int)  # the id depends on state of the database
+        self.assertIsInstance(
+            id_field_changes[1], int
+        )  # the id depends on state of the database
 
         text_field_changes = changes_dict["text"]
         self.assertEqual(text_field_changes, [None, ""])
@@ -33,7 +36,6 @@ class JSONForChangesTest(TestCase):
         datetime_field_changes = changes_dict["datetime"]
         self.assertIsNone(datetime_field_changes[0])
         self.assertIsInstance(datetime_field_changes[1], str)
-
 
     @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
     def test_use_json_for_changes_with_jsonmodel(

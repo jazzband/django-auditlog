@@ -95,8 +95,7 @@ def get_field_value(obj, field, use_json_for_changes=False):
                 value = smart_str(value)
                 if type(value).__name__ == "__proxy__":
                     value = str(value)
-            
-            
+
     except ObjectDoesNotExist:
         value = (
             field.default
@@ -106,25 +105,16 @@ def get_field_value(obj, field, use_json_for_changes=False):
 
     return value
 
+
 def is_primitive(obj) -> bool:
     """
     Checks if the given object is a primitive Python type that can be safely serialized to JSON.
-    
+
     :param obj: The object to check
     :return: True if the object is a primitive type, False otherwise
     :rtype: bool
     """
-    primitive_types = (
-        type(None),
-        bool,
-        int,
-        float,
-        str,
-        list,
-        tuple,
-        dict,
-        set
-    )
+    primitive_types = (type(None), bool, int, float, str, list, tuple, dict, set)
     return isinstance(obj, primitive_types)
 
 
@@ -142,7 +132,10 @@ def mask_str(value: str) -> str:
 
 
 def model_instance_diff(
-    old: Optional[Model], new: Optional[Model], fields_to_check=None, use_json_for_changes=False
+    old: Optional[Model],
+    new: Optional[Model],
+    fields_to_check=None,
+    use_json_for_changes=False,
 ):
     """
     Calculates the differences between two model instances. One of the instances may be ``None``
