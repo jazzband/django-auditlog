@@ -10,9 +10,7 @@ class JSONForChangesTest(TestCase):
         self.test_auditlog = AuditlogModelRegistry()
 
     @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
-    def test_use_json_for_changes_with_simplemodel(
-        self,
-    ):
+    def test_use_json_for_changes_with_simplemodel(self):
         self.test_auditlog.register_from_settings()
 
         smm = SimpleModel()
@@ -38,9 +36,7 @@ class JSONForChangesTest(TestCase):
         self.assertIsInstance(datetime_field_changes[1], str)
 
     @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
-    def test_use_json_for_changes_with_jsonmodel(
-        self,
-    ):
+    def test_use_json_for_changes_with_jsonmodel(self):
         self.test_auditlog.register_from_settings()
 
         json_model = JSONModel()
