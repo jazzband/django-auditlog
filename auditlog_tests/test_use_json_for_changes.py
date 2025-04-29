@@ -8,6 +8,13 @@ class JSONForChangesTest(TestCase):
 
     def setUp(self):
         self.test_auditlog = AuditlogModelRegistry()
+    
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES='str')
+    def test_wrong_setting_type(self):
+        with self.assertRaisesMessage(
+            TypeError, "Setting 'AUDITLOG_STORE_JSON_CHANGES' must be a boolean"
+        ):
+            self.test_auditlog.register_from_settings()
 
     @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
     def test_use_json_for_changes_with_simplemodel(self):
