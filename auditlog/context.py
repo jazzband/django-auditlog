@@ -66,7 +66,7 @@ def _set_actor(user, sender, instance, signal_duid, **kwargs):
             and instance.actor is None
         ):
             instance.actor = user
-            instance.actor_email = hasattr(user, "email") and user.email or None
+            instance.actor_email = getattr(user, "email", None)
 
         instance.remote_addr = auditlog["remote_addr"]
         instance.remote_port = auditlog["remote_port"]
