@@ -4,6 +4,8 @@
 
 #### Improvements
 
+- feat: Support storing JSON in the changes field when ```AUDITLOG_STORE_JSON_CHANGES``` is enabled.  ([#719](https://github.com/jazzband/django-auditlog/pull/719))
+
 #### Fixes
 
 ## 3.1.2 (2025-04-26)

@@ -43,6 +43,7 @@ def log_create(sender, instance, created, **kwargs):
             sender=sender,
             diff_old=None,
             diff_new=instance,
+            use_json_for_changes=settings.AUDITLOG_STORE_JSON_CHANGES,
         )
 
 
@@ -101,7 +102,14 @@ def log_access(sender, instance, **kwargs):
 
 
 def _create_log_entry(
-    action, instance, sender, diff_old, diff_new, fields_to_check=None, force_log=False
+    action,
+    instance,
+    sender,
+    diff_old,
+    diff_new,
+    fields_to_check=None,
+    force_log=False,
+    use_json_for_changes=False,
 ):
     pre_log_results = pre_log.send(
         sender,
@@ -117,7 +125,10 @@ def _create_log_entry(
     changes = None
     try:
         changes = model_instance_diff(
-            diff_old, diff_new, fields_to_check=fields_to_check
+            diff_old,
+            diff_new,
+            fields_to_check=fields_to_check,
+            use_json_for_changes=use_json_for_changes,
         )
 
         if force_log or changes:
