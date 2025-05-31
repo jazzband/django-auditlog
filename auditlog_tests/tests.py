@@ -33,6 +33,7 @@ from test_app.models import (
     AutoManyRelatedModel,
     CharfieldTextfieldModel,
     ChoicesFieldModel,
+    CustomMaskModel,
     DateTimeFieldModel,
     JSONModel,
     ManyRelatedModel,
@@ -62,7 +63,7 @@ from test_app.models import (
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
-from auditlog.diff import model_instance_diff, mask_str
+from auditlog.diff import mask_str, model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
@@ -808,6 +809,21 @@ class SimpleMaskedFieldsModelTest(TestCase):
             smm.history.latest().changes_dict["address"][1],
             "*******ve data",
             msg="The diff function masks 'address' field.",
+        )
+
+    @override_settings(
+        AUDITLOG_DEFAULT_MASK_CALLABLE="auditlog_tests.test_app.mask.custom_mask_str"
+    )
+    def test_global_mask_callable(self):
+        """Test that global mask_callable from settings is used when model-specific one is not provided"""
+        instance = SimpleMaskedModel.objects.create(
+            address="1234567890123456", text="Some text"
+        )
+
+        self.assertEqual(
+            instance.history.latest().changes_dict["address"][1],
+            "****3456",
+            msg="The global masking function should be used when model-specific one is not provided",
         )
 
 
@@ -2907,3 +2923,43 @@ class TestMaskStr(TestCase):
 
     def test_mask_str_long_text(self):
         self.assertEqual(mask_str("confidential"), "******ential")
+
+
+class CustomMaskModelTest(TestCase):
+    def test_custom_mask_function(self):
+        instance = CustomMaskModel.objects.create(
+            credit_card="1234567890123456", text="Some text"
+        )
+        self.assertEqual(
+            instance.history.latest().changes_dict["credit_card"][1],
+            "****3456",
+            msg="The custom masking function should mask all but last 4 digits",
+        )
+
+    def test_custom_mask_function_short_value(self):
+        """Test that custom masking function handles short values correctly"""
+        instance = CustomMaskModel.objects.create(credit_card="123", text="Some text")
+        self.assertEqual(
+            instance.history.latest().changes_dict["credit_card"][1],
+            "123",
+            msg="The custom masking function should not mask values shorter than 4 characters",
+        )
+
+    def test_custom_mask_function_serialized_data(self):
+        instance = CustomMaskModel.objects.create(
+            credit_card="1234567890123456", text="Some text"
+        )
+        log = instance.history.latest()
+        self.assertTrue(isinstance(log, LogEntry))
+        self.assertEqual(log.action, LogEntry.Action.CREATE)
+
+        # Update to trigger serialization
+        instance.credit_card = "9876543210987654"
+        instance.save()
+
+        log = instance.history.latest()
+        self.assertEqual(
+            log.changes_dict["credit_card"][1],
+            "****7654",
+            msg="The custom masking function should be used in serialized data",
+        )
