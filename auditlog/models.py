@@ -23,7 +23,7 @@ from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
-from auditlog.diff import mask_str
+from auditlog.diff import get_mask_function
 
 DEFAULT_OBJECT_REPR = "<error forming object repr>"
 
@@ -247,7 +247,7 @@ class LogEntryManager(models.Manager):
 
         mask_fields = model_fields["mask_fields"]
         if mask_fields:
-            data = self._mask_serialized_fields(data, mask_fields)
+            data = self._mask_serialized_fields(data, mask_fields, model_fields)
 
         return data
 
@@ -287,14 +287,15 @@ class LogEntryManager(models.Manager):
         return list(set(include_fields or all_field_names).difference(exclude_fields))
 
     def _mask_serialized_fields(
-        self, data: dict[str, Any], mask_fields: list[str]
+        self, data: dict[str, Any], mask_fields: list[str], model_fields: dict[str, Any]
     ) -> dict[str, Any]:
         all_field_data = data.pop("fields")
+        mask_func = get_mask_function(model_fields.get("mask_callable"))
 
         masked_field_data = {}
         for key, value in all_field_data.items():
             if isinstance(value, str) and key in mask_fields:
-                masked_field_data[key] = mask_str(value)
+                masked_field_data[key] = mask_func(value)
             else:
                 masked_field_data[key] = value
 
