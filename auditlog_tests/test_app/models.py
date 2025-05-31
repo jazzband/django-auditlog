@@ -424,6 +424,13 @@ class AutoManyRelatedModel(models.Model):
     related = models.ManyToManyField(SimpleModel)
 
 
+class CustomMaskModel(models.Model):
+    credit_card = models.CharField(max_length=16)
+    text = models.TextField()
+
+    history = AuditlogHistoryField(delete_related=True)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ModelPrimaryKeyModel)
@@ -460,4 +467,9 @@ auditlog.register(
     SerializeNaturalKeyRelatedModel,
     serialize_data=True,
     serialize_kwargs={"use_natural_foreign_keys": True},
+)
+auditlog.register(
+    CustomMaskModel,
+    mask_fields=["credit_card"],
+    mask_callable="auditlog_tests.test_app.mask.custom_mask_str",
 )
