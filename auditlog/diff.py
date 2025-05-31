@@ -1,12 +1,13 @@
 import json
 from datetime import timezone
-from typing import Optional
+from typing import Callable, Optional
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import NOT_PROVIDED, DateTimeField, ForeignKey, JSONField, Model
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
+from django.utils.module_loading import import_string
 
 
 def track_field(field):
@@ -130,6 +131,29 @@ def is_primitive(obj) -> bool:
     return isinstance(obj, primitive_types)
 
 
+def get_mask_function(mask_callable: Optional[str] = None) -> Callable[[str], str]:
+    """
+    Get the masking function to use based on the following priority:
+    1. Model-specific mask_callable if provided
+    2. mask_callable from settings if configured
+    3. Default mask_str function
+
+    :param mask_callable: The dotted path to a callable that will be used for masking.
+    :type mask_callable: str
+    :return: A callable that takes a string and returns a masked version.
+    :rtype: Callable[[str], str]
+    """
+
+    if mask_callable:
+        return import_string(mask_callable)
+
+    default_mask_callable = settings.AUDITLOG_DEFAULT_MASK_CALLABLE
+    if default_mask_callable:
+        return import_string(default_mask_callable)
+
+    return mask_str
+
+
 def mask_str(value: str) -> str:
     """
     Masks the first half of the input string to remove sensitive data.
@@ -226,9 +250,11 @@ def model_instance_diff(
 
         if old_value != new_value:
             if model_fields and field.name in model_fields["mask_fields"]:
+                mask_func = get_mask_function(model_fields.get("mask_callable"))
+
                 diff[field.name] = (
-                    mask_str(smart_str(old_value)),
-                    mask_str(smart_str(new_value)),
+                    mask_func(smart_str(old_value)),
+                    mask_func(smart_str(new_value)),
                 )
             else:
                 if not use_json_for_changes:
