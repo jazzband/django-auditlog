@@ -132,6 +132,37 @@ For example, to mask the field ``address``, use::
 
     auditlog.register(MyModel, mask_fields=['address'])
 
+You can also specify a custom masking function by passing ``mask_callable`` to the ``register``
+method. The ``mask_callable`` should be a dotted path to a function that takes a string and returns
+a masked version of that string.
+
+For example, to use a custom masking function::
+
+    # In your_app/utils.py
+    def custom_mask(value: str) -> str:
+        return "****" + value[-4:]  # Only show last 4 characters
+    
+    # In your models.py
+    auditlog.register(
+        MyModel,
+        mask_fields=['credit_card'],
+        mask_callable='your_app.utils.custom_mask'
+    )
+
+Additionally, you can set a global default masking function that will be used when a model-specific
+mask_callable is not provided. To do this, add the following to your Django settings::
+
+    AUDITLOG_DEFAULT_MASK_CALLABLE = 'your_app.utils.custom_mask'
+
+The masking function priority is as follows:
+
+1. Model-specific ``mask_callable`` if provided in ``register()``
+2. ``AUDITLOG_DEFAULT_MASK_CALLABLE`` from settings if configured
+3. Default ``mask_str`` function which masks the first half of the string with asterisks
+
+If ``mask_callable`` is not specified and no global default is configured, the default masking function will be used which masks
+the first half of the string with asterisks.
+
 .. versionadded:: 2.0.0
 
     Masking fields
