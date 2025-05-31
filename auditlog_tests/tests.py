@@ -62,7 +62,7 @@ from test_app.models import (
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor
-from auditlog.diff import model_instance_diff
+from auditlog.diff import model_instance_diff, mask_str
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
@@ -2888,3 +2888,22 @@ class ModelManagerTest(TestCase):
         log = LogEntry.objects.get_for_object(self.public).first()
         self.assertEqual(log.action, LogEntry.Action.UPDATE)
         self.assertEqual(log.changes_dict["name"], ["Public", "Updated"])
+
+
+class TestMaskStr(TestCase):
+    """Test the mask_str function that masks sensitive data."""
+
+    def test_mask_str_empty(self):
+        self.assertEqual(mask_str(""), "")
+
+    def test_mask_str_single_char(self):
+        self.assertEqual(mask_str("a"), "a")
+
+    def test_mask_str_even_length(self):
+        self.assertEqual(mask_str("1234"), "**34")
+
+    def test_mask_str_odd_length(self):
+        self.assertEqual(mask_str("12345"), "**345")
+
+    def test_mask_str_long_text(self):
+        self.assertEqual(mask_str("confidential"), "******ential")
