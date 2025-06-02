@@ -812,7 +812,7 @@ class SimpleMaskedFieldsModelTest(TestCase):
         )
 
     @override_settings(
-        AUDITLOG_DEFAULT_MASK_CALLABLE="auditlog_tests.test_app.mask.custom_mask_str"
+        AUDITLOG_MASK_CALLABLE="auditlog_tests.test_app.mask.custom_mask_str"
     )
     def test_global_mask_callable(self):
         """Test that global mask_callable from settings is used when model-specific one is not provided"""

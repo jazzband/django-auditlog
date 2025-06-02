@@ -147,7 +147,7 @@ def get_mask_function(mask_callable: Optional[str] = None) -> Callable[[str], st
     if mask_callable:
         return import_string(mask_callable)
 
-    default_mask_callable = settings.AUDITLOG_DEFAULT_MASK_CALLABLE
+    default_mask_callable = settings.AUDITLOG_MASK_CALLABLE
     if default_mask_callable:
         return import_string(default_mask_callable)
 
