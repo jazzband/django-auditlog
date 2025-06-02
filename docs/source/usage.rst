@@ -152,12 +152,12 @@ For example, to use a custom masking function::
 Additionally, you can set a global default masking function that will be used when a model-specific
 mask_callable is not provided. To do this, add the following to your Django settings::
 
-    AUDITLOG_DEFAULT_MASK_CALLABLE = 'your_app.utils.custom_mask'
+    AUDITLOG_MASK_CALLABLE = 'your_app.utils.custom_mask'
 
 The masking function priority is as follows:
 
 1. Model-specific ``mask_callable`` if provided in ``register()``
-2. ``AUDITLOG_DEFAULT_MASK_CALLABLE`` from settings if configured
+2. ``AUDITLOG_MASK_CALLABLE`` from settings if configured
 3. Default ``mask_str`` function which masks the first half of the string with asterisks
 
 If ``mask_callable`` is not specified and no global default is configured, the default masking function will be used which masks

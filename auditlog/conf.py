@@ -61,6 +61,6 @@ settings.AUDITLOG_STORE_JSON_CHANGES = getattr(
     settings, "AUDITLOG_STORE_JSON_CHANGES", False
 )
 
-settings.AUDITLOG_DEFAULT_MASK_CALLABLE = getattr(
-    settings, "AUDITLOG_DEFAULT_MASK_CALLABLE", None
+settings.AUDITLOG_MASK_CALLABLE = getattr(
+    settings, "AUDITLOG_MASK_CALLABLE", None
 )
