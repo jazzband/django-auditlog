@@ -62,10 +62,11 @@ def get_field_value(obj, field, use_json_for_changes=False):
     :return: The value of the field as a string.
     :rtype: str
     """
+
     def get_default_value():
         """
         Attempts to get the default value for a field from the model's field definition.
-        
+
         :return: The default value of the field or None
         """
         try:
@@ -73,12 +74,12 @@ def get_field_value(obj, field, use_json_for_changes=False):
             default = model_field.default
             if default is NOT_PROVIDED:
                 return None
-            
+
             if callable(default):
                 return default()
-            
+
             return default
-        except (AttributeError):
+        except AttributeError:
             return None
 
     try:
@@ -104,9 +105,7 @@ def get_field_value(obj, field, use_json_for_changes=False):
                 except TypeError:
                     pass
         elif (field.one_to_one or field.many_to_one) and hasattr(field, "rel_class"):
-            value = smart_str(
-                getattr(obj, field.get_attname()), strings_only=True
-            )
+            value = smart_str(getattr(obj, field.get_attname()), strings_only=True)
         else:
             value = getattr(obj, field.name)
             if not use_json_for_changes:
