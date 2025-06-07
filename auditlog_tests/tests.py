@@ -2111,6 +2111,33 @@ class ModelInstanceDiffTest(TestCase):
             msg="ObjectDoesNotExist should be handled",
         )
 
+    def test_field_with_no_default_provided(self):
+        """Field with no default (NOT_PROVIDED) should return None."""
+        first = SimpleModel(integer=1)
+        second = SimpleModel()
+
+        delattr(second, "integer")
+
+        changes = model_instance_diff(first, second)
+        self.assertEqual(
+            changes,
+            {"integer": ("1", "None")},
+            msg="field with no default should return None",
+        )
+
+    def test_field_with_callable_default(self):
+        first = SimpleModel(char="value")
+        second = SimpleModel()
+
+        delattr(second, "char")
+
+        changes = model_instance_diff(first, second)
+        self.assertEqual(
+            changes,
+            {"char": ("value", "default value")},
+            msg="callable default should be handled",
+        )
+
     def test_diff_models_with_json_fields(self):
         first = JSONModel.objects.create(
             json={
