@@ -20,6 +20,7 @@ class SimpleModel(models.Model):
     boolean = models.BooleanField(default=False)
     integer = models.IntegerField(blank=True, null=True)
     datetime = models.DateTimeField(auto_now=True)
+    char = models.CharField(null=True, max_length=100, default=lambda: "default value")
 
     history = AuditlogHistoryField(delete_related=True)
 

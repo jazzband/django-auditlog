@@ -62,11 +62,31 @@ def get_field_value(obj, field, use_json_for_changes=False):
     :return: The value of the field as a string.
     :rtype: str
     """
+
+    def get_default_value():
+        """
+        Attempts to get the default value for a field from the model's field definition.
+
+        :return: The default value of the field or None
+        """
+        try:
+            model_field = obj._meta.get_field(field.name)
+            default = model_field.default
+            if default is NOT_PROVIDED:
+                return None
+
+            if callable(default):
+                return default()
+
+            return default
+        except AttributeError:
+            return None
+
     try:
         if isinstance(field, DateTimeField):
             # DateTimeFields are timezone-aware, so we need to convert the field
             # to its naive form before we can accurately compare them for changes.
-            value = getattr(obj, field.name, None)
+            value = getattr(obj, field.name)
             try:
                 value = field.to_python(value)
             except TypeError:
@@ -78,30 +98,22 @@ def get_field_value(obj, field, use_json_for_changes=False):
             ):
                 value = django_timezone.make_naive(value, timezone=timezone.utc)
         elif isinstance(field, JSONField):
-            value = field.to_python(getattr(obj, field.name, None))
+            value = field.to_python(getattr(obj, field.name))
             if not use_json_for_changes:
                 try:
                     value = json.dumps(value, sort_keys=True, cls=field.encoder)
                 except TypeError:
                     pass
         elif (field.one_to_one or field.many_to_one) and hasattr(field, "rel_class"):
-            value = smart_str(
-                getattr(obj, field.get_attname(), None), strings_only=True
-            )
+            value = smart_str(getattr(obj, field.get_attname()), strings_only=True)
         else:
-            value = getattr(obj, field.name, None)
-
+            value = getattr(obj, field.name)
             if not use_json_for_changes:
                 value = smart_str(value)
                 if type(value).__name__ == "__proxy__":
                     value = str(value)
-
-    except ObjectDoesNotExist:
-        value = (
-            field.default
-            if getattr(field, "default", NOT_PROVIDED) is not NOT_PROVIDED
-            else None
-        )
+    except (ObjectDoesNotExist, AttributeError):
+        return get_default_value()
 
     return value
 
