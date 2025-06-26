@@ -4,6 +4,8 @@
 
 #### Improvements
 
+- Confirm Django 5.2 support. ([#730](https://github.com/jazzband/django-auditlog/pull/730))
+
 #### Fixes
 
 ## 3.2.0 (2025-06-26)
