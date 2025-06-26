@@ -28,7 +28,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.9",
-    install_requires=["Django>=4.2,<5.3", "python-dateutil>=2.7.0"],
+    install_requires=["Django>=4.2", "python-dateutil>=2.7.0"],
     zip_safe=False,
     classifiers=[
         "Programming Language :: Python :: 3",
