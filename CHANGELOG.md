@@ -4,6 +4,8 @@
 
 #### Improvements
 
+- Confirm Django 5.2 support. ([#730](https://github.com/jazzband/django-auditlog/pull/730))
+
 #### Fixes
 
 ## 3.2.0 (2025-06-26)
@@ -12,7 +14,6 @@
 
 - feat: Support storing JSON in the changes field when ```AUDITLOG_STORE_JSON_CHANGES``` is enabled.  ([#719](https://github.com/jazzband/django-auditlog/pull/719))
 - feat: Added `AUDITLOG_MASK_CALLABLE` setting to allow custom masking functions ([#725](https://github.com/jazzband/django-auditlog/pull/725))
-- Confirm Django 5.2 support.
 
 ## 3.1.2 (2025-04-26)
 
