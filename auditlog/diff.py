@@ -184,6 +184,8 @@ def model_instance_diff(
     :type new: Model
     :param fields_to_check: An iterable of the field names to restrict the diff to, while ignoring the rest of
         the model's fields. This is used to pass the `update_fields` kwarg from the model's `save` method.
+    :param use_json_for_changes: whether or not to use a JSON for changes
+        (see settings.AUDITLOG_STORE_JSON_CHANGES)
     :type fields_to_check: Iterable
     :return: A dictionary with the names of the changed fields as keys and a two tuple of the old and new
             field values as value.
