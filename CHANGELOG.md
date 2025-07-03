@@ -2,13 +2,15 @@
 
 ## Next Release
 
+## 3.2.1 (2025-07-03)
+
 #### Improvements
 
 - Confirm Django 5.2 support. ([#730](https://github.com/jazzband/django-auditlog/pull/730))
 
 #### Fixes
 
-- fix: ```AUDITLOG_STORE_JSON_CHANGES=True``` was not respected during updates and deletions. 
+- fix: ```AUDITLOG_STORE_JSON_CHANGES=True``` was not respected during updates and deletions. ([#732](https://github.com/jazzband/django-auditlog/pull/732))
 
 ## 3.2.0 (2025-06-26)
 
