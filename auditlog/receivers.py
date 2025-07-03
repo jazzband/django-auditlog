@@ -64,6 +64,7 @@ def log_update(sender, instance, **kwargs):
             diff_old=old,
             diff_new=instance,
             fields_to_check=update_fields,
+            use_json_for_changes=settings.AUDITLOG_STORE_JSON_CHANGES,
         )
 
 
@@ -81,6 +82,7 @@ def log_delete(sender, instance, **kwargs):
             sender=sender,
             diff_old=instance,
             diff_new=None,
+            use_json_for_changes=settings.AUDITLOG_STORE_JSON_CHANGES,
         )
 
 
@@ -98,6 +100,7 @@ def log_access(sender, instance, **kwargs):
             diff_old=None,
             diff_new=None,
             force_log=True,
+            use_json_for_changes=settings.AUDITLOG_STORE_JSON_CHANGES,
         )
 
 
@@ -152,6 +155,7 @@ def _create_log_entry(
                 changes=changes,
                 log_entry=log_entry,
                 log_created=log_entry is not None,
+                use_json_for_changes=settings.AUDITLOG_STORE_JSON_CHANGES,
             )
         if error:
             raise error

@@ -8,6 +8,8 @@
 
 #### Fixes
 
+- fix: ```AUDITLOG_STORE_JSON_CHANGES=True``` was not respected during updates and deletions. 
+
 ## 3.2.0 (2025-06-26)
 
 #### Improvements

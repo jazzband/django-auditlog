@@ -1,6 +1,7 @@
 from django.test import TestCase, override_settings
 from test_app.models import JSONModel, RelatedModel, SimpleModel
 
+from auditlog.models import LogEntry
 from auditlog.registry import AuditlogModelRegistry
 
 
@@ -113,3 +114,36 @@ class JSONForChangesTest(TestCase):
 
         field_one_to_one_changes = changes_dict["one_to_one"]
         self.assertEqual(field_one_to_one_changes, [None, simple.id])
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
+    def test_use_json_for_changes_update(self):
+        self.test_auditlog.register_from_settings()
+
+        simple = SimpleModel(text="original")
+        simple.save()
+        simple.text = "new"
+        simple.save()
+
+        changes_dict = simple.history.latest().changes_dict
+
+        text_changes = changes_dict["text"]
+        self.assertEqual(text_changes, ["original", "new"])
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
+    def test_use_json_for_changes_delete(self):
+        self.test_auditlog.register_from_settings()
+
+        simple = SimpleModel()
+        simple.save()
+        simple.delete()
+
+        history = LogEntry.objects.all()
+
+        self.assertEqual(history.count(), 1, '"DELETE" record is always retained')
+
+        changes_dict = history.first().changes_dict
+
+        self.assertTrue(
+            all(v[1] is None for k, v in changes_dict.items()),
+            'all values in the changes dict should None, not "None"',
+        )
