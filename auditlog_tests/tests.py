@@ -1737,7 +1737,7 @@ class AdminPanelTest(TestCase):
         for tz, timestamp in [
             ("UTC", "2022-08-01 12:00:00"),
             ("Asia/Tbilisi", "2022-08-01 16:00:00"),
-            ("America/Buenos_Aires", "2022-08-01 09:00:00"),
+            ("America/Argentina/Buenos_Aires", "2022-08-01 09:00:00"),
             ("Asia/Kathmandu", "2022-08-01 17:45:00"),
         ]:
             with self.settings(TIME_ZONE=tz):
