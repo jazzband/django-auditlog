@@ -455,9 +455,17 @@ class LogEntry(models.Model):
         if auditlog.contains(model._meta.model):
             model_fields = auditlog.get_model_fields(model._meta.model)
 
+        if settings.AUDITLOG_STORE_JSON_CHANGES:
+            changes_dict = {}
+            for field_name, values in self.changes_dict.items():
+                values_as_strings = [str(v) for v in values]
+                changes_dict[field_name] = values_as_strings
+        else:
+            changes_dict = self.changes_dict
+
         changes_display_dict = {}
         # grab the changes_dict and iterate through
-        for field_name, values in self.changes_dict.items():
+        for field_name, values in changes_dict.items():
             # try to get the field attribute on the model
             try:
                 field = model._meta.get_field(field_name)
