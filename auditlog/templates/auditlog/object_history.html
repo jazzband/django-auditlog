@@ -1,0 +1,160 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <style type="text/css">
+    .auditlog-entries {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 1200px;
+    }
+
+    .auditlog-entry {
+      border: 1px solid var(--hairline-color, #e1e1e1);
+      border-radius: 4px;
+    }
+
+    .entry-header {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--hairline-color, #e1e1e1);
+    }
+
+    .entry-meta {
+      display: flex;
+      flex-direction: row;
+      gap: 16px; 
+    }
+
+    .entry-timestamp {
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+    
+    .entry-user {
+      font-size: 0.9em;
+    }
+
+    .entry-action {
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.8em;
+      font-weight: 500;
+      border: 1px solid var(--hairline-color, #e1e1e1);
+    }
+
+    .entry-content {
+      padding: 12px;
+    }
+
+    .no-changes {
+      font-style: italic;
+      opacity: 0.7;
+      font-size: 0.9em;
+    }
+
+    /* Table styling */
+    .entry-content table {
+      width: auto;
+      min-width: 100%;
+      border-collapse: collapse;
+      margin: 6px 0;
+      font-size: 0.9em;
+    }
+
+    .entry-content table th,
+    .entry-content table td {
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+      border: 1px solid var(--hairline-color, #e1e1e1);
+      white-space: nowrap;
+    }
+
+    .entry-content table th {
+      font-weight: 600;
+      font-size: 0.85em;
+    }
+
+    .entry-content table td {
+      max-width: 200px;
+      word-wrap: break-word;
+      white-space: normal;
+    }
+
+    .entry-content table + table {
+      margin-top: 8px;
+    }
+
+    /* Pagination styling */
+    .pagination {
+      margin-top: 16px;
+      text-align: center;
+    }
+
+    .pagination a,
+    .pagination span {
+      display: inline-block;
+      padding: 4px 8px;
+      margin: 0 2px;
+      border: 1px solid var(--hairline-color, #e1e1e1);
+      text-decoration: none;
+      border-radius: 3px;
+    }
+
+    .pagination .current {
+      font-weight: 600;
+      border-width: 2px;
+    }
+ 
+
+    .pagination-info {
+      text-align: center;
+      margin-top: 8px;
+      opacity: 0.7;
+      font-size: 0.9em;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .auditlog-entries {
+        max-width: 100%;
+      }
+
+      .entry-content {
+        padding: 6px;
+      }
+    } 
+  </style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ module_name }}</a>
+  &rsaquo; <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:'18' }}</a>
+  &rsaquo; {% translate 'Audit log' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <div id="auditlog-history" class="module">
+    {% if log_entries %}
+      <div class="auditlog-entries">
+        {% for entry in log_entries %}
+          {% include "auditlog/entry_detail.html" with entry=entry %}
+        {% endfor %}
+      </div>
+      
+      {% if pagination_required %}
+        {% include "auditlog/pagination.html" with page_obj=log_entries page_var=page_var %}
+      {% endif %}
+    {% else %}
+      <p>{% trans 'No log entries found.' %}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
