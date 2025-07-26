@@ -144,7 +144,9 @@ class AuditlogHistoryAdminMixin:
             .order_by("-timestamp")
         )
 
-        paginator = self.get_paginator(request, log_entries, self.auditlog_history_per_page)
+        paginator = self.get_paginator(
+            request, log_entries, self.auditlog_history_per_page
+        )
         page_number = request.GET.get(PAGE_VAR, 1)
         page_obj = paginator.get_page(page_number)
         page_range = paginator.get_elided_page_range(page_obj.number)
