@@ -1,5 +1,3 @@
-from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from test_app.models import SimpleModel
 

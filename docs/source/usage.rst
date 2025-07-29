@@ -553,7 +553,7 @@ When ``auditlog`` is added to your ``INSTALLED_APPS`` setting a customized admin
 Django Admin interface for log entries.
 
 Audit log history view
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Use ``AuditlogHistoryAdminMixin`` to add a "View" link in the admin changelist for accessing each object's audit history::
 
