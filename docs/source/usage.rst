@@ -555,7 +555,7 @@ Django Admin interface for log entries.
 Audit log history view
 ----------------------
 
-.. versionadded:: Next Release
+.. versionadded:: 3.2.2
 
 Use ``AuditlogHistoryAdminMixin`` to add a "View" link in the admin changelist for accessing each object's audit history::
 
