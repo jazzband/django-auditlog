@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Improvements
+
+- feat: Add audit log history view to Django Admin. ([#743](https://github.com/jazzband/django-auditlog/pull/743))
+
 ## 3.2.1 (2025-07-03)
 
 #### Improvements
