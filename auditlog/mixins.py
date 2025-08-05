@@ -1,17 +1,21 @@
+from urllib.parse import unquote
+
 from django import urls as urlresolvers
 from django.conf import settings
 from django.contrib import admin
-from django.core.exceptions import FieldDoesNotExist
-from django.forms.utils import pretty_name
+from django.contrib.admin.views.main import PAGE_VAR
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.urls.exceptions import NoReverseMatch
-from django.utils.html import format_html, format_html_join
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
+from django.utils.text import capfirst
 from django.utils.timezone import is_aware, localtime
 from django.utils.translation import gettext_lazy as _
 
 from auditlog.models import LogEntry
-from auditlog.registry import auditlog
+from auditlog.render import get_field_verbose_name, render_logentry_changes_html
 from auditlog.signals import accessed
 
 MAX = 75
@@ -68,55 +72,7 @@ class LogEntryAdminMixin:
 
     @admin.display(description=_("Changes"))
     def msg(self, obj):
-        changes = obj.changes_dict
-
-        atom_changes = {}
-        m2m_changes = {}
-
-        for field, change in changes.items():
-            if isinstance(change, dict):
-                assert (
-                    change["type"] == "m2m"
-                ), "Only m2m operations are expected to produce dict changes now"
-                m2m_changes[field] = change
-            else:
-                atom_changes[field] = change
-
-        msg = []
-
-        if atom_changes:
-            msg.append("<table>")
-            msg.append(self._format_header("#", "Field", "From", "To"))
-            for i, (field, change) in enumerate(sorted(atom_changes.items()), 1):
-                value = [i, self.field_verbose_name(obj, field)] + (
-                    ["***", "***"] if field == "password" else change
-                )
-                msg.append(self._format_line(*value))
-            msg.append("</table>")
-
-        if m2m_changes:
-            msg.append("<table>")
-            msg.append(self._format_header("#", "Relationship", "Action", "Objects"))
-            for i, (field, change) in enumerate(sorted(m2m_changes.items()), 1):
-                change_html = format_html_join(
-                    mark_safe("<br>"),
-                    "{}",
-                    [(value,) for value in change["objects"]],
-                )
-
-                msg.append(
-                    format_html(
-                        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
-                        i,
-                        self.field_verbose_name(obj, field),
-                        change["operation"],
-                        change_html,
-                    )
-                )
-
-            msg.append("</table>")
-
-        return mark_safe("".join(msg))
+        return render_logentry_changes_html(obj)
 
     @admin.display(description="Correlation ID")
     def cid_url(self, obj):
@@ -127,39 +83,18 @@ class LogEntryAdminMixin:
                 '<a href="{}" title="{}">{}</a>', url, self.CID_TITLE, cid
             )
 
-    def _format_header(self, *labels):
-        return format_html(
-            "".join(["<tr>", "<th>{}</th>" * len(labels), "</tr>"]), *labels
-        )
-
-    def _format_line(self, *values):
-        return format_html(
-            "".join(["<tr>", "<td>{}</td>" * len(values), "</tr>"]), *values
-        )
-
-    def field_verbose_name(self, obj, field_name: str):
-        model = obj.content_type.model_class()
-        if model is None:
-            return field_name
-        try:
-            model_fields = auditlog.get_model_fields(model._meta.model)
-            mapping_field_name = model_fields["mapping_fields"].get(field_name)
-            if mapping_field_name:
-                return mapping_field_name
-        except KeyError:
-            # Model definition in auditlog was probably removed
-            pass
-        try:
-            field = model._meta.get_field(field_name)
-            return pretty_name(getattr(field, "verbose_name", field_name))
-        except FieldDoesNotExist:
-            return pretty_name(field_name)
-
     def _add_query_parameter(self, key: str, value: str):
         full_path = self.request.get_full_path()
         delimiter = "&" if "?" in full_path else "?"
 
         return f"{full_path}{delimiter}{key}={value}"
+
+    def field_verbose_name(self, obj, field_name: str):
+        """
+        Use `auditlog.render.get_field_verbose_name` instead.
+        This method is kept for backward compatibility.
+        """
+        return get_field_verbose_name(obj, field_name)
 
 
 class LogAccessMixin:
@@ -167,3 +102,76 @@ class LogAccessMixin:
         obj = self.get_object()
         accessed.send(obj.__class__, instance=obj)
         return super().render_to_response(context, **response_kwargs)
+
+
+class AuditlogHistoryAdminMixin:
+    """
+    Add an audit log history view to a model admin.
+    """
+
+    auditlog_history_template = "auditlog/object_history.html"
+    show_auditlog_history_link = False
+    auditlog_history_per_page = 10
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if self.show_auditlog_history_link and "auditlog_link" not in list_display:
+            list_display.append("auditlog_link")
+
+        return list_display
+
+    def get_urls(self):
+        opts = self.model._meta
+        info = opts.app_label, opts.model_name
+        my_urls = [
+            path(
+                "<path:object_id>/auditlog/",
+                self.admin_site.admin_view(self.auditlog_history_view),
+                name="%s_%s_auditlog" % info,
+            )
+        ]
+
+        return my_urls + super().get_urls()
+
+    def auditlog_history_view(self, request, object_id, extra_context=None):
+        obj = self.get_object(request, unquote(object_id))
+        if not self.has_view_permission(request, obj):
+            raise PermissionDenied
+
+        log_entries = (
+            LogEntry.objects.get_for_object(obj)
+            .select_related("actor")
+            .order_by("-timestamp")
+        )
+
+        paginator = self.get_paginator(
+            request, log_entries, self.auditlog_history_per_page
+        )
+        page_number = request.GET.get(PAGE_VAR, 1)
+        page_obj = paginator.get_page(page_number)
+        page_range = paginator.get_elided_page_range(page_obj.number)
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": _("Audit log: %s") % obj,
+            "module_name": str(capfirst(self.model._meta.verbose_name_plural)),
+            "page_range": page_range,
+            "page_var": PAGE_VAR,
+            "pagination_required": paginator.count > self.auditlog_history_per_page,
+            "object": obj,
+            "opts": self.model._meta,
+            "log_entries": page_obj,
+            **(extra_context or {}),
+        }
+
+        return TemplateResponse(request, self.auditlog_history_template, context)
+
+    @admin.display(description=_("Audit log"))
+    def auditlog_link(self, obj):
+        opts = self.model._meta
+        url = reverse(
+            f"admin:{opts.app_label}_{opts.model_name}_auditlog",
+            args=[obj.pk],
+        )
+
+        return format_html('<a href="{}">{}</a>', url, _("View"))

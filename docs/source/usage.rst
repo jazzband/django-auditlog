@@ -551,3 +551,26 @@ Django Admin integration
 
 When ``auditlog`` is added to your ``INSTALLED_APPS`` setting a customized admin class is active providing an enhanced
 Django Admin interface for log entries.
+
+Audit log history view
+----------------------
+
+.. versionadded:: 3.2.2
+
+Use ``AuditlogHistoryAdminMixin`` to add a "View" link in the admin changelist for accessing each object's audit history::
+
+    from auditlog.mixins import AuditlogHistoryAdminMixin
+
+    @admin.register(MyModel)
+    class MyModelAdmin(AuditlogHistoryAdminMixin, admin.ModelAdmin):
+        show_auditlog_history_link = True
+
+The history page displays paginated log entries with user, timestamp, action, and field changes. Override
+``auditlog_history_template`` to customize the page layout.
+
+The mixin provides the following configuration options:
+
+- ``show_auditlog_history_link``: Set to ``True`` to display the "View" link in the admin changelist
+- ``auditlog_history_template``: Template to use for rendering the history page (default: ``auditlog/object_history.html``)
+- ``auditlog_history_per_page``: Number of log entries to display per page (default: 10)
+

@@ -1,0 +1,18 @@
+{% load i18n auditlog_tags %}
+
+<div class="auditlog-entry">
+  <div class="entry-header">
+    <div class="entry-meta">
+      <span class="entry-timestamp">{{ entry.timestamp|date:"DATETIME_FORMAT" }}</span>
+      <span class="entry-user">{{ entry.actor|default:'system' }}</span>
+      <span class="entry-action">{{ entry.get_action_display }}</span>
+    </div>
+  </div>
+  <div class="entry-content">
+    {% if entry.action == entry.Action.DELETE or entry.action == entry.Action.ACCESS %}
+      <span class="no-changes">{% trans 'No field changes' %}</span>
+    {% else %}
+      {{ entry|render_logentry_changes_html|safe }}
+    {% endif %}
+  </div>
+</div>
