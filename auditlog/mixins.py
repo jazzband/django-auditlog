@@ -138,9 +138,11 @@ class AuditlogHistoryAdminMixin:
         obj = self.get_object(request, unquote(object_id))
         if not self.has_view_permission(request, obj):
             raise PermissionDenied
-        ct = ContentType.objects.get_for_model(obj.__class__) 
+        ct = ContentType.objects.get_for_model(obj.__class__)
         log_entries = (
-            LogEntry.objects.filter(content_type=ct, object_pk=str(obj.pk))  # <--- Fixed here
+            LogEntry.objects.filter(
+                content_type=ct, object_pk=str(obj.pk)
+            )  # <--- Fixed here
             .select_related("actor")
             .order_by("-timestamp")
         )
