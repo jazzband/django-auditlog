@@ -149,29 +149,29 @@ class LogEntryManager(models.Manager):
         return self.filter(content_type=content_type, object_pk=smart_str(pk))
 
     def get_for_objects(self, queryset):
-       """
-       Get log entries for the objects in the specified queryset.
+        """
+        Get log entries for the objects in the specified queryset.
 
-       :param queryset: The queryset to get the log entries for.
-       :type queryset: QuerySet
-       :return: The LogEntry objects for the objects in the given queryset.
-       :rtype: QuerySet """
-       if not isinstance(queryset, QuerySet) or queryset.count() == 0:
-           return self.none()
+        :param queryset: The queryset to get the log entries for.
+        :type queryset: QuerySet
+        :return: The LogEntry objects for the objects in the given queryset.
+        :rtype: QuerySet"""
+        if not isinstance(queryset, QuerySet) or queryset.count() == 0:
+            return self.none()
 
-       content_type = ContentType.objects.get_for_model(queryset.model)
-       primary_keys = list(
-           queryset.values_list(queryset.model._meta.pk.name, flat=True)
-       )
+        content_type = ContentType.objects.get_for_model(queryset.model)
+        primary_keys = list(
+            queryset.values_list(queryset.model._meta.pk.name, flat=True)
+        )
 
-    # Always compare as strings for PostgreSQL compatibility
-       primary_keys = [smart_str(pk) for pk in primary_keys]
+        # Always compare as strings for PostgreSQL compatibility
+        primary_keys = [smart_str(pk) for pk in primary_keys]
 
-       return (
-           self.filter(content_type=content_type)
-           .filter(Q(object_pk__in=primary_keys))
-           .distinct()
-       )
+        return (
+            self.filter(content_type=content_type)
+            .filter(Q(object_pk__in=primary_keys))
+            .distinct()
+        )
 
     def get_for_model(self, model):
         """
