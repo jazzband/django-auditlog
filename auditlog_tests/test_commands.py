@@ -6,8 +6,12 @@ from unittest import mock
 
 import freezegun
 from django.core.management import call_command
+from django.db import connection
 from django.test import TestCase, TransactionTestCase
+from django.test.utils import skipIf
 from test_app.models import SimpleModel
+
+from auditlog.management.commands.auditlogflush import TruncateQuery
 
 
 class AuditlogFlushTest(TestCase):
@@ -139,6 +143,10 @@ class AuditlogFlushWithTruncateTest(TransactionTestCase):
         )
         self.assertEqual(err, "", msg="No stderr")
 
+    @skipIf(
+        not TruncateQuery.support_truncate_statement(connection.vendor),
+        "Database does not support TRUNCATE",
+    )
     def test_flush_with_truncate_and_yes(self):
         obj = self.make_object()
         self.assertEqual(obj.history.count(), 1, msg="There is one log entry.")
@@ -152,6 +160,10 @@ class AuditlogFlushWithTruncateTest(TransactionTestCase):
         )
         self.assertEqual(err, "", msg="No stderr")
 
+    @skipIf(
+        not TruncateQuery.support_truncate_statement(connection.vendor),
+        "Database does not support TRUNCATE",
+    )
     def test_flush_with_truncate_with_input_yes(self):
         obj = self.make_object()
         self.assertEqual(obj.history.count(), 1, msg="There is one log entry.")

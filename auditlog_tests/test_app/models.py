@@ -1,6 +1,6 @@
 import uuid
 
-from django.contrib.postgres.fields import ArrayField
+from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
@@ -311,26 +311,36 @@ class CharfieldTextfieldModel(models.Model):
     history = AuditlogHistoryField(delete_related=True)
 
 
-class PostgresArrayFieldModel(models.Model):
-    """
-    Test auditlog with Postgres's ArrayField
-    """
+# Only define PostgreSQL-specific models when ArrayField is available
+if settings.TEST_DB_BACKEND == "postgresql":
+    from django.contrib.postgres.fields import ArrayField
 
-    RED = "r"
-    YELLOW = "y"
-    GREEN = "g"
+    class PostgresArrayFieldModel(models.Model):
+        """
+        Test auditlog with Postgres's ArrayField
+        """
 
-    STATUS_CHOICES = (
-        (RED, "Red"),
-        (YELLOW, "Yellow"),
-        (GREEN, "Green"),
-    )
+        RED = "r"
+        YELLOW = "y"
+        GREEN = "g"
 
-    arrayfield = ArrayField(
-        models.CharField(max_length=1, choices=STATUS_CHOICES), size=3
-    )
+        STATUS_CHOICES = (
+            (RED, "Red"),
+            (YELLOW, "Yellow"),
+            (GREEN, "Green"),
+        )
 
-    history = AuditlogHistoryField(delete_related=True)
+        arrayfield = ArrayField(
+            models.CharField(max_length=1, choices=STATUS_CHOICES), size=3
+        )
+
+        history = AuditlogHistoryField(delete_related=True)
+
+else:
+
+    class PostgresArrayFieldModel(models.Model):
+        class Meta:
+            managed = False
 
 
 class NoDeleteHistoryModel(models.Model):
@@ -448,7 +458,8 @@ auditlog.register(AdditionalDataIncludedModel)
 auditlog.register(DateTimeFieldModel)
 auditlog.register(ChoicesFieldModel)
 auditlog.register(CharfieldTextfieldModel)
-auditlog.register(PostgresArrayFieldModel)
+if settings.TEST_DB_BACKEND == "postgresql":
+    auditlog.register(PostgresArrayFieldModel)
 auditlog.register(NoDeleteHistoryModel)
 auditlog.register(JSONModel)
 auditlog.register(NullableJSONModel)
