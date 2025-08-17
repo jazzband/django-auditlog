@@ -24,6 +24,11 @@ jobs:
           TEST_DB_BACKEND: sqlite3
         run: tox -v
 
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          name: Python ${{ matrix.python-version }}
+
   test-postgres:
     name: PostgreSQL • Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
@@ -64,6 +69,11 @@ jobs:
           TEST_DB_PORT: ${{ job.services.postgres.ports[5432] }}
 
         run: tox -v
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          name: Python ${{ matrix.python-version }}
 
   test-mysql:
     name: MySQL • Python ${{ matrix.python-version }}
@@ -110,3 +120,8 @@ jobs:
           TEST_DB_NAME: auditlog
           TEST_DB_PORT: ${{ job.services.mysql.ports[3306] }}
         run: tox -v
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          name: Python ${{ matrix.python-version }}

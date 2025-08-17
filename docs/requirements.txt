@@ -3,3 +3,4 @@ django>=4.2,<4.3
 sphinx
 sphinx_rtd_theme
 psycopg2-binary
+mysqlclient==2.2.5
