@@ -27,7 +27,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         with:
-          name: Python ${{ matrix.python-version }}
+          name: SQLite • Python ${{ matrix.python-version }}
 
   test-postgres:
     name: PostgreSQL • Python ${{ matrix.python-version }}
@@ -73,7 +73,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         with:
-          name: Python ${{ matrix.python-version }}
+          name: PostgreSQL • Python ${{ matrix.python-version }}
 
   test-mysql:
     name: MySQL • Python ${{ matrix.python-version }}
@@ -124,4 +124,4 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         with:
-          name: Python ${{ matrix.python-version }}
+          name: MySQL • Python ${{ matrix.python-version }}
