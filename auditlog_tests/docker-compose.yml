@@ -1,0 +1,47 @@
+services:
+  postgres:
+    container_name: auditlog_postgres
+    image: postgres:15
+    restart: "no"
+    environment:
+      POSTGRES_DB: auditlog
+      POSTGRES_USER: ${TEST_DB_USER}
+      POSTGRES_PASSWORD: ${TEST_DB_PASS}
+    ports:
+      - "${TEST_DB_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U ${TEST_DB_USER} -d auditlog
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mysql:
+    container_name: auditlog_mysql
+    platform: linux/x86_64
+    image: mysql:8.0
+    restart: "no"
+    environment:
+      MYSQL_DATABASE: auditlog
+      MYSQL_USER: ${TEST_DB_USER}
+      MYSQL_PASSWORD: ${TEST_DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${TEST_DB_PASS}
+    ports:
+      - "${TEST_DB_PORT:-3306}:3306"
+    expose:
+      - '${TEST_DB_PORT:-3306}'
+    volumes:
+      - mysql-data:/var/lib/mysql 
+      - ./docker/db/init-mysql.sh:/docker-entrypoint-initdb.d/init.sh
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u ${TEST_DB_USER} --password=${TEST_DB_PASS}
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  postgres-data:
+    driver: local
+  mysql-data:
+    driver: local

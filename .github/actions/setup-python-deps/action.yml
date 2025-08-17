@@ -1,0 +1,30 @@
+name: 'Setup Python and Dependencies'
+description: 'Common setup steps for Python and pip dependencies'
+
+inputs:
+  python-version:
+    description: 'Python version to setup'
+    required: true
+  cache-key-prefix:
+    description: 'Prefix for pip cache key'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python ${{ inputs.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ inputs.cache-key-prefix }}-${{ inputs.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+
+    - name: Install Python dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade tox tox-gh-actions

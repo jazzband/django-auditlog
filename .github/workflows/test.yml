@@ -3,67 +3,125 @@ name: Test
 on: [push, pull_request]
 
 jobs:
-  build:
+  test-sqlite:
+    name: SQLite • Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 5
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-key-prefix: sqlite3
+
+      - name: Run tests
+        env:
+          TEST_DB_BACKEND: sqlite3
+        run: tox -v
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          name: SQLite • Python ${{ matrix.python-version }}
+
+  test-postgres:
+    name: PostgreSQL • Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
     services:
       postgres:
-        image: postgres:14
+        image: postgres:15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
+          POSTGRES_DB: auditlog
         ports:
-        - 5432/tcp
+          - 5432/tcp
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
-
+          --health-retries 10
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-key-prefix: postgresql
 
-    - name: Get pip cache dir
-      id: pip-cache
-      run: |
-        echo "dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+      - name: Run tests
+        env:
+          TEST_DB_BACKEND: postgresql
+          TEST_DB_HOST: localhost
+          TEST_DB_USER: postgres
+          TEST_DB_PASS: postgres
+          TEST_DB_NAME: auditlog
+          TEST_DB_PORT: ${{ job.services.postgres.ports[5432] }}
 
-    - name: Cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key:
-          -${{ matrix.python-version }}-v1-${{ hashFiles('**/setup.py') }}
-        restore-keys: |
-          -${{ matrix.python-version }}-v1-
+        run: tox -v
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --upgrade tox tox-gh-actions
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          name: PostgreSQL • Python ${{ matrix.python-version }}
 
-    - name: Tox tests
-      run: |
-        tox -v
-      env:
-        TEST_DB_HOST: localhost
-        TEST_DB_USER: postgres
-        TEST_DB_PASS: postgres
-        TEST_DB_NAME: postgres
-        TEST_DB_PORT: ${{ job.services.postgres.ports[5432] }}
+  test-mysql:
+    name: MySQL • Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: auditlog
+          MYSQL_USER: mysql
+          MYSQL_PASSWORD: mysql
+          MYSQL_ROOT_PASSWORD: mysql
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="sh -c 'export MYSQL_PWD=\"$MYSQL_ROOT_PASSWORD\"; mysqladmin ping -h 127.0.0.1 --protocol=TCP -uroot --silent || exit 1'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v5
-      with:
-        name: Python ${{ matrix.python-version }}
+      - name: Install MySQL client libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmysqlclient-dev pkg-config mysql-client
+
+      - name: Setup Python and dependencies
+        uses: ./.github/actions/setup-python-deps
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache-key-prefix: mysql
+
+      - name: Run tests
+        env:
+          TEST_DB_BACKEND: mysql
+          TEST_DB_HOST: 127.0.0.1
+          TEST_DB_USER: root
+          TEST_DB_PASS: mysql
+          TEST_DB_NAME: auditlog
+          TEST_DB_PORT: ${{ job.services.mysql.ports[3306] }}
+        run: tox -v
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          name: MySQL • Python ${{ matrix.python-version }}

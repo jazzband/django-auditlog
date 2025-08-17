@@ -83,7 +83,7 @@ class Command(BaseCommand):
 
 
 class TruncateQuery:
-    SUPPORTED_VENDORS = ("postgresql", "mysql", "sqlite", "oracle", "microsoft")
+    SUPPORTED_VENDORS = ("postgresql", "mysql", "oracle", "microsoft")
 
     @classmethod
     def support_truncate_statement(cls, database_vendor) -> bool:

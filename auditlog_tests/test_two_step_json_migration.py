@@ -2,8 +2,10 @@ import json
 from io import StringIO
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.management import CommandError, call_command
 from django.test import TestCase, override_settings
+from django.test.utils import skipIf
 from test_app.models import SimpleModel
 
 from auditlog.models import LogEntry
@@ -124,6 +126,7 @@ class AuditlogMigrateJsonTest(TestCase):
         # Assert
         self.assertEqual(call_count, 2)
 
+    @skipIf(settings.TEST_DB_BACKEND != "postgresql", "PostgreSQL-specific test")
     def test_native_postgres(self):
         # Arrange
         log_entry = self.make_logentry()
@@ -136,6 +139,7 @@ class AuditlogMigrateJsonTest(TestCase):
         self.assertEqual(errbuf, "")
         self.assertIsNotNone(log_entry.changes)
 
+    @skipIf(settings.TEST_DB_BACKEND != "postgresql", "PostgreSQL-specific test")
     def test_native_postgres_changes_not_overwritten(self):
         # Arrange
         log_entry = self.make_logentry()
