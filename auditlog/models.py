@@ -240,7 +240,7 @@ class LogEntryManager(models.Manager):
                 "fields", self._get_applicable_model_fields(instance, model_fields)
             )
 
-    #  safeguard: if fields explicitly set → only use them
+        #  safeguard: if fields explicitly set → only use them
         if "fields" in kwargs:
             allowed_fields = set(kwargs["fields"])
         else:
@@ -248,9 +248,11 @@ class LogEntryManager(models.Manager):
 
         instance_copy = self._get_copy_with_python_typed_fields(instance)
 
-    #  drop any deferred field not in allowed_fields
+        #  drop any deferred field not in allowed_fields
         for f in instance_copy._meta.fields:
-            if f.name not in allowed_fields and f.name in getattr(instance_copy, "deferred_fields", []):
+            if f.name not in allowed_fields and f.name in getattr(
+                instance_copy, "deferred_fields", []
+            ):
                 setattr(instance_copy, f.name, None)
 
         data = dict(
@@ -262,7 +264,6 @@ class LogEntryManager(models.Manager):
             data = self._mask_serialized_fields(data, mask_fields, model_fields)
 
         return data
-
 
     def _get_copy_with_python_typed_fields(self, instance):
         """

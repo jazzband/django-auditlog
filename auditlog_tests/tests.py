@@ -21,11 +21,11 @@ from django.db.models import JSONField, Value
 from django.db.models.functions import Now
 from django.db.models.signals import pre_save
 from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
+from django.test.utils import isolate_apps
 from django.urls import resolve, reverse
 from django.utils import dateformat, formats
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
-from django.test.utils import isolate_apps
 from django.utils.translation import gettext_lazy as _
 from test_app.fixtures.custom_get_cid import get_cid as custom_get_cid
 from test_app.models import (
@@ -132,8 +132,9 @@ class SimpleModelTest(TestCase):
         class Book(models.Model):
             title = models.CharField(max_length=100)
             description = models.TextField()
+
             class Meta:
-               app_label = "auditlog_tests" 
+                app_label = "auditlog_tests"
 
         auditlog.register(Book, serialize_data=True)
 
@@ -142,8 +143,6 @@ class SimpleModelTest(TestCase):
         b.delete()
 
         assert LogEntry.objects.filter(object_pk=b.pk).exists()
-    
-    
 
     def test_update_specific_field_supplied_via_save_method(self):
         obj = self.obj
