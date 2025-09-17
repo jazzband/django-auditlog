@@ -2,8 +2,11 @@
 
 ## Next Release
 
+## 3.3.0 (2025-09-18)
+
 #### Improvements
 
+- CI: Extend CI and local test coverage to MySQL and SQLite ([#744](https://github.com/jazzband/django-auditlog/pull/744))
 - feat: Add audit log history view to Django Admin. ([#743](https://github.com/jazzband/django-auditlog/pull/743))
 
 ## 3.2.1 (2025-07-03)
