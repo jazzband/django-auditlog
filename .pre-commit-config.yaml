@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 25.9.0
     hooks:
       - id: black
         language_version: python3.9
@@ -23,7 +23,7 @@ repos:
     -   id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: 1.27.0
+    rev: 1.28.0
     hooks:
     - id: django-upgrade
       args: [--target-version, "4.2"]
