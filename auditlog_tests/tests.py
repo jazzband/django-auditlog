@@ -4,7 +4,7 @@ import json
 import random
 import warnings
 from datetime import timezone
-from unittest import mock, skipIf
+from unittest import mock
 from unittest.mock import patch
 
 import freezegun
@@ -1214,10 +1214,6 @@ class DateTimeFieldModelTest(TestCase):
         )
         dtm.save()
 
-    @skipIf(
-        DJANGO_VERSION >= (6, 0, 0),
-        "Django 6.0+ evaluates Now() during save (ticket #27222)",
-    )
     def test_datetime_field_functions_now(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
@@ -1234,19 +1230,30 @@ class DateTimeFieldModelTest(TestCase):
         dtm.naive_dt = Now()
         self.assertEqual(dtm.naive_dt, Now())
         dtm.save()
-        self.assertEqual(dtm.naive_dt, Now())
 
-    @skipIf(
-        DJANGO_VERSION >= (6, 0, 0),
-        "Django 6.0+ evaluates Value() during save (ticket #27222)",
-    )
+        # Django 6.0+ evaluates expressions during save (django ticket #27222)
+        if DJANGO_VERSION >= (6, 0, 0):
+            with self.subTest("After save Django 6.0+"):
+                self.assertIsInstance(dtm.naive_dt, datetime.datetime)
+        else:
+            with self.subTest("After save Django < 6.0"):
+                self.assertEqual(dtm.naive_dt, Now())
+
     def test_json_field_value_none(self):
         json_model = NullableJSONModel(json=Value(None, JSONField()))
         json_model.save()
         self.assertEqual(json_model.history.count(), 1)
-        self.assertEqual(
-            json_model.history.latest().changes_dict["json"][1], "Value(None)"
-        )
+        changes_dict = json_model.history.latest().changes_dict
+
+        # Django 6.0+ evaluates expressions during save (django ticket #27222)
+        if DJANGO_VERSION >= (6, 0, 0):
+            with self.subTest("Django 6.0+"):
+                # Value(None) gets evaluated to "null"
+                self.assertEqual(changes_dict["json"][1], "null")
+        else:
+            with self.subTest("Django < 6.0"):
+                # Value(None) is preserved as string representation
+                self.assertEqual(changes_dict["json"][1], "Value(None)")
 
 
 class UnregisterTest(TestCase):
