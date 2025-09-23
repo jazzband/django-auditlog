@@ -4,28 +4,11 @@ import json
 import random
 import warnings
 from datetime import timezone
-from unittest import mock
+from unittest import mock, skipIf
 from unittest.mock import patch
 
 import freezegun
 from dateutil.tz import gettz
-from django.apps import apps
-from django.conf import settings
-from django.contrib.admin.sites import AdminSite
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser, User
-from django.contrib.contenttypes.models import ContentType
-from django.core import management
-from django.db import models
-from django.db.models import JSONField, Value
-from django.db.models.functions import Now
-from django.db.models.signals import pre_save
-from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
-from django.urls import resolve, reverse
-from django.utils import dateformat, formats
-from django.utils import timezone as django_timezone
-from django.utils.encoding import smart_str
-from django.utils.translation import gettext_lazy as _
 from test_app.fixtures.custom_get_cid import get_cid as custom_get_cid
 from test_app.models import (
     AdditionalDataIncludedModel,
@@ -67,6 +50,24 @@ from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
 from auditlog.signals import post_log, pre_log
+from django import VERSION as DJANGO_VERSION
+from django.apps import apps
+from django.conf import settings
+from django.contrib.admin.sites import AdminSite
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser, User
+from django.contrib.contenttypes.models import ContentType
+from django.core import management
+from django.db import models
+from django.db.models import JSONField, Value
+from django.db.models.functions import Now
+from django.db.models.signals import pre_save
+from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
+from django.urls import resolve, reverse
+from django.utils import dateformat, formats
+from django.utils import timezone as django_timezone
+from django.utils.encoding import smart_str
+from django.utils.translation import gettext_lazy as _
 
 
 class SimpleModelTest(TestCase):
@@ -1213,6 +1214,10 @@ class DateTimeFieldModelTest(TestCase):
         )
         dtm.save()
 
+    @skipIf(
+        DJANGO_VERSION >= (6, 0, 0),
+        "Django 6.0+ evaluates Now() during save (ticket #27222)",
+    )
     def test_datetime_field_functions_now(self):
         timestamp = datetime.datetime(2017, 1, 10, 15, 0, tzinfo=timezone.utc)
         date = datetime.date(2017, 1, 10)
@@ -1231,6 +1236,10 @@ class DateTimeFieldModelTest(TestCase):
         dtm.save()
         self.assertEqual(dtm.naive_dt, Now())
 
+    @skipIf(
+        DJANGO_VERSION >= (6, 0, 0),
+        "Django 6.0+ evaluates Value() during save (ticket #27222)",
+    )
     def test_json_field_value_none(self):
         json_model = NullableJSONModel(json=Value(None, JSONField()))
         json_model.save()
