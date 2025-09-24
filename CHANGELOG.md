@@ -5,6 +5,7 @@
 #### Improvements
 
 - feat: Add audit log history view to Django Admin. ([#743](https://github.com/jazzband/django-auditlog/pull/743))
+- Fix Expression test compatibility for Django 6.0+ ([#759](https://github.com/jazzband/django-auditlog/pull/759))
 
 ## 3.2.1 (2025-07-03)
 
