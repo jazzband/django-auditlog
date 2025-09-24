@@ -253,7 +253,7 @@ It will be considered when ``AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
 
 .. versionadded:: 3.0.0
 
-**AUDITLOG_EXCLUDE_TRACKING_FIELDS**
+**AUDITLOG_DISABLE_REMOTE_ADDR**
 
 When using "AuditlogMiddleware",
 the IP address is logged by default, you can use this setting
