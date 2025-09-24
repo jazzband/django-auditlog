@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import freezegun
 from dateutil.tz import gettz
+from django import VERSION as DJANGO_VERSION
 from django.apps import apps
 from django.conf import settings
 from django.contrib.admin.sites import AdminSite
@@ -1091,7 +1092,14 @@ class DateTimeFieldModelTest(TestCase):
         dtm.naive_dt = Now()
         self.assertEqual(dtm.naive_dt, Now())
         dtm.save()
-        self.assertEqual(dtm.naive_dt, Now())
+
+        # Django 6.0+ evaluates expressions during save (django ticket #27222)
+        if DJANGO_VERSION >= (6, 0, 0):
+            with self.subTest("After save Django 6.0+"):
+                self.assertIsInstance(dtm.naive_dt, datetime.datetime)
+        else:
+            with self.subTest("After save Django < 6.0"):
+                self.assertEqual(dtm.naive_dt, Now())
 
 
 class UnregisterTest(TestCase):
