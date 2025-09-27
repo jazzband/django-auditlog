@@ -6,6 +6,7 @@
 
 - feat: Add audit log history view to Django Admin. ([#743](https://github.com/jazzband/django-auditlog/pull/743))
 - Fix Expression test compatibility for Django 6.0+ ([#759](https://github.com/jazzband/django-auditlog/pull/759))
+- Add I18N Support ([#762](https://github.com/jazzband/django-auditlog/pull/762))
 
 ## 3.2.1 (2025-07-03)
 
