@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-auditlog\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-28 03:14+0900\n"
+"POT-Creation-Date: 2025-09-28 03:43+0900\n"
 "PO-Revision-Date: 2025-09-28 03:16+0900\n"
 "Last-Translator: Youngkwang Yang <me@youngkwang.dev>\n"
 "Language-Team: Japanese <ja@li.org>\n"
@@ -145,6 +145,34 @@ msgstr "{repr:s}が削除されました"
 #: models.py
 msgid "Logged {repr:s}"
 msgstr "{repr:s}がログに記録されました"
+
+#: render.py
+msgid "Field"
+msgstr "フィールド"
+
+#: render.py
+msgid "From"
+msgstr "変更前の値"
+
+#: render.py
+msgid "To"
+msgstr "変更後の値"
+
+#: render.py
+msgid "Relationship"
+msgstr "関係"
+
+#: render.py
+msgid "Action"
+msgstr "アクション"
+
+#: render.py
+msgid "Objects"
+msgstr "オブジェクト一覧"
+
+#: templates/auditlog/entry_detail.html
+msgid "system"
+msgstr "システム"
 
 #: templates/auditlog/entry_detail.html
 msgid "No field changes"

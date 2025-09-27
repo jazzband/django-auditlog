@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-auditlog\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-28 02:49+0900\n"
+"POT-Creation-Date: 2025-09-28 03:43+0900\n"
 "PO-Revision-Date: 2025-09-28 02:55+0900\n"
 "Last-Translator: Youngkwang Yang <me@youngkwang.dev>\n"
 "Language-Team: Korean <ko@li.org>\n"
@@ -120,7 +120,7 @@ msgstr "추가 데이터"
 
 #: models.py
 msgid "actor email"
-msgstr "실행자 이메일"
+msgstr "작업자 이메일"
 
 #: models.py
 msgid "log entry"
@@ -145,6 +145,34 @@ msgstr "{repr:s}이(가) 삭제됨"
 #: models.py
 msgid "Logged {repr:s}"
 msgstr "{repr:s}이(가) 기록됨"
+
+#: render.py
+msgid "Field"
+msgstr "필드"
+
+#: render.py
+msgid "From"
+msgstr "변경 전"
+
+#: render.py
+msgid "To"
+msgstr "변경 후"
+
+#: render.py
+msgid "Relationship"
+msgstr "관계"
+
+#: render.py
+msgid "Action"
+msgstr "작업"
+
+#: render.py
+msgid "Objects"
+msgstr "객체"
+
+#: templates/auditlog/entry_detail.html
+msgid "system"
+msgstr "시스템"
 
 #: templates/auditlog/entry_detail.html
 msgid "No field changes"
