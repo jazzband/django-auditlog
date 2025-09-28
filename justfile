@@ -24,6 +24,14 @@ compilemessages:
     django-admin compilemessages
     cd ..
 
+# Create initial locale structure for a new language
+create-locale LANG:
+    #!/usr/bin/env bash
+    mkdir -p auditlog/locale/{{LANG}}/LC_MESSAGES
+    cd auditlog
+    django-admin makemessages --add-location=file -l {{LANG}} --ignore=__pycache__ --ignore=migrations
+    cd ..
+
 # Full i18n workflow: extract strings, compile messages
 i18n:
     @just makemessages
