@@ -4,7 +4,7 @@
   <div class="entry-header">
     <div class="entry-meta">
       <span class="entry-timestamp">{{ entry.timestamp|date:"DATETIME_FORMAT" }}</span>
-      <span class="entry-user">{{ entry.actor|default:'system' }}</span>
+      <span class="entry-user">{% if entry.actor %}{{ entry.actor }}{% else %}{% trans 'system' %}{% endif %}</span>
       <span class="entry-action">{{ entry.get_action_display }}</span>
     </div>
   </div>

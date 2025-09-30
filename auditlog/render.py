@@ -2,6 +2,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.forms.utils import pretty_name
 from django.utils.html import format_html, format_html_join
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
 
 
 def render_logentry_changes_html(log_entry):
@@ -60,7 +61,7 @@ def get_field_verbose_name(log_entry, field_name):
 
 def _render_field_changes(log_entry, atom_changes):
     rows = []
-    rows.append(_format_header("#", "Field", "From", "To"))
+    rows.append(_format_header("#", _("Field"), _("From"), _("To")))
 
     for i, (field, change) in enumerate(sorted(atom_changes.items()), 1):
         field_name = get_field_verbose_name(log_entry, field)
@@ -72,7 +73,7 @@ def _render_field_changes(log_entry, atom_changes):
 
 def _render_m2m_changes(log_entry, m2m_changes):
     rows = []
-    rows.append(_format_header("#", "Relationship", "Action", "Objects"))
+    rows.append(_format_header("#", _("Relationship"), _("Action"), _("Objects")))
 
     for i, (field, change) in enumerate(sorted(m2m_changes.items()), 1):
         field_name = get_field_verbose_name(log_entry, field)

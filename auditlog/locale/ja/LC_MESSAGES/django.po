@@ -1,0 +1,192 @@
+# Django Auditlog Japanese Translation
+# Copyright (C) 2025 Django Auditlog Contributors
+# This file is distributed under the same license as the django-auditlog package.
+# Youngkwang Yang <me@youngkwang.dev>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: django-auditlog\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-28 03:43+0900\n"
+"PO-Revision-Date: 2025-09-28 03:16+0900\n"
+"Last-Translator: Youngkwang Yang <me@youngkwang.dev>\n"
+"Language-Team: Japanese <ja@li.org>\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: admin.py mixins.py
+msgid "Changes"
+msgstr "変更"
+
+#: apps.py mixins.py templates/auditlog/object_history.html
+msgid "Audit log"
+msgstr "監査ログ"
+
+#: filters.py
+msgid "Resource Type"
+msgstr "リソースタイプ"
+
+#: filters.py models.py
+msgid "Correlation ID"
+msgstr "Correlation ID"
+
+#: mixins.py
+msgid "Click to filter by records with this correlation id"
+msgstr "このCorrelation IDでレコードをフィルタするにはクリックしてください"
+
+#: mixins.py
+msgid "Created"
+msgstr "作成済み"
+
+#: mixins.py
+msgid "User"
+msgstr "ユーザー"
+
+#: mixins.py
+msgid "Resource"
+msgstr "リソース"
+
+#: mixins.py
+#, python-format
+msgid "Audit log: %s"
+msgstr "監査ログ：%s"
+
+#: mixins.py
+msgid "View"
+msgstr "表示"
+
+#: models.py
+msgid "create"
+msgstr "作成"
+
+#: models.py
+msgid "update"
+msgstr "更新"
+
+#: models.py
+msgid "delete"
+msgstr "削除"
+
+#: models.py
+msgid "access"
+msgstr "アクセス"
+
+#: models.py
+msgid "content type"
+msgstr "コンテンツタイプ"
+
+#: models.py
+msgid "object pk"
+msgstr "オブジェクトPK"
+
+#: models.py
+msgid "object id"
+msgstr "オブジェクトID"
+
+#: models.py
+msgid "object representation"
+msgstr "オブジェクト表現"
+
+#: models.py
+msgid "action"
+msgstr "アクション"
+
+#: models.py
+msgid "change message"
+msgstr "変更メッセージ"
+
+#: models.py
+msgid "actor"
+msgstr "アクター"
+
+#: models.py
+msgid "remote address"
+msgstr "リモートアドレス"
+
+#: models.py
+msgid "remote port"
+msgstr "リモートポート"
+
+#: models.py
+msgid "timestamp"
+msgstr "タイムスタンプ"
+
+#: models.py
+msgid "additional data"
+msgstr "追加データ"
+
+#: models.py
+msgid "actor email"
+msgstr "アクターメール"
+
+#: models.py
+msgid "log entry"
+msgstr "ログエントリ"
+
+#: models.py
+msgid "log entries"
+msgstr "ログエントリ"
+
+#: models.py
+msgid "Created {repr:s}"
+msgstr "{repr:s}が作成されました"
+
+#: models.py
+msgid "Updated {repr:s}"
+msgstr "{repr:s}が更新されました"
+
+#: models.py
+msgid "Deleted {repr:s}"
+msgstr "{repr:s}が削除されました"
+
+#: models.py
+msgid "Logged {repr:s}"
+msgstr "{repr:s}がログに記録されました"
+
+#: render.py
+msgid "Field"
+msgstr "フィールド"
+
+#: render.py
+msgid "From"
+msgstr "変更前の値"
+
+#: render.py
+msgid "To"
+msgstr "変更後の値"
+
+#: render.py
+msgid "Relationship"
+msgstr "関係"
+
+#: render.py
+msgid "Action"
+msgstr "アクション"
+
+#: render.py
+msgid "Objects"
+msgstr "オブジェクト一覧"
+
+#: templates/auditlog/entry_detail.html
+msgid "system"
+msgstr "システム"
+
+#: templates/auditlog/entry_detail.html
+msgid "No field changes"
+msgstr "フィールドの変更なし"
+
+#: templates/auditlog/object_history.html
+msgid "Home"
+msgstr "ホーム"
+
+#: templates/auditlog/object_history.html
+msgid "No log entries found."
+msgstr "ログエントリが見つかりません。"
+
+#: templates/auditlog/pagination.html
+msgid "entry"
+msgid_plural "entries"
+msgstr[0] "ログエントリ"
