@@ -1,5 +1,5 @@
 from django.test import TestCase, override_settings
-from test_app.models import JSONModel, RelatedModel, SimpleModel
+from test_app.models import JSONModel, NullableFieldModel, RelatedModel, SimpleModel
 
 from auditlog.models import LogEntry
 from auditlog.registry import AuditlogModelRegistry
@@ -147,3 +147,50 @@ class JSONForChangesTest(TestCase):
             all(v[1] is None for k, v in changes_dict.items()),
             'all values in the changes dict should None, not "None"',
         )
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=False)
+    def test_nullable_field_with_none_not_logged(self):
+        self.test_auditlog.register_from_settings()
+
+        obj = NullableFieldModel.objects.create(time=None, optional_text=None)
+        changes_dict = obj.history.latest().changes_dict
+
+        # None → None should NOT be logged as a change
+        self.assertNotIn("time", changes_dict)
+        self.assertNotIn("optional_text", changes_dict)
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=False)
+    def test_nullable_field_with_value_logged(self):
+        self.test_auditlog.register_from_settings()
+
+        obj = NullableFieldModel.objects.create(optional_text="something")
+        changes_dict = obj.history.latest().changes_dict
+
+        # None → "something" should be logged
+        self.assertIn("optional_text", changes_dict)
+        self.assertEqual(changes_dict["optional_text"], ["None", "something"])
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=True)
+    def test_nullable_field_with_none_not_logged_json_mode(self):
+        self.test_auditlog.register_from_settings()
+
+        obj = NullableFieldModel.objects.create(time=None, optional_text=None)
+        changes_dict = obj.history.latest().changes_dict
+
+        # None → None should NOT be logged
+        self.assertNotIn("time", changes_dict)
+        self.assertNotIn("optional_text", changes_dict)
+
+    @override_settings(AUDITLOG_STORE_JSON_CHANGES=False)
+    def test_nullable_field_update_none_to_value(self):
+        self.test_auditlog.register_from_settings()
+
+        obj = NullableFieldModel.objects.create(optional_text=None)
+        obj.optional_text = "updated"
+        obj.save()
+
+        changes_dict = obj.history.latest().changes_dict
+
+        # None → "updated" should be logged
+        self.assertIn("optional_text", changes_dict)
+        self.assertEqual(changes_dict["optional_text"], ["None", "updated"])
