@@ -442,6 +442,13 @@ class CustomMaskModel(models.Model):
     history = AuditlogHistoryField(delete_related=True)
 
 
+class NullableFieldModel(models.Model):
+    time = models.TimeField(null=True, blank=True)
+    optional_text = models.CharField(max_length=100, null=True, blank=True)
+
+    history = AuditlogHistoryField(delete_related=True)
+
+
 auditlog.register(AltPrimaryKeyModel)
 auditlog.register(UUIDPrimaryKeyModel)
 auditlog.register(ModelPrimaryKeyModel)
@@ -485,3 +492,4 @@ auditlog.register(
     mask_fields=["credit_card"],
     mask_callable="auditlog_tests.test_app.mask.custom_mask_str",
 )
+auditlog.register(NullableFieldModel)

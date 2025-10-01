@@ -73,15 +73,15 @@ def get_field_value(obj, field, use_json_for_changes=False):
         try:
             model_field = obj._meta.get_field(field.name)
             default = model_field.default
-            if default is NOT_PROVIDED:
-                return None
-
-            if callable(default):
-                return default()
-
-            return default
         except AttributeError:
-            return None
+            default = NOT_PROVIDED
+
+        if default is NOT_PROVIDED:
+            default = None
+        elif callable(default):
+            default = default()
+
+        return smart_str(default) if not use_json_for_changes else default
 
     try:
         if isinstance(field, DateTimeField):
