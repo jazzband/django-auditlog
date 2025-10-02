@@ -2,6 +2,13 @@
 
 ## Next Release
 
+## (2025-08-14)
+
+### Fixes
+
+- fix: Ensure `object_pk` lookup works for non-string primary keys by casting PK to    string in `get_for_object()` and related queries.
+- fix: Updated tests to correctly match log entries for integer, UUID, or string  primary keys.  ([#746](https://github.com/jazzband/django-auditlog/pull/746))
+
 #### Improvements
 
 - feat: Add audit log history view to Django Admin. ([#743](https://github.com/jazzband/django-auditlog/pull/743))
