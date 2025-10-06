@@ -1,7 +1,7 @@
 ---
 repos:
-  - repo: https://github.com/psf/black
-    rev: 25.1.0
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.9.0
     hooks:
       - id: black
         language_version: python3.9
@@ -14,7 +14,7 @@ repos:
       - id: flake8
         args: ["--max-line-length", "110"]
   - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
+    rev: 6.1.0
     hooks:
       - id: isort
   - repo: https://github.com/asottile/pyupgrade
@@ -23,7 +23,7 @@ repos:
     -   id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: 1.27.0
+    rev: 1.29.0
     hooks:
     - id: django-upgrade
       args: [--target-version, "4.2"]
