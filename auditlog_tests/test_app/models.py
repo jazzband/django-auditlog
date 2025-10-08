@@ -430,6 +430,40 @@ class SwappedManagerModel(models.Model):
 
     objects = SecretManager()
 
+    def __str__(self):
+        return str(self.name)
+
+
+@auditlog.register()
+class SecretRelatedModel(RelatedModelParent):
+    """
+    A RelatedModel, but with a foreign key to an object that could be secret.
+    """
+
+    related = models.ForeignKey(
+        "SwappedManagerModel", related_name="related_models", on_delete=models.CASCADE
+    )
+    one_to_one = models.OneToOneField(
+        to="SwappedManagerModel",
+        on_delete=models.CASCADE,
+        related_name="reverse_one_to_one",
+    )
+
+    history = AuditlogHistoryField(delete_related=True)
+
+    def __str__(self):
+        return f"SecretRelatedModel #{self.pk} -> {self.related.id}"
+
+
+class SecretM2MModel(models.Model):
+    m2m_related = models.ManyToManyField(
+        "SwappedManagerModel", related_name="m2m_related"
+    )
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return str(self.name)
+
 
 class AutoManyRelatedModel(models.Model):
     related = models.ManyToManyField(SimpleModel)
@@ -459,6 +493,8 @@ auditlog.register(ManyRelatedModel.recursive.through)
 m2m_only_auditlog.register(ManyRelatedModel, m2m_fields={"related"})
 m2m_only_auditlog.register(ModelForReusableThroughModel, m2m_fields={"related"})
 m2m_only_auditlog.register(OtherModelForReusableThroughModel, m2m_fields={"related"})
+m2m_only_auditlog.register(SecretM2MModel, m2m_fields={"m2m_related"})
+m2m_only_auditlog.register(SwappedManagerModel, m2m_fields={"m2m_related"})
 auditlog.register(SimpleExcludeModel, exclude_fields=["text"])
 auditlog.register(SimpleMappingModel, mapping_fields={"sku": "Product No."})
 auditlog.register(AdditionalDataIncludedModel)
