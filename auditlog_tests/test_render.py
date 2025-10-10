@@ -2,7 +2,7 @@ from django.test import TestCase
 from test_app.models import SimpleModel
 
 from auditlog.models import LogEntry
-from auditlog.render import render_logentry_changes_html
+from auditlog.templatetags.auditlog_tags import render_logentry_changes_html
 
 
 class RenderChangesTest(TestCase):
