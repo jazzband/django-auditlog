@@ -8,7 +8,9 @@ from django.test import TestCase, override_settings
 from django.test.utils import skipIf
 from test_app.models import SimpleModel
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
+
+LogEntry = get_logentry_model()
 
 
 class TwoStepMigrationTest(TestCase):
@@ -119,7 +121,10 @@ class AuditlogMigrateJsonTest(TestCase):
         self.make_logentry()
 
         # Act
-        with patch("auditlog.models.LogEntry.objects.bulk_update") as bulk_update:
+        LogEntry = get_logentry_model()
+        path = f"{LogEntry.__module__}.{LogEntry.__name__}.objects.bulk_update"
+
+        with patch(path) as bulk_update:
             outbuf, errbuf = self.call_command("-b=1")
             call_count = bulk_update.call_count
 

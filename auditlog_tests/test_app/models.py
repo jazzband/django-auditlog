@@ -4,10 +4,14 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
-from auditlog.models import AuditlogHistoryField
+from auditlog.models import AbstractLogEntry, AuditlogHistoryField
 from auditlog.registry import AuditlogModelRegistry, auditlog
 
 m2m_only_auditlog = AuditlogModelRegistry(create=False, update=False, delete=False)
+
+
+class CustomLogEntryModel(AbstractLogEntry):
+    role = models.CharField(max_length=100, null=True, blank=True)
 
 
 @auditlog.register()

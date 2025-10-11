@@ -1,8 +1,10 @@
 from django.test import TestCase, override_settings
 from test_app.models import JSONModel, NullableFieldModel, RelatedModel, SimpleModel
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
 from auditlog.registry import AuditlogModelRegistry
+
+LogEntry = get_logentry_model()
 
 
 class JSONForChangesTest(TestCase):

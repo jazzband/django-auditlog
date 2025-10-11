@@ -100,3 +100,5 @@ ROOT_URLCONF = "test_app.urls"
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+AUDITLOG_LOGENTRY_MODEL = os.environ.get("AUDITLOG_LOGENTRY_MODEL", "auditlog.LogEntry")
