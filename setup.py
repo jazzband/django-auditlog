@@ -10,11 +10,13 @@ setup(
     name="django-auditlog",
     use_scm_version={"version_scheme": "post-release"},
     setup_requires=["setuptools_scm"],
+    include_package_data=True,
     packages=[
         "auditlog",
         "auditlog.migrations",
         "auditlog.management",
         "auditlog.management.commands",
+        "auditlog.templatetags",
     ],
     url="https://github.com/jazzband/django-auditlog",
     project_urls={
