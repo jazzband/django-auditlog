@@ -17,6 +17,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.core import management
+from django.core.exceptions import ImproperlyConfigured
+from django.core.management import call_command
 from django.db import models
 from django.db.models import JSONField, Value
 from django.db.models.functions import Now
@@ -60,14 +62,17 @@ from test_app.models import (
     UUIDPrimaryKeyModel,
 )
 
+from auditlog import get_logentry_model
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
-from auditlog.context import disable_auditlog, set_actor
+from auditlog.context import disable_auditlog, set_actor, set_extra_data
 from auditlog.diff import mask_str, model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
-from auditlog.models import DEFAULT_OBJECT_REPR, LogEntry
+from auditlog.models import DEFAULT_OBJECT_REPR
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
 from auditlog.signals import post_log, pre_log
+
+LogEntry = get_logentry_model()
 
 
 class SimpleModelTest(TestCase):
@@ -258,7 +263,7 @@ class NoActorMixin:
         self.assertIsNone(log_entry.actor)
 
 
-class WithActorMixin:
+class WithActorMixinBase:
     sequence = itertools.count()
 
     def setUp(self):
@@ -276,10 +281,6 @@ class WithActorMixin:
         auditlog_entries = LogEntry.objects.filter(actor_email=user_email).all()
         self.assertIsNotNone(auditlog_entries, msg="All auditlog entries are deleted.")
         super().tearDown()
-
-    def make_object(self):
-        with set_actor(self.user):
-            return super().make_object()
 
     def check_create_log_entry(self, obj, log_entry):
         super().check_create_log_entry(obj, log_entry)
@@ -303,6 +304,12 @@ class WithActorMixin:
         super().check_delete_log_entry(obj, log_entry)
         self.assertEqual(log_entry.actor, self.user)
         self.assertEqual(log_entry.actor_email, self.user.email)
+
+
+class WithActorMixin(WithActorMixinBase):
+    def make_object(self):
+        with set_actor(self.user):
+            return super().make_object()
 
 
 class AltPrimaryKeyModelBase(SimpleModelTest):
@@ -369,6 +376,10 @@ class ModelPrimaryKeyModelWithActorTest(WithActorMixin, ModelPrimaryKeyModelBase
 
 # Must inherit from TransactionTestCase to use self.assertNumQueries.
 class ModelPrimaryKeyTest(TransactionTestCase):
+
+    def _fixture_teardown(self):
+        call_command("flush", verbosity=0, interactive=False, allow_cascade=True)
+
     def test_get_pk_value(self):
         """
         Test that the primary key can be retrieved without additional database queries.
@@ -1739,21 +1750,24 @@ class AdminPanelTest(TestCase):
         )
         self.site = AdminSite()
         self.admin = LogEntryAdmin(LogEntry, self.site)
+        self.admin_path_prefix = (
+            f"admin/{LogEntry._meta.app_label}/{LogEntry._meta.model_name}"
+        )
         with freezegun.freeze_time("2022-08-01 12:00:00Z"):
             self.obj = SimpleModel.objects.create(text="For admin logentry test")
 
     def test_auditlog_admin(self):
         self.client.force_login(self.user)
         log_pk = self.obj.history.latest().pk
-        res = self.client.get("/admin/auditlog/logentry/")
+        res = self.client.get(f"/{self.admin_path_prefix}/")
         self.assertEqual(res.status_code, 200)
-        res = self.client.get("/admin/auditlog/logentry/add/")
+        res = self.client.get(f"/{self.admin_path_prefix}/add/")
         self.assertEqual(res.status_code, 403)
-        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/", follow=True)
+        res = self.client.get(f"/{self.admin_path_prefix}/{log_pk}/", follow=True)
         self.assertEqual(res.status_code, 200)
-        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/delete/")
+        res = self.client.get(f"/{self.admin_path_prefix}/{log_pk}/delete/")
         self.assertEqual(res.status_code, 403)
-        res = self.client.get(f"/admin/auditlog/logentry/{log_pk}/history/")
+        res = self.client.get(f"/{self.admin_path_prefix}/{log_pk}/history/")
         self.assertEqual(res.status_code, 200)
 
     def test_created_timezone(self):
@@ -1783,7 +1797,7 @@ class AdminPanelTest(TestCase):
     def test_cid(self):
         self.client.force_login(self.user)
         expected_response = (
-            '<a href="/admin/auditlog/logentry/?cid=123" '
+            f'<a href="/{self.admin_path_prefix}/?cid=123" '
             'title="Click to filter by records with this correlation id">123</a>'
         )
 
@@ -1791,7 +1805,7 @@ class AdminPanelTest(TestCase):
         log_entry.cid = "123"
         log_entry.save()
 
-        res = self.client.get("/admin/auditlog/logentry/")
+        res = self.client.get(f"/{self.admin_path_prefix}/")
         self.assertEqual(res.status_code, 200)
         self.assertIn(expected_response, res.rendered_content)
 
@@ -1799,7 +1813,7 @@ class AdminPanelTest(TestCase):
         log = self.obj.history.latest()
         obj_pk = self.obj.pk
         delete_log_request = RequestFactory().post(
-            f"/admin/auditlog/logentry/{log.pk}/delete/"
+            f"/{self.admin_path_prefix}/{log.pk}/delete/"
         )
         delete_log_request.resolver_match = resolve(delete_log_request.path)
         delete_log_request.user = self.user
@@ -2796,7 +2810,7 @@ class SignalTests(TestCase):
 
         self.assertSignals(LogEntry.Action.DELETE)
 
-    @patch("auditlog.receivers.LogEntry.objects")
+    @patch(f"{LogEntry.__module__}.{LogEntry.__name__}.objects")
     def test_signals_errors(self, log_entry_objects_mock):
         class CustomSignalError(BaseException):
             pass
@@ -2988,3 +3002,66 @@ class CustomMaskModelTest(TestCase):
             "****7654",
             msg="The custom masking function should be used in serialized data",
         )
+
+
+class WithExtraDataMixin(WithActorMixinBase):
+    def get_context_data(self):
+        return {}
+
+    def make_object(self):
+        with set_extra_data(context_data=self.get_context_data()):
+            return super().make_object()
+
+
+class ExtraDataTest(WithExtraDataMixin, SimpleModelTest):
+    def get_context_data(self):
+        return {
+            "actor": self.user,
+        }
+
+
+class ExtraDataWithRoleTest(WithExtraDataMixin, SimpleModelTest):
+    def get_context_data(self):
+        return {
+            "actor": self.user,
+            "role": "admin",
+        }
+
+    def test_extra_data_role(self):
+        log = self.obj.history.first()
+        if settings.AUDITLOG_LOGENTRY_MODEL != "auditlog.LogEntry":
+            self.assertEqual(log.role, "admin")
+
+
+class ExtraDataWithRoleLazyLoadTest(WithExtraDataMixin, SimpleModelTest):
+    def get_context_data(self):
+        return {
+            "actor": self.user,
+            "role": lambda: "admin",
+        }
+
+    def test_extra_data_role(self):
+        log = self.obj.history.first()
+        if settings.AUDITLOG_LOGENTRY_MODEL != "auditlog.LogEntry":
+            self.assertEqual(log.role, "admin")
+
+
+class GetLogEntryModelTest(TestCase):
+    """Test the get_logentry_model function."""
+
+    def get_model_name(self):
+        model = get_logentry_model()
+        return f"{model._meta.app_label}.{model._meta.object_name}"
+
+    def test_logentry_model(self):
+        self.assertEqual(self.get_model_name(), settings.AUDITLOG_LOGENTRY_MODEL)
+
+    @override_settings(AUDITLOG_LOGENTRY_MODEL="LogEntry")
+    def test_invalid_logentry_model_name(self):
+        with self.assertRaises(ImproperlyConfigured):
+            get_logentry_model()
+
+    @override_settings(AUDITLOG_LOGENTRY_MODEL="test_app2.LogEntry")
+    def test_invalid_appname(self):
+        with self.assertRaises(ImproperlyConfigured):
+            get_logentry_model()

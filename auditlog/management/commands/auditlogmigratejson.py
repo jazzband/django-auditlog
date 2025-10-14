@@ -4,7 +4,9 @@ from django.conf import settings
 from django.core.management import CommandError, CommandParser
 from django.core.management.base import BaseCommand
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
+
+LogEntry = get_logentry_model()
 
 
 class Command(BaseCommand):
@@ -125,8 +127,8 @@ class Command(BaseCommand):
         def postgres():
             with connection.cursor() as cursor:
                 cursor.execute(
-                    """
-                    UPDATE auditlog_logentry
+                    f"""
+                    UPDATE {LogEntry._meta.db_table}
                     SET changes="changes_text"::jsonb
                     WHERE changes_text IS NOT NULL
                         AND changes_text <> ''
