@@ -9,6 +9,8 @@ from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.module_loading import import_string
 
+from auditlog import get_logentry_model
+
 
 def track_field(field):
     """
@@ -21,7 +23,6 @@ def track_field(field):
     :return: Whether the given field should be tracked.
     :rtype: bool
     """
-    from auditlog.models import LogEntry
 
     # Do not track many to many relations
     if field.many_to_many:
@@ -30,7 +31,7 @@ def track_field(field):
     # Do not track relations to LogEntry
     if (
         getattr(field, "remote_field", None) is not None
-        and field.remote_field.model == LogEntry
+        and field.remote_field.model == get_logentry_model()
     ):
         return False
 
