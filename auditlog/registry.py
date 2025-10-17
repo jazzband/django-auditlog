@@ -1,8 +1,7 @@
 import copy
 from collections import defaultdict
-from collections.abc import Collection, Iterable
+from collections.abc import Callable, Collection, Iterable
 from typing import Any, Optional, Union
-from collections.abc import Callable
 
 from django.apps import apps
 from django.db.models import ManyToManyField, Model

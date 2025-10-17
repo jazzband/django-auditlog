@@ -1,7 +1,7 @@
 import json
+from collections.abc import Callable
 from datetime import timezone
 from typing import Optional
-from collections.abc import Callable
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist

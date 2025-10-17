@@ -1,10 +1,10 @@
 import ast
 import contextlib
 import json
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import timezone
 from typing import Any, Union
-from collections.abc import Callable
 
 from dateutil import parser
 from dateutil.tz import gettz
