@@ -1,7 +1,8 @@
 import copy
 from collections import defaultdict
 from collections.abc import Collection, Iterable
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
+from collections.abc import Callable
 
 from django.apps import apps
 from django.db.models import ManyToManyField, Model
@@ -38,7 +39,7 @@ class AuditlogModelRegistry:
         delete: bool = True,
         access: bool = True,
         m2m: bool = True,
-        custom: Optional[dict[ModelSignal, Callable]] = None,
+        custom: dict[ModelSignal, Callable] | None = None,
     ):
         from auditlog.receivers import log_access, log_create, log_delete, log_update
 
@@ -62,14 +63,14 @@ class AuditlogModelRegistry:
     def register(
         self,
         model: ModelBase = None,
-        include_fields: Optional[list[str]] = None,
-        exclude_fields: Optional[list[str]] = None,
-        mapping_fields: Optional[dict[str, str]] = None,
-        mask_fields: Optional[list[str]] = None,
-        mask_callable: Optional[str] = None,
-        m2m_fields: Optional[Collection[str]] = None,
+        include_fields: list[str] | None = None,
+        exclude_fields: list[str] | None = None,
+        mapping_fields: dict[str, str] | None = None,
+        mask_fields: list[str] | None = None,
+        mask_callable: str | None = None,
+        m2m_fields: Collection[str] | None = None,
         serialize_data: bool = False,
-        serialize_kwargs: Optional[dict[str, Any]] = None,
+        serialize_kwargs: dict[str, Any] | None = None,
         serialize_auditlog_fields_only: bool = False,
     ):
         """
@@ -259,7 +260,7 @@ class AuditlogModelRegistry:
         ]
         return exclude_models
 
-    def _register_models(self, models: Iterable[Union[str, dict[str, Any]]]) -> None:
+    def _register_models(self, models: Iterable[str | dict[str, Any]]) -> None:
         models = copy.deepcopy(models)
         for model in models:
             if isinstance(model, str):

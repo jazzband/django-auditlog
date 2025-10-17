@@ -8,7 +8,7 @@ from django.utils.module_loading import import_string
 correlation_id = ContextVar("auditlog_correlation_id", default=None)
 
 
-def set_cid(request: Optional[HttpRequest] = None) -> None:
+def set_cid(request: HttpRequest | None = None) -> None:
     """
     A function to read the cid from a request.
     If the header is not in the request, then we set it to `None`.
@@ -40,11 +40,11 @@ def set_cid(request: Optional[HttpRequest] = None) -> None:
     correlation_id.set(cid)
 
 
-def _get_cid() -> Optional[str]:
+def _get_cid() -> str | None:
     return correlation_id.get()
 
 
-def get_cid() -> Optional[str]:
+def get_cid() -> str | None:
     """
     Calls the cid getter function based on `settings.AUDITLOG_CID_GETTER`
 
