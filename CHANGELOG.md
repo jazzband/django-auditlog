@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Improvements
+
+- Drop 'Python 3.9' support ([#773](https://github.com/jazzband/django-auditlog/pull/773))
+
 ## 3.3.0 (2025-09-18)
 
 #### Improvements
