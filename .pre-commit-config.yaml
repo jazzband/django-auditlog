@@ -4,10 +4,10 @@ repos:
     rev: 25.9.0
     hooks:
       - id: black
-        language_version: python3.9
+        language_version: python3.10
         args:
           - "--target-version"
-          - "py39"
+          - "py310"
   - repo: https://github.com/PyCQA/flake8
     rev: "7.3.0"
     hooks:
@@ -21,7 +21,7 @@ repos:
     rev: v3.20.0
     hooks:
     -   id: pyupgrade
-        args: [--py39-plus]
+        args: [--py310-plus]
   - repo: https://github.com/adamchainz/django-upgrade
     rev: 1.29.0
     hooks:
