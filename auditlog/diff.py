@@ -1,6 +1,6 @@
 import json
+from collections.abc import Callable
 from datetime import timezone
-from typing import Callable, Optional
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -131,7 +131,7 @@ def is_primitive(obj) -> bool:
     return isinstance(obj, primitive_types)
 
 
-def get_mask_function(mask_callable: Optional[str] = None) -> Callable[[str], str]:
+def get_mask_function(mask_callable: str | None = None) -> Callable[[str], str]:
     """
     Get the masking function to use based on the following priority:
     1. Model-specific mask_callable if provided
@@ -168,8 +168,8 @@ def mask_str(value: str) -> str:
 
 
 def model_instance_diff(
-    old: Optional[Model],
-    new: Optional[Model],
+    old: Model | None,
+    new: Model | None,
     fields_to_check=None,
     use_json_for_changes=False,
 ):
