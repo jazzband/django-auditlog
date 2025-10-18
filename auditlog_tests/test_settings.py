@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.staticfiles",
     "django.contrib.postgres",
+    "custom_logentry_app",
     "auditlog",
     "test_app",
 ]
@@ -28,8 +29,13 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
-    "auditlog.middleware.AuditlogMiddleware",
 ]
+
+if os.environ.get("AUDITLOG_LOGENTRY_MODEL", None):
+    MIDDLEWARE = MIDDLEWARE + ["auditlog.middleware.AuditlogMiddleware"]
+else:
+    MIDDLEWARE = MIDDLEWARE + ["middleware.CustomAuditlogMiddleware"]
+
 
 if TEST_DB_BACKEND == "postgresql":
     DATABASES = {
@@ -100,3 +106,5 @@ ROOT_URLCONF = "test_app.urls"
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+AUDITLOG_LOGENTRY_MODEL = os.environ.get("AUDITLOG_LOGENTRY_MODEL", "auditlog.LogEntry")
