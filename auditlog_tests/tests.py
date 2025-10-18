@@ -48,6 +48,8 @@ from test_app.models import (
     ProxyModel,
     RelatedModel,
     ReusableThroughRelatedModel,
+    SecretM2MModel,
+    SecretRelatedModel,
     SerializeNaturalKeyRelatedModel,
     SerializeOnlySomeOfThisModel,
     SerializePrimaryKeyRelatedModel,
@@ -1369,7 +1371,7 @@ class RegisterModelSettingsTest(TestCase):
 
         self.assertTrue(self.test_auditlog.contains(SimpleExcludeModel))
         self.assertTrue(self.test_auditlog.contains(ChoicesFieldModel))
-        self.assertEqual(len(self.test_auditlog.get_models()), 34)
+        self.assertEqual(len(self.test_auditlog.get_models()), 36)
 
     def test_register_models_register_model_with_attrs(self):
         self.test_auditlog._register_models(
@@ -2943,6 +2945,136 @@ class ModelManagerTest(TestCase):
         log = LogEntry.objects.get_for_object(self.public).first()
         self.assertEqual(log.action, LogEntry.Action.UPDATE)
         self.assertEqual(log.changes_dict["name"], ["Public", "Updated"])
+
+
+class BaseManagerSettingTest(TestCase):
+    """
+    If the AUDITLOG_USE_BASE_MANAGER setting is enabled, "secret" objects
+    should be audited as if they were public, with full access to field
+    values.
+    """
+
+    def test_use_base_manager_setting_update(self):
+        """
+        Model update. The default False case is covered by test_update_secret.
+        """
+        secret = SwappedManagerModel.objects.create(is_secret=True, name="Secret")
+        with override_settings(AUDITLOG_USE_BASE_MANAGER=True):
+            secret.name = "Updated"
+            secret.save()
+            log = LogEntry.objects.get_for_object(secret).first()
+            self.assertEqual(log.action, LogEntry.Action.UPDATE)
+            self.assertEqual(log.changes_dict["name"], ["Secret", "Updated"])
+
+    def test_use_base_manager_setting_related_model(self):
+        """
+        When AUDITLOG_USE_BASE_MANAGER is enabled, related model changes that
+        are normally invisible to the default model manager should remain
+        visible and not refer to "deleted" objects.
+        """
+        t1 = datetime.datetime(2025, 1, 1, 12, tzinfo=datetime.timezone.utc)
+        with (
+            override_settings(AUDITLOG_USE_BASE_MANAGER=False),
+            freezegun.freeze_time(t1),
+        ):
+            public_one = SwappedManagerModel.objects.create(name="Public One")
+            secret_one = SwappedManagerModel.objects.create(
+                is_secret=True, name="Secret One"
+            )
+            instance_one = SecretRelatedModel.objects.create(
+                one_to_one=public_one,
+                related=secret_one,
+            )
+
+            log_one = instance_one.history.filter(timestamp=t1).first()
+            self.assertIsInstance(log_one, LogEntry)
+            display_dict = log_one.changes_display_dict
+            self.assertEqual(display_dict["related"][0], "None")
+            self.assertEqual(
+                display_dict["related"][1],
+                f"Deleted 'SwappedManagerModel' ({secret_one.id})",
+                "Default manager should have no visibility of secret object",
+            )
+            self.assertEqual(display_dict["one to one"][0], "None")
+            self.assertEqual(display_dict["one to one"][1], "Public One")
+
+        t2 = t1 + datetime.timedelta(days=20)
+        with (
+            override_settings(AUDITLOG_USE_BASE_MANAGER=True),
+            freezegun.freeze_time(t2),
+        ):
+            public_two = SwappedManagerModel.objects.create(name="Public Two")
+            secret_two = SwappedManagerModel.objects.create(
+                is_secret=True, name="Secret Two"
+            )
+            instance_two = SecretRelatedModel.objects.create(
+                one_to_one=public_two,
+                related=secret_two,
+            )
+
+            log_two = instance_two.history.filter(timestamp=t2).first()
+            self.assertIsInstance(log_two, LogEntry)
+            display_dict = log_two.changes_display_dict
+            self.assertEqual(display_dict["related"][0], "None")
+            self.assertEqual(
+                display_dict["related"][1],
+                "Secret Two",
+                "Base manager should have full visibility of secret object",
+            )
+            self.assertEqual(display_dict["one to one"][0], "None")
+            self.assertEqual(display_dict["one to one"][1], "Public Two")
+
+    def test_use_base_manager_setting_changes(self):
+        """
+        When AUDITLOG_USE_BASE_MANAGER is enabled, registered many-to-many model
+        changes that refer to an object hidden from the default model manager
+        should remain visible and be logged.
+        """
+        with override_settings(AUDITLOG_USE_BASE_MANAGER=False):
+            obj_one = SwappedManagerModel.objects.create(
+                is_secret=True, name="Secret One"
+            )
+            m2m_one = SecretM2MModel.objects.create(name="M2M One")
+            m2m_one.m2m_related.add(obj_one)
+
+        self.assertIn(m2m_one, obj_one.m2m_related.all(), "Secret One sees M2M One")
+        self.assertNotIn(
+            obj_one, m2m_one.m2m_related.all(), "M2M One cannot see Secret One"
+        )
+        self.assertEqual(
+            0,
+            LogEntry.objects.get_for_object(m2m_one).count(),
+            "No update with default manager",
+        )
+
+        with override_settings(AUDITLOG_USE_BASE_MANAGER=True):
+            obj_two = SwappedManagerModel.objects.create(
+                is_secret=True, name="Secret Two"
+            )
+            m2m_two = SecretM2MModel.objects.create(name="M2M Two")
+            m2m_two.m2m_related.add(obj_two)
+
+        self.assertIn(m2m_two, obj_two.m2m_related.all(), "Secret Two sees M2M Two")
+        self.assertNotIn(
+            obj_two, m2m_two.m2m_related.all(), "M2M Two cannot see Secret Two"
+        )
+        self.assertEqual(
+            1,
+            LogEntry.objects.get_for_object(m2m_two).count(),
+            "Update logged with base manager",
+        )
+
+        log_entry = LogEntry.objects.get_for_object(m2m_two).first()
+        self.assertEqual(
+            log_entry.changes,
+            {
+                "m2m_related": {
+                    "type": "m2m",
+                    "operation": "add",
+                    "objects": [smart_str(obj_two)],
+                }
+            },
+        )
 
 
 class TestMaskStr(TestCase):
