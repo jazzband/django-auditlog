@@ -62,3 +62,8 @@ settings.AUDITLOG_STORE_JSON_CHANGES = getattr(
 )
 
 settings.AUDITLOG_MASK_CALLABLE = getattr(settings, "AUDITLOG_MASK_CALLABLE", None)
+
+# Use base model managers instead of default model managers
+settings.AUDITLOG_USE_BASE_MANAGER = getattr(
+    settings, "AUDITLOG_USE_BASE_MANAGER", False
+)

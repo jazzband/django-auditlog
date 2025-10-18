@@ -554,7 +554,9 @@ class LogEntry(models.Model):
             return value
         # Attempt to return the string representation of the object
         try:
-            return smart_str(field.related_model._default_manager.get(pk=pk_value))
+            related_model_manager = _get_manager_from_settings(field.related_model)
+
+            return smart_str(related_model_manager.get(pk=pk_value))
         # ObjectDoesNotExist will be raised if the object was deleted.
         except ObjectDoesNotExist:
             return f"Deleted '{field.related_model.__name__}' ({value})"
@@ -623,3 +625,16 @@ def _changes_func() -> Callable[[LogEntry], dict]:
     if settings.AUDITLOG_USE_TEXT_CHANGES_IF_JSON_IS_NOT_PRESENT:
         return json_then_text
     return default
+
+
+def _get_manager_from_settings(model: type[models.Model]) -> models.Manager:
+    """
+    Get model manager as selected by AUDITLOG_USE_BASE_MANAGER.
+
+    - True: return model._meta.base_manager
+    - False: return model._meta.default_manager
+    """
+    if settings.AUDITLOG_USE_BASE_MANAGER:
+        return model._meta.base_manager
+    else:
+        return model._meta.default_manager
