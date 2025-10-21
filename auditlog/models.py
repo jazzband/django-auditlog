@@ -377,7 +377,9 @@ class LogEntry(models.Model):
         ordering = ["-timestamp"]
         verbose_name = _("log entry")
         verbose_name_plural = _("log entries")
-        index_together = ("timestamp", "id")
+        indexes = [
+            models.Index(fields=["timestamp", "id"], name="auditlog_timestamp_id_idx"),
+        ]
 
     def __str__(self):
         if self.action == self.Action.CREATE:
