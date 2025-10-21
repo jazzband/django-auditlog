@@ -24,7 +24,7 @@ setup(
     },
     license="MIT",
     author="Jan-Jelle Kester",
-    maintainer="Alieh Rymašeŭski",
+    maintainer="Ilya Datskevich",
     description="Audit log app for Django",
     long_description=long_description,
     long_description_content_type="text/markdown",
