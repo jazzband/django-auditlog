@@ -5,6 +5,7 @@ from django.conf import settings
 from auditlog import get_logentry_model
 from auditlog.context import auditlog_disabled
 from auditlog.diff import model_instance_diff
+from auditlog.models import _get_manager_from_settings
 from auditlog.signals import post_log, pre_log
 
 
@@ -56,7 +57,7 @@ def log_update(sender, instance, **kwargs):
     """
     if not instance._state.adding and instance.pk is not None:
         update_fields = kwargs.get("update_fields", None)
-        old = sender._default_manager.filter(pk=instance.pk).first()
+        old = _get_manager_from_settings(sender).filter(pk=instance.pk).first()
         _create_log_entry(
             action=get_logentry_model().Action.UPDATE,
             instance=instance,
@@ -172,12 +173,12 @@ def make_log_m2m_changes(field_name):
             return
         LogEntry = get_logentry_model()
 
+        model_manager = _get_manager_from_settings(kwargs["model"])
+
         if action == "post_clear":
-            changed_queryset = kwargs["model"]._default_manager.all()
+            changed_queryset = model_manager.all()
         else:
-            changed_queryset = kwargs["model"]._default_manager.filter(
-                pk__in=kwargs["pk_set"]
-            )
+            changed_queryset = model_manager.filter(pk__in=kwargs["pk_set"])
 
         if action in ["post_add"]:
             LogEntry.objects.log_m2m_changes(

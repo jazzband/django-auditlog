@@ -141,7 +141,7 @@ For example, to use a custom masking function::
     # In your_app/utils.py
     def custom_mask(value: str) -> str:
         return "****" + value[-4:]  # Only show last 4 characters
-    
+
     # In your models.py
     auditlog.register(
         MyModel,
@@ -270,13 +270,13 @@ It will be considered when ``AUDITLOG_DISABLE_REMOTE_ADDR`` is `True`.
 
 You can use this setting to mask specific field values in all tracked models
 while still logging changes. This is useful when models contain sensitive fields
-like `password`, `api_key`, or `secret_token`` that should not be logged
+like `password`, `api_key`, or `secret_token` that should not be logged
 in plain text but need to be auditable.
 
 When a masked field changes, its value will be replaced with a masked
 representation (e.g., `****`) in the audit log instead of storing the actual value.
 
-This setting will be applied only when `AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
+This setting will be applied only when ``AUDITLOG_INCLUDE_ALL_MODELS`` is `True`.
 
 .. code-block:: python
 
@@ -376,6 +376,73 @@ This means that primitives such as booleans, integers, etc. will be represented 
 `None` as a string, it will be stored as a JSON `null` in the `changes` field.  Same goes for other primitives.
 
 .. versionadded:: 3.2.0
+
+**AUDITLOG_USE_BASE_MANAGER**
+
+This configuration variable determines whether to use `base managers
+<https://docs.djangoproject.com/en/dev/topics/db/managers/#base-managers>`_ for
+tracked models instead of their default managers.
+
+This setting can be useful for applications where the default manager behaviour
+hides some objects from the majority of ORM queries:
+
+.. code-block:: python
+
+    class SecretManager(models.Manager):
+        def get_queryset(self):
+            return super().get_queryset().filter(is_secret=False)
+
+
+    @auditlog.register()
+    class SwappedManagerModel(models.Model):
+        is_secret = models.BooleanField(default=False)
+        name = models.CharField(max_length=255)
+
+        objects = SecretManager()
+
+In this example, when ``AUDITLOG_USE_BASE_MANAGER`` is set to `True`, objects
+with the `is_secret` field set will be made visible to Auditlog. Otherwise you
+may see inaccurate data in log entries, recording changes to a seemingly
+"non-existent" object with empty fields.
+
+.. versionadded:: 3.4.0
+
+**AUDITLOG_LOGENTRY_MODEL**
+
+This configuration variable allows you to specify a custom model to be used instead of the default
+:py:class:`auditlog.models.LogEntry` model for storing audit records.
+
+By default, Auditlog stores change records in the built-in ``LogEntry`` model.
+If you need to store additional information in each log entry (for example, a user role, request metadata,
+or any other contextual data), you can define your own model by subclassing
+:py:class:`auditlog.models.AbstractLogEntry` and configure it using this setting.
+
+.. code-block:: python
+
+    from django.db import models
+    from auditlog.models import AbstractLogEntry
+
+    class CustomLogEntryModel(AbstractLogEntry):
+        role = models.CharField(max_length=100, null=True, blank=True)
+
+Then, in your project settings:
+
+.. code-block:: python
+
+    AUDITLOG_LOGENTRY_MODEL = 'custom_log_app.CustomLogEntryModel'
+
+Once defined, Auditlog will automatically use the specified model for all future log entries instead
+of the default one.
+
+.. note::
+
+    - The custom model **must** inherit from :py:class:`auditlog.models.AbstractLogEntry`.
+    - All fields and behaviors defined in :py:class:`AbstractLogEntry` should remain intact to ensure compatibility.
+    - The app label and model name in ``AUDITLOG_LOGENTRY_MODEL`` must follow Django’s standard dotted notation
+      (for example, ``"app_name.ModelName"``).
+
+.. versionadded:: 3.5.0
+    Custom LogEntry model configuration via ``AUDITLOG_LOGENTRY_MODEL``
 
 Actors
 ------

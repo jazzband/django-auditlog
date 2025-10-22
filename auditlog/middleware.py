@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
@@ -39,7 +37,7 @@ class AuditlogMiddleware:
         return remote_addr
 
     @staticmethod
-    def _get_remote_port(request) -> Optional[int]:
+    def _get_remote_port(request) -> int | None:
         remote_port = request.headers.get("X-Forwarded-Port", "")
 
         try:
@@ -70,4 +68,3 @@ class AuditlogMiddleware:
 
         with set_extra_data(context_data=self.get_extra_data(request)):
             return self.get_response(request)
-
