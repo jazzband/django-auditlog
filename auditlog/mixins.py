@@ -14,9 +14,11 @@ from django.utils.text import capfirst
 from django.utils.timezone import is_aware, localtime
 from django.utils.translation import gettext_lazy as _
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
 from auditlog.render import get_field_verbose_name, render_logentry_changes_html
 from auditlog.signals import accessed
+
+LogEntry = get_logentry_model()
 
 MAX = 75
 
