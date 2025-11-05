@@ -107,7 +107,7 @@ def get_field_value(obj, field, use_json_for_changes=False):
                 except TypeError:
                     pass
         elif (
-            not settings.AUDITLOG_USE_STRING_REPRESENTATION_IN_FOREIGN_KEY_CHANGES
+            not settings.AUDITLOG_USE_FK_STRING_REPRESENTATION
             and (field.one_to_one or field.many_to_one)
             and hasattr(field, "rel_class")
         ):

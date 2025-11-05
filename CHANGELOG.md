@@ -4,6 +4,7 @@
 
 #### Improvements
 
+- feat: Add `AUDITLOG_USE_FK_STRING_REPRESENTATION` setting that controls how foreign key changes are represented ([#779)](https://github.com/jazzband/django-auditlog/pull/779))
 - Add `AUDITLOG_USE_BASE_MANAGER` setting to override default manager use ([#766](https://github.com/jazzband/django-auditlog/pull/766))
 - Drop 'Python 3.9' support ([#773](https://github.com/jazzband/django-auditlog/pull/773))
 

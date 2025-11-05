@@ -73,6 +73,6 @@ settings.AUDITLOG_USE_BASE_MANAGER = getattr(
 )
 
 # Use string representation of referenced object in foreign key changes instead of its primary key
-settings.AUDITLOG_USE_STRING_REPRESENTATION_IN_FOREIGN_KEY_CHANGES = getattr(
-    settings, "AUDITLOG_USE_STRING_REPRESENTATION_IN_FOREIGN_KEY_CHANGES", False
+settings.AUDITLOG_USE_FK_STRING_REPRESENTATION = getattr(
+    settings, "AUDITLOG_USE_FK_STRING_REPRESENTATION", False
 )

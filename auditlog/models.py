@@ -542,10 +542,6 @@ class AbstractLogEntry(models.Model):
         """
         :return: A string representing a given FK value and the field to which it belongs
         """
-        # Return value if FK value should explicitly be interpreted as string representation
-        if settings.AUDITLOG_USE_STRING_REPRESENTATION_IN_FOREIGN_KEY_CHANGES:
-            return value
-
         # Return "None" if the FK value is "None".
         if value == "None":
             return value

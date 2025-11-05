@@ -444,6 +444,29 @@ of the default one.
 .. versionadded:: 3.5.0
     Custom LogEntry model configuration via ``AUDITLOG_LOGENTRY_MODEL``
 
+**AUDITLOG_USE_FK_STRING_REPRESENTATION**
+
+Determines how changes to foreign key fields are recorded in log entries.
+
+When `True`, changes to foreign key fields are stored using the string representation of related objects.
+When `False` (default), the primary key of the related objects is stored instead.
+
+Before version 2.2.0, foreign key changes were stored using the string representation of the related objects.
+Starting from version 2.2.0, the default behavior was updated to store the primary key of the related objects instead.
+
+Before:
+.. code-block:: json
+    { "foreign_key_field": ["foo", "bar"] }
+
+
+After:
+.. code-block:: json
+    { "foreign_key_field": [1, 2] }
+
+You can use this option to enable the legacy behavior.
+
+.. versionadded:: 3.5.0
+
 Actors
 ------
 
