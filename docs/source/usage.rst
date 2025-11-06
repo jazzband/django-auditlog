@@ -455,12 +455,16 @@ Before version 2.2.0, foreign key changes were stored using the string represent
 Starting from version 2.2.0, the default behavior was updated to store the primary key of the related objects instead.
 
 Before:
+
 .. code-block:: json
+
     { "foreign_key_field": ["foo", "bar"] }
 
 
 After:
+
 .. code-block:: json
+
     { "foreign_key_field": [1, 2] }
 
 You can use this option to enable the legacy behavior.
