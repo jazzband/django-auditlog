@@ -16,7 +16,7 @@ def get_logentry_model():
         )
     except ValueError:
         raise ImproperlyConfigured(
-            "AUDITLOG_ENTRY_MODEL must be of the form 'app_label.model_name'"
+            "AUDITLOG_LOGENTRY_MODEL must be of the form 'app_label.model_name'"
         )
     except LookupError:
         raise ImproperlyConfigured(
