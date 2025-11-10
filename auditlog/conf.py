@@ -67,3 +67,30 @@ settings.AUDITLOG_MASK_CALLABLE = getattr(settings, "AUDITLOG_MASK_CALLABLE", No
 settings.AUDITLOG_USE_BASE_MANAGER = getattr(
     settings, "AUDITLOG_USE_BASE_MANAGER", False
 )
+
+# PostgreSQL partitioning defaults
+settings.AUDITLOG_PARTITIONED = getattr(
+    settings,
+    "AUDITLOG_PARTITIONED",
+    False,
+)
+settings.AUDITLOG_PARTITION_BY = getattr(
+    settings,
+    "AUDITLOG_PARTITION_BY",
+    "timestamp",
+)
+settings.AUDITLOG_PARTITION_INTERVAL = getattr(
+    settings,
+    "AUDITLOG_PARTITION_INTERVAL",
+    "month",
+)
+settings.AUDITLOG_PARTITION_AHEAD_MONTHS = getattr(
+    settings,
+    "AUDITLOG_PARTITION_AHEAD_MONTHS",
+    3,
+)
+settings.AUDITLOG_PARTITION_RETENTION_MONTHS = getattr(
+    settings,
+    "AUDITLOG_PARTITION_RETENTION_MONTHS",
+    None,
+)

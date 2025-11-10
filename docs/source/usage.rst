@@ -223,6 +223,80 @@ You can store a correlation ID (cid) in the log entries by:
 Using the custom getter is helpful for integrating with a third-party cid package
 such as `django-cid <https://pypi.org/project/django-cid/>`_.
 
+PostgreSQL partitioning
+-----------------------
+
+``auditlog`` can optionally store ``LogEntry`` rows in native PostgreSQL range
+partitions. This is useful for installations that accumulate hundreds of
+millions of audit rows and rely on time-based retention policies.
+
+Prerequisites
+~~~~~~~~~~~~~
+
+* PostgreSQL 11 or newer.
+* The database user running the management commands must have privileges to
+  ``LOCK``, ``ALTER`` and ``CREATE`` tables and sequences.
+
+Partition lifecycle
+~~~~~~~~~~~~~~~~~~~
+
+1. Run the initialization command once per database:
+
+   .. code-block:: bash
+
+      python manage.py auditlogpartition init
+
+   The default mode only works on an empty ``auditlog_logentry`` table. Add
+   ``--convert`` to migrate a populated table. The command snapshots the current
+   rows, copies them into a partitioned shadow table while the application
+   continues to write, then briefly locks ``auditlog_logentry`` to copy the
+   remaining delta and swap the tables. Downtime is limited to that final swap.
+   A successful run renames the old table, creates ``auditlog_logentry`` as
+   ``PARTITION BY RANGE (timestamp)``, and builds partitions for the current
+   month plus the configured number of future months.
+
+2. Create additional partitions on demand:
+
+   .. code-block:: bash
+
+      python manage.py auditlogpartition create --ahead=6
+
+   ``create`` accepts ``--start`` / ``--end`` (``YYYY-MM``) to materialise a
+   specific range.
+
+3. Prune old partitions based on your retention window:
+
+   .. code-block:: bash
+
+      python manage.py auditlogpartition prune --retention-months=12
+
+   ``prune`` just drops partitions, so it is much faster than row-by-row
+   deletes. Add ``--dry-run`` to see what would be removed.
+
+4. Inspect partition status at any time:
+
+   .. code-block:: bash
+
+      python manage.py auditlogpartition status
+
+Operational notes
+~~~~~~~~~~~~~~~~~
+
+* ``auditlog`` continues to use the same Django model; all inserts go through
+  the parent table and are automatically routed to the correct partition.
+* The database sequence is preserved during conversion and reset to the highest
+  ``LogEntry.id`` value, so future inserts continue from the correct number.
+* PostgreSQL cannot enforce a primary key on ``id`` once the table is
+  partitioned because the partition key is ``timestamp``. ``LogEntry`` never had
+  foreign keys or unique constraints in ``auditlog``, so Django's ORM behaviour
+  is unchanged. Document this caveat for your ops team.
+* Prefer ``auditlogpartition prune`` over ``auditlogflush --before-date`` on
+  very large datasets. Dropping a partition is nearly instantaneous.
+* For large conversions, consider temporarily increasing ``maintenance_work_mem``
+  and disabling synchronous commits for the session to speed up index creation.
+* The old table is dropped after a ``--convert`` run completes. Take a backup if
+  you need a longer rollback window.
+
 Settings
 --------
 
@@ -397,6 +471,33 @@ hides some objects from the majority of ORM queries:
     class SwappedManagerModel(models.Model):
         is_secret = models.BooleanField(default=False)
         name = models.CharField(max_length=255)
+
+**AUDITLOG_PARTITIONED**
+
+Boolean flag that you can use in your project to signal that the
+``auditlog_logentry`` table is managed as a PostgreSQL partitioned table. The
+core package does not enable partitioning automatically—you must run the
+``auditlogpartition`` command described above. Default: ``False``.
+
+**AUDITLOG_PARTITION_BY**
+
+Name of the column used as the partition key. Only ``"timestamp"`` is currently
+supported. Default: ``"timestamp"``.
+
+**AUDITLOG_PARTITION_INTERVAL**
+
+Interval used when creating partitions. The management command currently
+supports monthly partitions. Default: ``"month"``.
+
+**AUDITLOG_PARTITION_AHEAD_MONTHS**
+
+How many future months ``auditlogpartition init`` / ``create`` will pre-create
+by default. You can override per command via ``--ahead``. Default: ``3``.
+
+**AUDITLOG_PARTITION_RETENTION_MONTHS**
+
+Optional retention window in months. ``auditlogpartition prune`` uses this value
+when ``--retention-months`` is omitted. Default: ``None`` (no automatic pruning).
 
         objects = SecretManager()
 
