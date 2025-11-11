@@ -84,7 +84,7 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:8.4
         env:
           MYSQL_DATABASE: auditlog
           MYSQL_USER: mysql
