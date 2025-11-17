@@ -4,7 +4,7 @@ import json
 import random
 import warnings
 from datetime import timezone
-from unittest import mock
+from unittest import mock, skipIf
 from unittest.mock import patch
 
 import freezegun
@@ -2812,7 +2812,7 @@ class SignalTests(TestCase):
 
         self.assertSignals(LogEntry.Action.DELETE)
 
-    @patch(f"{LogEntry.__module__}.{LogEntry.__name__}.objects")
+    @patch.object(LogEntry, "objects")
     def test_signals_errors(self, log_entry_objects_mock):
         class CustomSignalError(BaseException):
             pass
@@ -3159,10 +3159,13 @@ class ExtraDataWithRoleTest(WithExtraDataMixin, SimpleModelTest):
             "role": "admin",
         }
 
+    @skipIf(
+        settings.AUDITLOG_LOGENTRY_MODEL == "auditlog.LogEntry",
+        "Do not run on defualt log entry model",
+    )
     def test_extra_data_role(self):
         log = self.obj.history.first()
-        if settings.AUDITLOG_LOGENTRY_MODEL != "auditlog.LogEntry":
-            self.assertEqual(log.role, "admin")
+        self.assertEqual(log.role, "admin")
 
 
 class ExtraDataWithRoleLazyLoadTest(WithExtraDataMixin, SimpleModelTest):
@@ -3172,10 +3175,13 @@ class ExtraDataWithRoleLazyLoadTest(WithExtraDataMixin, SimpleModelTest):
             "role": lambda: "admin",
         }
 
+    @skipIf(
+        settings.AUDITLOG_LOGENTRY_MODEL == "auditlog.LogEntry",
+        "Do not run on defualt log entry model",
+    )
     def test_extra_data_role(self):
         log = self.obj.history.first()
-        if settings.AUDITLOG_LOGENTRY_MODEL != "auditlog.LogEntry":
-            self.assertEqual(log.role, "admin")
+        self.assertEqual(log.role, "admin")
 
 
 class GetLogEntryModelTest(TestCase):
