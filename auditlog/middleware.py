@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from auditlog.cid import set_cid
-from auditlog.context import set_actor
+from auditlog.context import set_extra_data
 
 
 class AuditlogMiddleware:
@@ -54,12 +54,17 @@ class AuditlogMiddleware:
             return user
         return None
 
-    def __call__(self, request):
-        remote_addr = self._get_remote_addr(request)
-        remote_port = self._get_remote_port(request)
-        user = self._get_actor(request)
+    def get_extra_data(self, request):
+        context_data = {}
+        context_data["remote_addr"] = self._get_remote_addr(request)
+        context_data["remote_port"] = self._get_remote_port(request)
 
+        context_data["actor"] = self._get_actor(request)
+
+        return context_data
+
+    def __call__(self, request):
         set_cid(request)
 
-        with set_actor(actor=user, remote_addr=remote_addr, remote_port=remote_port):
+        with set_extra_data(context_data=self.get_extra_data(request)):
             return self.get_response(request)

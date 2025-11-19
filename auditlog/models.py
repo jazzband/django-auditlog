@@ -24,6 +24,7 @@ from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
 from django.utils.translation import gettext_lazy as _
 
+from auditlog import get_logentry_model
 from auditlog.diff import get_mask_function
 
 DEFAULT_OBJECT_REPR = "<error forming object repr>"
@@ -304,7 +305,7 @@ class LogEntryManager(models.Manager):
         return data
 
 
-class LogEntry(models.Model):
+class AbstractLogEntry(models.Model):
     """
     Represents an entry in the audit log. The content type is saved along with the textual and numeric
     (if available) primary key, as well as the textual representation of the object when it was saved.
@@ -393,6 +394,7 @@ class LogEntry(models.Model):
     objects = LogEntryManager()
 
     class Meta:
+        abstract = True
         get_latest_by = "timestamp"
         ordering = ["-timestamp"]
         verbose_name = _("log entry")
@@ -562,6 +564,11 @@ class LogEntry(models.Model):
             return f"Deleted '{field.related_model.__name__}' ({value})"
 
 
+class LogEntry(AbstractLogEntry):
+    class Meta(AbstractLogEntry.Meta):
+        swappable = "AUDITLOG_LOGENTRY_MODEL"
+
+
 class AuditlogHistoryField(GenericRelation):
     """
     A subclass of py:class:`django.contrib.contenttypes.fields.GenericRelation` that sets some default
@@ -582,7 +589,7 @@ class AuditlogHistoryField(GenericRelation):
     """
 
     def __init__(self, pk_indexable=True, delete_related=False, **kwargs):
-        kwargs["to"] = LogEntry
+        kwargs["to"] = get_logentry_model()
 
         if pk_indexable:
             kwargs["object_id_field"] = "object_id"

@@ -121,6 +121,9 @@ class AuditlogFlushWithTruncateTest(TransactionTestCase):
         self.mock_input = input_patcher.start()
         self.addCleanup(input_patcher.stop)
 
+    def _fixture_teardown(self):
+        call_command("flush", verbosity=0, interactive=False, allow_cascade=True)
+
     def make_object(self):
         return SimpleModel.objects.create(text="I am a simple model.")
 

@@ -407,6 +407,43 @@ may see inaccurate data in log entries, recording changes to a seemingly
 
 .. versionadded:: 3.4.0
 
+**AUDITLOG_LOGENTRY_MODEL**
+
+This configuration variable allows you to specify a custom model to be used instead of the default
+:py:class:`auditlog.models.LogEntry` model for storing audit records.
+
+By default, Auditlog stores change records in the built-in ``LogEntry`` model.
+If you need to store additional information in each log entry (for example, a user role, request metadata,
+or any other contextual data), you can define your own model by subclassing
+:py:class:`auditlog.models.AbstractLogEntry` and configure it using this setting.
+
+.. code-block:: python
+
+    from django.db import models
+    from auditlog.models import AbstractLogEntry
+
+    class CustomLogEntryModel(AbstractLogEntry):
+        role = models.CharField(max_length=100, null=True, blank=True)
+
+Then, in your project settings:
+
+.. code-block:: python
+
+    AUDITLOG_LOGENTRY_MODEL = 'custom_log_app.CustomLogEntryModel'
+
+Once defined, Auditlog will automatically use the specified model for all future log entries instead
+of the default one.
+
+.. note::
+
+    - The custom model **must** inherit from :py:class:`auditlog.models.AbstractLogEntry`.
+    - All fields and behaviors defined in :py:class:`AbstractLogEntry` should remain intact to ensure compatibility.
+    - The app label and model name in ``AUDITLOG_LOGENTRY_MODEL`` must follow Django’s standard dotted notation
+      (for example, ``"app_name.ModelName"``).
+
+.. versionadded:: 3.5.0
+    Custom LogEntry model configuration via ``AUDITLOG_LOGENTRY_MODEL``
+
 Actors
 ------
 

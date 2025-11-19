@@ -1,8 +1,10 @@
 from django.test import TestCase
 from test_app.models import SimpleModel
 
-from auditlog.models import LogEntry
+from auditlog import get_logentry_model
 from auditlog.templatetags.auditlog_tags import render_logentry_changes_html
+
+LogEntry = get_logentry_model()
 
 
 class RenderChangesTest(TestCase):
