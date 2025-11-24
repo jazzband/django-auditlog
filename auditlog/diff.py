@@ -3,7 +3,7 @@ from collections.abc import Callable
 from datetime import timezone
 
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db.models import NOT_PROVIDED, DateTimeField, ForeignKey, JSONField, Model
 from django.utils import timezone as django_timezone
 from django.utils.encoding import smart_str
@@ -74,7 +74,7 @@ def get_field_value(obj, field, use_json_for_changes=False):
         try:
             model_field = obj._meta.get_field(field.name)
             default = model_field.default
-        except AttributeError:
+        except (AttributeError, FieldDoesNotExist):
             default = NOT_PROVIDED
 
         if default is NOT_PROVIDED:

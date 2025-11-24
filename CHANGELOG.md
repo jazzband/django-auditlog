@@ -7,6 +7,10 @@
 - Add `AUDITLOG_USE_BASE_MANAGER` setting to override default manager use ([#766](https://github.com/jazzband/django-auditlog/pull/766))
 - Drop 'Python 3.9' support ([#773](https://github.com/jazzband/django-auditlog/pull/773))
 
+#### Fixes
+
+- Make diffing more robust for polymorphic models ([#784](https://github.com/jazzband/django-auditlog/pull/784))
+
 ## 3.3.0 (2025-09-18)
 
 #### Improvements
