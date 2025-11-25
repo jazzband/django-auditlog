@@ -47,6 +47,7 @@ from test_app.models import (
     NullableJSONModel,
     ProxyModel,
     RelatedModel,
+    RelatedModelParent,
     ReusableThroughRelatedModel,
     SecretM2MModel,
     SecretRelatedModel,
@@ -2130,6 +2131,27 @@ class ModelInstanceDiffTest(TestCase):
 
         model_instance_diff(simple2, simple1)
         model_instance_diff(simple1, simple2)
+
+    def test_diff_polymorphic_models(self):
+        """No error is raised when comparing parent/child for polymorphic models."""
+
+        # This tests that when a polymorphic model is compared to its parent,
+        # no FieldDoesNotExist errors are raised because those fields don't exist
+        # on the parent model.
+
+        # relation target
+        simple = SimpleModel()
+        simple.save()
+
+        # the parent model
+        related_parent = RelatedModelParent()
+        related_parent.save()
+
+        # the child model, with some fields that don't exist on the parent
+        related = RelatedModel(related=simple, one_to_one=simple)
+        related.save()
+
+        model_instance_diff(related, related_parent)
 
     def test_object_repr_related_deleted(self):
         """No error is raised when __str__() loads a related object that has been deleted."""
