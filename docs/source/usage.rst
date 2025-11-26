@@ -469,7 +469,7 @@ After:
 
 You can use this option to enable the legacy behavior.
 
-.. versionadded:: 3.5.0
+.. versionadded:: 3.4.0
 
 Actors
 ------
