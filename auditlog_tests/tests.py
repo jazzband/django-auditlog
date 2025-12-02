@@ -2407,6 +2407,29 @@ class TestRelatedDiffs(TestCase):
         self.assertEqual(int(log_create.changes_dict["related"][1]), one_simple.id)
         self.assertEqual(int(log_update.changes_dict["related"][1]), two_simple.id)
 
+    @override_settings(AUDITLOG_USE_FK_STRING_REPRESENTATION=True)
+    def test_string_representation_of_fk_changes(self):
+        """FK changes should be stored using string representation when setting is enabled"""
+
+        t1 = self.test_date
+        with freezegun.freeze_time(t1):
+            simple = SimpleModel.objects.create(text="Test Foo")
+            two_simple = SimpleModel.objects.create(text="Test Bar")
+            instance = RelatedModel.objects.create(one_to_one=simple, related=simple)
+
+        t2 = self.test_date + datetime.timedelta(days=20)
+        with freezegun.freeze_time(t2):
+            instance.one_to_one = two_simple
+            instance.related = two_simple
+            instance.save()
+
+        self.assertEqual(instance.history.all().count(), 2)
+        log_update = instance.history.filter(timestamp=t2).first()
+        self.assertEqual(log_update.changes_dict["related"][0], "Test Foo")
+        self.assertEqual(log_update.changes_dict["related"][1], "Test Bar")
+        self.assertEqual(log_update.changes_dict["one_to_one"][0], "Test Foo")
+        self.assertEqual(log_update.changes_dict["one_to_one"][1], "Test Bar")
+
 
 class TestModelSerialization(TestCase):
     def setUp(self):

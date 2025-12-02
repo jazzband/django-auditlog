@@ -71,3 +71,8 @@ settings.AUDITLOG_LOGENTRY_MODEL = getattr(
 settings.AUDITLOG_USE_BASE_MANAGER = getattr(
     settings, "AUDITLOG_USE_BASE_MANAGER", False
 )
+
+# Use string representation of referenced object in foreign key changes instead of its primary key
+settings.AUDITLOG_USE_FK_STRING_REPRESENTATION = getattr(
+    settings, "AUDITLOG_USE_FK_STRING_REPRESENTATION", False
+)

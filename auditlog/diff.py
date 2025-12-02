@@ -106,7 +106,11 @@ def get_field_value(obj, field, use_json_for_changes=False):
                     value = json.dumps(value, sort_keys=True, cls=field.encoder)
                 except TypeError:
                     pass
-        elif (field.one_to_one or field.many_to_one) and hasattr(field, "rel_class"):
+        elif (
+            not settings.AUDITLOG_USE_FK_STRING_REPRESENTATION
+            and (field.one_to_one or field.many_to_one)
+            and hasattr(field, "rel_class")
+        ):
             value = smart_str(getattr(obj, field.get_attname()), strings_only=True)
         else:
             value = getattr(obj, field.name)
