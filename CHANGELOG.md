@@ -2,8 +2,11 @@
 
 ## Next Release
 
+## 3.4.0 (2025-12-04)
+
 #### Improvements
 
+- feat: Add CustomLogEntry model support and update tests ([#764)](https://github.com/jazzband/django-auditlog/pull/764)) 
 - feat: Add `AUDITLOG_USE_FK_STRING_REPRESENTATION` setting that controls how foreign key changes are represented ([#779)](https://github.com/jazzband/django-auditlog/pull/779))
 - Add `AUDITLOG_USE_BASE_MANAGER` setting to override default manager use ([#766](https://github.com/jazzband/django-auditlog/pull/766))
 - Drop 'Python 3.9' support ([#773](https://github.com/jazzband/django-auditlog/pull/773))
@@ -11,6 +14,7 @@
 #### Fixes
 
 - Make diffing more robust for polymorphic models ([#784](https://github.com/jazzband/django-auditlog/pull/784))
+- Amend setup configuration to include non-python package files ([#769](https://github.com/jazzband/django-auditlog/pull/769))
 
 ## 3.3.0 (2025-09-18)
 
