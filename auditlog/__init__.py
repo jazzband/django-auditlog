@@ -10,10 +10,9 @@ __version__ = version("django-auditlog")
 
 
 def get_logentry_model():
+    model_string = getattr(settings, "AUDITLOG_LOGENTRY_MODEL", "auditlog.LogEntry")
     try:
-        return django_apps.get_model(
-            settings.AUDITLOG_LOGENTRY_MODEL, require_ready=False
-        )
+        return django_apps.get_model(model_string, require_ready=False)
     except ValueError:
         raise ImproperlyConfigured(
             "AUDITLOG_LOGENTRY_MODEL must be of the form 'app_label.model_name'"
@@ -21,5 +20,5 @@ def get_logentry_model():
     except LookupError:
         raise ImproperlyConfigured(
             "AUDITLOG_LOGENTRY_MODEL refers to model '%s' that has not been installed"
-            % settings.AUDITLOG_LOGENTRY_MODEL
+            % model_string
         )
