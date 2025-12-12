@@ -2,6 +2,12 @@
 
 ## Next Release
 
+## 3.4.1 (2025-12-13)
+
+#### Fixes
+
+- Fix AttributeError when AUDITLOG_LOGENTRY_MODEL is not set ([#789](https://github.com/jazzband/django-auditlog/pull/789))
+
 ## 3.4.0 (2025-12-04)
 
 #### Improvements
