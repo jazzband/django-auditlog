@@ -3248,3 +3248,22 @@ class GetLogEntryModelTest(TestCase):
     def test_invalid_appname(self):
         with self.assertRaises(ImproperlyConfigured):
             get_logentry_model()
+
+    def test_logentry_model_default_when_setting_missing(self):
+        """Regression test for issue #788: AttributeError when AUDITLOG_LOGENTRY_MODEL is not set."""
+        # Save and remove the setting to simulate the bug condition
+        original_value = getattr(settings, "AUDITLOG_LOGENTRY_MODEL", None)
+        if hasattr(settings, "AUDITLOG_LOGENTRY_MODEL"):
+            delattr(settings, "AUDITLOG_LOGENTRY_MODEL")
+
+        try:
+            # This should NOT raise AttributeError - it should use the default
+            model = get_logentry_model()
+            self.assertEqual(
+                f"{model._meta.app_label}.{model._meta.object_name}",
+                "auditlog.LogEntry",
+            )
+        finally:
+            # Restore the original setting
+            if original_value is not None:
+                settings.AUDITLOG_LOGENTRY_MODEL = original_value
