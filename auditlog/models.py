@@ -431,6 +431,8 @@ class AbstractLogEntry(models.Model):
         :param separator: The string to place between each field.
         :return: A readable string of the changes in this log entry.
         """
+        substrings = []
+
         if all(isinstance(value, Sequence) for value in self.changes_dict.values()):
             substrings = [
                 "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
@@ -440,19 +442,15 @@ class AbstractLogEntry(models.Model):
                     arrow=arrow,
                     new=values[1],
                 )
-                for field, values in self.changes_dict.items()
+                for field, values in sorted(self.changes_dict.items())
             ]
         elif all(
             isinstance(value, dict) and value.get("type") == "m2m"
             for value in self.changes_dict.values()
         ):
             substrings = [
-                f"{field}{colon}{value_dict['operation']} {value_dict['objects']}"
+                f"{field}{colon}{value_dict['operation']} {sorted(value_dict['objects'])}"
                 for field, value_dict in self.changes_dict.items()
-            ]
-        else:
-            substrings = [
-                f"{field}{colon}{value}" for field, value in self.changes_dict.items()
             ]
 
         return separator.join(substrings)
