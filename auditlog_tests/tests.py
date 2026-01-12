@@ -494,6 +494,14 @@ class ManyRelatedModelTest(TestCase):
             },
         )
 
+    def test_changes_str(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.changes_str,
+            f"related: add {[smart_str(self.related)]}"
+        )
+
     def test_adding_existing_related_obj(self):
         self.obj.related.add(self.related)
         log_entry = self.obj.history.first()
