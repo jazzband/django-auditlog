@@ -1,7 +1,7 @@
 import ast
 import contextlib
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from copy import deepcopy
 from datetime import timezone
 from typing import Any
@@ -427,21 +427,33 @@ class AbstractLogEntry(models.Model):
         not satisfying, please use :py:func:`LogEntry.changes_dict` and format the string yourself.
 
         :param colon: The string to place between the field name and the values.
-        :param arrow: The string to place between each old and new value.
+        :param arrow: The string to place between each old and new value (non-m2m field changes only).
         :param separator: The string to place between each field.
         :return: A readable string of the changes in this log entry.
         """
-        substrings = []
-
-        for field, values in self.changes_dict.items():
-            substring = "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
-                field_name=field,
-                colon=colon,
-                old=values[0],
-                arrow=arrow,
-                new=values[1],
-            )
-            substrings.append(substring)
+        if all(isinstance(value, Sequence) for value in self.changes_dict.values()):
+            substrings = [
+                "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
+                    field_name=field,
+                    colon=colon,
+                    old=values[0],
+                    arrow=arrow,
+                    new=values[1],
+                )
+                for field, values in self.changes_dict.items()
+            ]
+        elif all(
+            isinstance(value, dict) and value.get("type") == "m2m"
+            for value in self.changes_dict.values()
+        ):
+            substrings = [
+                f"{field}{colon}{value_dict['operation']} {value_dict['objects']}"
+                for field, value_dict in self.changes_dict.items()
+            ]
+        else:
+            substrings = [
+                f"{field}{colon}{value}" for field, value in self.changes_dict.items()
+            ]
 
         return separator.join(substrings)
 
