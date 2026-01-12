@@ -2090,7 +2090,7 @@ class JSONModelTest(TestCase):
         )
         self.assertEqual(
             history.changes_str,
-            "json: {} → {\"quantity\": \"1\"}",
+            'json: {} → {"quantity": "1"}',
             msg="Changes string is correct",
         )
 
@@ -3153,7 +3153,9 @@ class BaseManagerSettingTest(TestCase):
                 }
             },
         )
-        self.assertEqual(log_entry.changes_str, f"m2m_related: add {[smart_str(obj_two)]}")
+        self.assertEqual(
+            log_entry.changes_str, f"m2m_related: add {[smart_str(obj_two)]}"
+        )
 
 
 class TestMaskStr(TestCase):
