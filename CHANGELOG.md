@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Fixes
+
+- `KeyError` when calling `changes_str` on a log entry that tracks many-to-many field changes ([#798](https://github.com/jazzband/django-auditlog/pull/798))
+
 ## 3.4.1 (2025-12-13)
 
 #### Fixes
