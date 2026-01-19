@@ -126,15 +126,13 @@ class Command(BaseCommand):
 
         def postgres():
             with connection.cursor() as cursor:
-                cursor.execute(
-                    f"""
+                cursor.execute(f"""
                     UPDATE {LogEntry._meta.db_table}
                     SET changes="changes_text"::jsonb
                     WHERE changes_text IS NOT NULL
                         AND changes_text <> ''
                         AND changes IS NULL
-                    """
-                )
+                    """)
                 return cursor.cursor.rowcount
 
         if database == "postgres":
