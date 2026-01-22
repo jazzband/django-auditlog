@@ -1,7 +1,7 @@
 import ast
 import contextlib
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import timezone
 from typing import Any
@@ -433,7 +433,10 @@ class AbstractLogEntry(models.Model):
         """
         substrings = []
 
-        if all(isinstance(value, Sequence) for value in self.changes_dict.values()):
+        if all(
+            isinstance(value, (list, tuple)) and len(value) == 2
+            for value in self.changes_dict.values()
+        ):
             substrings = [
                 "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
                     field_name=field,
