@@ -433,28 +433,23 @@ class AbstractLogEntry(models.Model):
         """
         substrings = []
 
-        if all(
-            isinstance(value, (list, tuple)) and len(value) == 2
-            for value in self.changes_dict.values()
-        ):
-            substrings = [
-                "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
+        for field, value in sorted(self.changes_dict.items()):
+            if isinstance(value, (list, tuple)) and len(value) == 2:
+                # handle regular field change
+                substring = "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
                     field_name=field,
                     colon=colon,
-                    old=values[0],
+                    old=value[0],
                     arrow=arrow,
-                    new=values[1],
+                    new=value[1],
                 )
-                for field, values in sorted(self.changes_dict.items())
-            ]
-        elif all(
-            isinstance(value, dict) and value.get("type") == "m2m"
-            for value in self.changes_dict.values()
-        ):
-            substrings = [
-                f"{field}{colon}{value_dict['operation']} {sorted(value_dict['objects'])}"
-                for field, value_dict in self.changes_dict.items()
-            ]
+                substrings.append(substring)
+            elif isinstance(value, dict) and value.get("type") == "m2m":
+                # handle m2m change
+                substring = (
+                    f"{field}{colon}{value['operation']} {sorted(value['objects'])}"
+                )
+                substrings.append(substring)
 
         return separator.join(substrings)
 
