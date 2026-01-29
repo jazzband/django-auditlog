@@ -131,6 +131,11 @@ class SimpleModelTest(TestCase):
             {"boolean": ["False", "True"]},
             msg="The change is correctly logged",
         )
+        self.assertEqual(
+            history.changes_str,
+            "boolean: False → True",
+            msg="Changes string is correct",
+        )
 
     def test_update_specific_field_supplied_via_save_method(self):
         obj = self.obj
@@ -148,6 +153,11 @@ class SimpleModelTest(TestCase):
                 "Object modifications that are not saved to DB are not logged "
                 "when using the `update_fields`."
             ),
+        )
+        self.assertEqual(
+            obj.history.get(action=LogEntry.Action.UPDATE).changes_str,
+            "boolean: False → True",
+            msg="Changes string is correct",
         )
 
     def test_django_update_fields_edge_cases(self):
@@ -178,6 +188,11 @@ class SimpleModelTest(TestCase):
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
             {"boolean": ["False", "True"], "integer": ["None", "1"]},
             msg="The 2 fields changed are correctly logged",
+        )
+        self.assertEqual(
+            obj.history.get(action=LogEntry.Action.UPDATE).changes_str,
+            "boolean: False → True; integer: None → 1",
+            msg="Changes string is correct",
         )
 
     def test_delete(self):
@@ -494,6 +509,13 @@ class ManyRelatedModelTest(TestCase):
             },
         )
 
+    def test_changes_str(self):
+        self.obj.related.add(self.related)
+        log_entry = self.obj.history.first()
+        self.assertEqual(
+            log_entry.changes_str, f"related: add {[smart_str(self.related)]}"
+        )
+
     def test_adding_existing_related_obj(self):
         self.obj.related.add(self.related)
         log_entry = self.obj.history.first()
@@ -724,6 +746,11 @@ class SimpleIncludeModelTest(TestCase):
             obj.history.get(action=LogEntry.Action.UPDATE).changes,
             {"label": ["Initial label", "New label"]},
             msg="Only the label was logged, regardless of multiple entries in `update_fields`",
+        )
+        self.assertEqual(
+            obj.history.get(action=LogEntry.Action.UPDATE).changes_str,
+            "label: Initial label → New label",
+            msg="Changes string is correct",
         )
 
     def test_register_include_fields(self):
@@ -2061,6 +2088,11 @@ class JSONModelTest(TestCase):
             {"json": ["{}", '{"quantity": "1"}']},
             msg="The change is correctly logged",
         )
+        self.assertEqual(
+            history.changes_str,
+            'json: {} → {"quantity": "1"}',
+            msg="Changes string is correct",
+        )
 
     def test_update_with_no_changes(self):
         """No changes are logged."""
@@ -2697,6 +2729,7 @@ class TestAccessLog(TestCase):
         )
         self.assertIsNone(log_entry.changes)
         self.assertEqual(log_entry.changes_dict, {})
+        self.assertEqual(log_entry.changes_str, "")
 
 
 class SignalTests(TestCase):
@@ -3119,6 +3152,9 @@ class BaseManagerSettingTest(TestCase):
                     "objects": [smart_str(obj_two)],
                 }
             },
+        )
+        self.assertEqual(
+            log_entry.changes_str, f"m2m_related: add {[smart_str(obj_two)]}"
         )
 
 

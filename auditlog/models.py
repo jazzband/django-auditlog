@@ -427,21 +427,29 @@ class AbstractLogEntry(models.Model):
         not satisfying, please use :py:func:`LogEntry.changes_dict` and format the string yourself.
 
         :param colon: The string to place between the field name and the values.
-        :param arrow: The string to place between each old and new value.
+        :param arrow: The string to place between each old and new value (non-m2m field changes only).
         :param separator: The string to place between each field.
         :return: A readable string of the changes in this log entry.
         """
         substrings = []
 
-        for field, values in self.changes_dict.items():
-            substring = "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
-                field_name=field,
-                colon=colon,
-                old=values[0],
-                arrow=arrow,
-                new=values[1],
-            )
-            substrings.append(substring)
+        for field, value in sorted(self.changes_dict.items()):
+            if isinstance(value, (list, tuple)) and len(value) == 2:
+                # handle regular field change
+                substring = "{field_name:s}{colon:s}{old:s}{arrow:s}{new:s}".format(
+                    field_name=field,
+                    colon=colon,
+                    old=value[0],
+                    arrow=arrow,
+                    new=value[1],
+                )
+                substrings.append(substring)
+            elif isinstance(value, dict) and value.get("type") == "m2m":
+                # handle m2m change
+                substring = (
+                    f"{field}{colon}{value['operation']} {sorted(value['objects'])}"
+                )
+                substrings.append(substring)
 
         return separator.join(substrings)
 
