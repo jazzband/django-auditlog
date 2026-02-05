@@ -76,7 +76,7 @@ You can also add log-access to function base views, as the following example ill
 
 Fields that are excluded will not trigger saving a new log entry and will not show up in the recorded changes.
 
-To exclude specific fields from the log you can pass ``include_fields`` resp. ``exclude_fields`` to the ``register``
+To exclude specific fields from the log you can pass ``include_fields`` or ``exclude_fields`` to the ``register``
 method. If ``exclude_fields`` is specified the fields with the given names will not be included in the generated log
 entries. If ``include_fields`` is specified only the fields with the given names will be included in the generated log
 entries. Explicitly excluding fields through ``exclude_fields`` takes precedence over specifying which fields to
