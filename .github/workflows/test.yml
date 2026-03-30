@@ -25,7 +25,7 @@ jobs:
         run: tox -v
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           name: SQLite • Python ${{ matrix.python-version }}
 
@@ -71,7 +71,7 @@ jobs:
         run: tox -v
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           name: PostgreSQL • Python ${{ matrix.python-version }}
 
@@ -122,6 +122,6 @@ jobs:
         run: tox -v
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           name: MySQL • Python ${{ matrix.python-version }}
