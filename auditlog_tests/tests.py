@@ -732,7 +732,7 @@ class MiddlewareTest(TestCase):
         """
         request = self.factory.get("/")
         request.user = AnonymousUser()
-        
+
         def get_response(req):
             # Simulate deferred auth setting the real user after middleware ran
             req.user = self.user
@@ -743,9 +743,7 @@ class MiddlewareTest(TestCase):
 
         self.middleware(request)
 
-        history = SimpleModel.objects.last().history.get(
-            action=LogEntry.Action.CREATE
-        )
+        history = SimpleModel.objects.last().history.get(action=LogEntry.Action.CREATE)
         self.assertEqual(
             history.actor,
             self.user,
