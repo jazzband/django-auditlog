@@ -2,6 +2,10 @@
 
 ## Next Release
 
+#### Improvements
+
+- Add support for Python 3.14 and Django 6.0
+
 #### Fixes
 
 - `KeyError` when calling `changes_str` on a log entry that tracks many-to-many field changes ([#798](https://github.com/jazzband/django-auditlog/pull/798))
