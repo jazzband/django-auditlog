@@ -7,7 +7,7 @@ way to do this is by using the Python Package Index (PyPI). Simply run the follo
 ``pip install django-auditlog``
 
 Instead of installing Auditlog via PyPI, you can also clone the Git repository or download the source code via GitHub.
-The repository can be found at https://github.com/jazzband/django-auditlog/.
+The repository can be found at https://github.com/django-commons/django-auditlog/.
 
 **Requirements**
 
@@ -15,7 +15,7 @@ The repository can be found at https://github.com/jazzband/django-auditlog/.
 - Django 4.2, 5.0, 5.1, and 5.2
 
 Auditlog is currently tested with Python 3.10+ and Django 4.2, 5.0, 5.1, and 5.2. The latest test report can be found
-at https://github.com/jazzband/django-auditlog/actions.
+at https://github.com/django-commons/django-auditlog/actions.
 
 Adding Auditlog to your Django application
 ------------------------------------------
