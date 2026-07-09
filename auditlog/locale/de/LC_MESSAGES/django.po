@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: django-auditlogN\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-08 10:18+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2026-07-09 21:23+0200\n"
 "Last-Translator: Thea Tischbein <thea@riotcat.org>\n"
 "Language-Team: German <de@li.org>\n"
 "Language: de\n"
@@ -68,7 +68,7 @@ msgstr "aktualisiert"
 
 #: models.py
 msgid "delete"
-msgstr "gelsöcht"
+msgstr "gelöscht"
 
 #: models.py
 msgid "access"
