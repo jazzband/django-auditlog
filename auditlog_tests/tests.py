@@ -2386,7 +2386,7 @@ class TestRelatedDiffs(TestCase):
         with freezegun.freeze_time(t2):
             one_simple.delete()
 
-        log_two = LogEntry.objects.filter(object_id=instance.id, timestamp=t2).first()
+        log_two = instance.history.filter(timestamp=t2).first()
         self.assertTrue(isinstance(log_two, LogEntry))
         display_dict = log_two.changes_display_dict
         self.assertEqual(
