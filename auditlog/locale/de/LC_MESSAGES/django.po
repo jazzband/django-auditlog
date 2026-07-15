@@ -1,0 +1,193 @@
+# Django Auditlog German Translation
+# Copyright (C) 2025 Django Auditlog Contributors
+# This file is distributed under the same license as the django-auditlog package.
+# Thea Tischbein <thea@riotcat.org>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: django-auditlog\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-08 10:18+0200\n"
+"PO-Revision-Date: 2026-07-09 21:23+0200\n"
+"Last-Translator: Thea Tischbein <thea@riotcat.org>\n"
+"Language-Team: German <de@li.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: admin.py mixins.py
+msgid "Changes"
+msgstr "Änderungen"
+
+#: apps.py mixins.py templates/auditlog/object_history.html
+msgid "Audit log"
+msgstr "Änderungsprotokoll"
+
+#: filters.py
+msgid "Resource Type"
+msgstr "Art der Ressource"
+
+#: filters.py models.py
+msgid "Correlation ID"
+msgstr "Korrelations-ID"
+
+#: mixins.py
+msgid "Click to filter by records with this correlation id"
+msgstr "Hier klicken, um nach Datensätzen mit dieser Korrelations-ID zu filtern"
+
+#: mixins.py
+msgid "Created"
+msgstr "Erstellt"
+
+#: mixins.py
+msgid "User"
+msgstr "Benutzer"
+
+#: mixins.py
+msgid "Resource"
+msgstr "Ressource"
+
+#: mixins.py
+#, python-format
+msgid "Audit log: %s"
+msgstr "Änderungsprotokoll: %s"
+
+#: mixins.py
+msgid "View"
+msgstr "Ansicht"
+
+#: models.py
+msgid "create"
+msgstr "erstellt"
+
+#: models.py
+msgid "update"
+msgstr "aktualisiert"
+
+#: models.py
+msgid "delete"
+msgstr "gelöscht"
+
+#: models.py
+msgid "access"
+msgstr "zugegriffen"
+
+#: models.py
+msgid "content type"
+msgstr "Inhaltstyp"
+
+#: models.py
+msgid "object pk"
+msgstr "Objekt PK"
+
+#: models.py
+msgid "object id"
+msgstr "Objekt ID"
+
+#: models.py
+msgid "object representation"
+msgstr "Objektdarstellung"
+
+#: models.py
+msgid "action"
+msgstr "Aktion"
+
+#: models.py
+msgid "change message"
+msgstr "Änderungsnachricht"
+
+#: models.py
+msgid "actor"
+msgstr "Akteur"
+
+#: models.py
+msgid "remote address"
+msgstr "Remote-Adresse"
+
+#: models.py
+msgid "remote port"
+msgstr "Remote-Port"
+
+#: models.py
+msgid "timestamp"
+msgstr "Zeitstempel"
+
+#: models.py
+msgid "additional data"
+msgstr "Zusätzliche Daten"
+
+#: models.py
+msgid "actor email"
+msgstr "E-Mail-Adresse des Akteurs"
+
+#: models.py
+msgid "log entry"
+msgstr "Log-Eintrag"
+
+#: models.py
+msgid "log entries"
+msgstr "Log-Einträge"
+
+#: models.py
+msgid "Created {repr:s}"
+msgstr "{repr:s} wurde erstellt"
+
+#: models.py
+msgid "Updated {repr:s}"
+msgstr "{repr:s} wurde aktualisiert"
+
+#: models.py
+msgid "Deleted {repr:s}"
+msgstr "{repr:s} wurde gelöscht"
+
+#: models.py
+msgid "Logged {repr:s}"
+msgstr "{repr:s} wurde protokolliert"
+
+#: render.py
+msgid "Field"
+msgstr "Feld"
+
+#: render.py
+msgid "From"
+msgstr "Von"
+
+#: render.py
+msgid "To"
+msgstr "Zu"
+
+#: render.py
+msgid "Relationship"
+msgstr "Beziehung"
+
+#: render.py
+msgid "Action"
+msgstr "Aktion"
+
+#: render.py
+msgid "Objects"
+msgstr "Objekte"
+
+#: templates/auditlog/entry_detail.html
+msgid "system"
+msgstr "System"
+
+#: templates/auditlog/entry_detail.html
+msgid "No field changes"
+msgstr "Keine Änderungen an den Feldern"
+
+#: templates/auditlog/object_history.html
+msgid "Home"
+msgstr "Startseite"
+
+#: templates/auditlog/object_history.html
+msgid "No log entries found."
+msgstr "Es wurde kein Log-Eintrag gefunden."
+
+#: templates/auditlog/pagination.html
+msgid "entry"
+msgid_plural "entries"
+msgstr[0] "Eintrag"
+msgstr[1] "Einträge"
