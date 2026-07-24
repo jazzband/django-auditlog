@@ -71,7 +71,7 @@ from auditlog import get_logentry_model
 from auditlog.admin import LogEntryAdmin
 from auditlog.cid import get_cid
 from auditlog.context import disable_auditlog, set_actor, set_extra_data
-from auditlog.diff import mask_str, model_instance_diff
+from auditlog.diff import get_field_value, mask_str, model_instance_diff
 from auditlog.middleware import AuditlogMiddleware
 from auditlog.models import DEFAULT_OBJECT_REPR
 from auditlog.registry import AuditlogModelRegistry, AuditLogRegistrationError, auditlog
@@ -2208,6 +2208,22 @@ class ModelInstanceDiffTest(TestCase):
 
         diff = model_instance_diff(old, new)
         self.assertEqual(diff["integer"], ("1", "1.0"))
+
+    def test_json_value_unserializable_as_json_falls_back_to_str(self):
+        """json.dumps failure falls back to the string representation."""
+        old = NullableJSONModel(json=None)
+        new = NullableJSONModel(json={1})
+
+        diff = model_instance_diff(old, new)
+        self.assertEqual(diff["json"], ("null", "{1}"))
+
+    def test_get_field_value_returns_serialized_values(self):
+        field = SimpleModel._meta.get_field("integer")
+        obj = SimpleModel(integer=5)
+
+        self.assertEqual(get_field_value(obj, field), "5")
+        self.assertEqual(get_field_value(obj, field, use_json_for_changes=True), 5)
+        self.assertEqual(get_field_value(None, field), "None")
 
     def test_value_without_truth_value_falls_back_to_serialized_comparison(self):
         """No error is raised when comparing field values whose __eq__ has no
