@@ -1289,8 +1289,9 @@ class DateTimeFieldModelTest(TestCase):
         # Django 6.0+ evaluates expressions during save (django ticket #27222)
         if DJANGO_VERSION >= (6, 0, 0):
             with self.subTest("Django 6.0+"):
-                # Value(None) gets evaluated to "null"
-                self.assertEqual(changes_dict["json"][1], "null")
+                # Value(None) evaluates to None during save; None -> None is
+                # not a change
+                self.assertNotIn("json", changes_dict)
         else:
             with self.subTest("Django < 6.0"):
                 # Value(None) is preserved as string representation

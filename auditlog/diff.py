@@ -177,75 +177,23 @@ def _serialize_field_value_or_default(
         )
 
 
-def get_field_value(obj, field, use_json_for_changes=False):
+def get_field_value(
+    obj: Model | None, field: Any, use_json_for_changes: bool = False
+) -> Any:
     """
-    Gets the value of a given model instance field.
+    Gets the value of a given model instance field, serialized for the
+    changes dict.
 
     :param obj: The model instance.
     :type obj: Model
     :param field: The field you want to find the value of.
     :type field: Any
-    :return: The value of the field as a string.
-    :rtype: str
+    :return: The serialized value of the field.
+    :rtype: Any
     """
-
-    def get_default_value():
-        """
-        Attempts to get the default value for a field from the model's field definition.
-
-        :return: The default value of the field or None
-        """
-        try:
-            model_field = obj._meta.get_field(field.name)
-            default = model_field.default
-        except (AttributeError, FieldDoesNotExist):
-            default = NOT_PROVIDED
-
-        if default is NOT_PROVIDED:
-            default = None
-        elif callable(default):
-            default = default()
-
-        return smart_str(default) if not use_json_for_changes else default
-
-    try:
-        if isinstance(field, DateTimeField):
-            # DateTimeFields are timezone-aware, so we need to convert the field
-            # to its naive form before we can accurately compare them for changes.
-            value = getattr(obj, field.name)
-            try:
-                value = field.to_python(value)
-            except TypeError:
-                return value
-            if (
-                value is not None
-                and settings.USE_TZ
-                and not django_timezone.is_naive(value)
-            ):
-                value = django_timezone.make_naive(value, timezone=timezone.utc)
-        elif isinstance(field, JSONField):
-            value = field.to_python(getattr(obj, field.name))
-            if not use_json_for_changes:
-                try:
-                    value = json.dumps(value, sort_keys=True, cls=field.encoder)
-                except TypeError:
-                    pass
-        elif (
-            not settings.AUDITLOG_USE_FK_STRING_REPRESENTATION
-            and (field.one_to_one or field.many_to_one)
-            and hasattr(field, "rel_class")
-        ):
-            value = smart_str(getattr(obj, field.get_attname()), strings_only=True)
-        else:
-            value = getattr(obj, field.name)
-            if not use_json_for_changes:
-                value = smart_str(value)
-                if type(value).__name__ == "__proxy__":
-                    value = str(value)
-    except (ObjectDoesNotExist, AttributeError):
-        return get_default_value()
-
-    return value
+    return _serialize_field_value_or_default(
+        obj, field, get_raw_field_value(obj, field), use_json_for_changes
+    )
 
 
 def is_primitive(obj) -> bool:
@@ -376,30 +324,42 @@ def model_instance_diff(
         fields = filtered_fields
 
     for field in fields:
-        old_value = get_field_value(old, field, use_json_for_changes)
-        new_value = get_field_value(new, field, use_json_for_changes)
+        old_raw = get_raw_field_value(old, field)
+        new_raw = get_raw_field_value(new, field)
 
-        if old_value != new_value:
-            if model_fields and field.name in model_fields["mask_fields"]:
-                mask_func = get_mask_function(model_fields.get("mask_callable"))
+        # Log only when raw AND serialized both differ:
+        # - raw equal -> skip (representation-only change)
+        # - serialized equal -> skip (type mismatch)
+        # - the type check and the JSONField bypass exist because == coerces
+        #   across types and containers ({"a": 1} == {"a": True})
+        if not isinstance(field, JSONField):
+            try:
+                raw_equal = type(old_raw) is type(new_raw) and bool(old_raw == new_raw)
+            except Exception:
+                # __eq__ on exotic values (e.g. numpy arrays) may not produce
+                # a truth value; fall back to the serialized comparison.
+                raw_equal = False
+            if raw_equal:
+                continue
 
-                diff[field.name] = (
-                    mask_func(smart_str(old_value)),
-                    mask_func(smart_str(new_value)),
-                )
-            else:
-                if not use_json_for_changes:
-                    diff[field.name] = (smart_str(old_value), smart_str(new_value))
-                else:
-                    # TODO: should we handle the case where the value is a django Model specifically?
-                    #       for example, could create a list of ids for ManyToMany fields
+        old_value = _serialize_field_value_or_default(
+            old, field, old_raw, use_json_for_changes
+        )
+        new_value = _serialize_field_value_or_default(
+            new, field, new_raw, use_json_for_changes
+        )
+        if old_value == new_value:
+            continue
 
-                    # this maintains the behavior of the original code
-                    if not is_primitive(old_value):
-                        old_value = smart_str(old_value)
-                    if not is_primitive(new_value):
-                        new_value = smart_str(new_value)
-                    diff[field.name] = (old_value, new_value)
+        if model_fields and field.name in model_fields["mask_fields"]:
+            mask_func = get_mask_function(model_fields.get("mask_callable"))
+
+            diff[field.name] = (
+                mask_func(smart_str(old_value)),
+                mask_func(smart_str(new_value)),
+            )
+        else:
+            diff[field.name] = (old_value, new_value)
 
     if len(diff) == 0:
         diff = None
