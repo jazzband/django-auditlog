@@ -4,6 +4,7 @@ import json
 import random
 import warnings
 from datetime import timezone
+from decimal import Decimal
 from unittest import mock, skipIf
 from unittest.mock import patch
 
@@ -44,6 +45,7 @@ from test_app.models import (
     ModelForReusableThroughModel,
     ModelPrimaryKeyModel,
     NoDeleteHistoryModel,
+    NullableFieldModel,
     NullableJSONModel,
     ProxyModel,
     RelatedModel,
@@ -2184,6 +2186,53 @@ class JSONModelTest(TestCase):
 
 
 class ModelInstanceDiffTest(TestCase):
+    def test_decimal_representation_change_not_logged(self):
+        """Equal values that only differ in representation are not a change."""
+        old = NullableFieldModel(amount=Decimal("0.17"))
+        new = NullableFieldModel(amount=Decimal("0.17000"))
+
+        self.assertIsNone(model_instance_diff(old, new))
+
+    def test_json_change_with_equal_python_values_logged(self):
+        """dict equality coerces 1 == True; the serialized JSON decides instead."""
+        old = NullableJSONModel(json={"a": 1})
+        new = NullableJSONModel(json={"a": True})
+
+        diff = model_instance_diff(old, new)
+        self.assertEqual(diff["json"], ('{"a": 1}', '{"a": true}'))
+
+    def test_scalar_type_change_logged(self):
+        """1 == 1.0 in Python, but a type change is still a change."""
+        old = SimpleModel(integer=1)
+        new = SimpleModel(integer=1.0)
+
+        diff = model_instance_diff(old, new)
+        self.assertEqual(diff["integer"], ("1", "1.0"))
+
+    def test_value_without_truth_value_falls_back_to_serialized_comparison(self):
+        """No error is raised when comparing field values whose __eq__ has no
+        truth value (e.g. numpy arrays)."""
+
+        class Truthless:
+            def __bool__(self):
+                raise ValueError("ambiguous truth value")
+
+        class ArrayLike:
+            def __init__(self, text):
+                self.text = text
+
+            def __eq__(self, other):
+                return Truthless()
+
+            def __str__(self):
+                return self.text
+
+        old = SimpleModel(text=ArrayLike("a"))
+        new = SimpleModel(text=ArrayLike("b"))
+
+        diff = model_instance_diff(old, new)
+        self.assertEqual(diff["text"], ("a", "b"))
+
     def test_diff_models_with_related_fields(self):
         """No error is raised when comparing models with related fields."""
 
@@ -2513,6 +2562,18 @@ class TestRelatedDiffs(TestCase):
         self.assertEqual(log_update.changes_dict["related"][1], "Test Bar")
         self.assertEqual(log_update.changes_dict["one_to_one"][0], "Test Foo")
         self.assertEqual(log_update.changes_dict["one_to_one"][1], "Test Bar")
+
+    @override_settings(AUDITLOG_USE_FK_STRING_REPRESENTATION=True)
+    def test_string_representation_change_of_unchanged_fk_not_logged(self):
+        """An unchanged FK is not a change, even if the related repr changed"""
+
+        simple = SimpleModel.objects.create(text="Test Foo")
+        instance = RelatedModel.objects.create(one_to_one=simple, related=simple)
+
+        simple.text = "Test Bar"
+        instance.save()
+
+        self.assertEqual(instance.history.all().count(), 1)
 
 
 class TestModelSerialization(TestCase):
