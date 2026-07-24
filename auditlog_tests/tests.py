@@ -1296,6 +1296,57 @@ class DateTimeFieldModelTest(TestCase):
                 # Value(None) is preserved as string representation
                 self.assertEqual(changes_dict["json"][1], "Value(None)")
 
+    def test_create_with_naive_dt_none(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(
+            label="DateTimeField model",
+            timestamp=timestamp,
+            date=date,
+            time=time,
+            naive_dt=None,
+        )
+        dtm.save()
+
+        # naive_dt stayed None, so it should not appear in changes
+        self.assertNotIn("naive_dt", dtm.history.latest().changes_dict)
+
+    def test_create_with_naive_dt_value(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(
+            label="DateTimeField model",
+            timestamp=timestamp,
+            date=date,
+            time=time,
+            naive_dt=datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc),
+        )
+        dtm.save()
+
+        changes_dict = dtm.history.latest().changes_dict
+        self.assertEqual(changes_dict["naive_dt"], ["None", "2017-01-10 12:00:00"])
+
+    def test_delete_with_naive_dt_none(self):
+        timestamp = datetime.datetime(2017, 1, 10, 12, 0, tzinfo=timezone.utc)
+        date = datetime.date(2017, 1, 10)
+        time = datetime.time(12, 0)
+        dtm = DateTimeFieldModel(
+            label="DateTimeField model",
+            timestamp=timestamp,
+            date=date,
+            time=time,
+            naive_dt=None,
+        )
+        dtm.save()
+        dtm.delete()
+
+        changes_dict = LogEntry.objects.latest("timestamp").changes_dict
+
+        # naive_dt stayed None, so it should not appear in changes
+        self.assertNotIn("naive_dt", changes_dict)
+
 
 class UnregisterTest(TestCase):
     def setUp(self):
