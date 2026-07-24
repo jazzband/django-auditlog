@@ -5,6 +5,7 @@
 #### Improvements
 
 - Add support for Python 3.14 and Django 6.0
+- Add German (de) locale ([#831](https://github.com/jazzband/django-auditlog/pull/831))
 
 #### Fixes
 
