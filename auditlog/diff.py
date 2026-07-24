@@ -1,6 +1,7 @@
 import json
 from collections.abc import Callable
 from datetime import timezone
+from typing import Any
 
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
@@ -51,6 +52,129 @@ def get_fields_in_model(instance):
     assert isinstance(instance, Model)
 
     return [f for f in instance._meta.get_fields() if track_field(f)]
+
+
+def _get_field_default(obj: Model | None, field: Any) -> Any:
+    """
+    Gets the default value for a field from the model's field definition.
+
+    :return: The default value of the field or None.
+    """
+    try:
+        model_field = obj._meta.get_field(field.name)
+        default = model_field.default
+    except (AttributeError, FieldDoesNotExist):
+        default = NOT_PROVIDED
+
+    if default is NOT_PROVIDED:
+        return None
+    if callable(default):
+        return default()
+    return default
+
+
+def get_raw_field_value(obj: Model | None, field: Any) -> Any:
+    """
+    Gets the value of a given model instance field without serializing it.
+
+    Values are normalized so that the old and the new side of a diff are
+    comparable:
+
+    - timezone-aware datetimes are converted to naive UTC
+    - JSON values pass through the field's ``to_python``
+    - foreign keys resolve to their raw attname value, unless
+      AUDITLOG_USE_FK_STRING_REPRESENTATION is enabled
+    - no instance returns None; a value inaccessible on an instance
+      (deferred field, missing relation) falls back to the field's default,
+      or None
+
+    :param obj: The model instance, or None.
+    :type obj: Model
+    :param field: The field you want to find the value of.
+    :type field: Any
+    :return: The raw value of the field.
+    :rtype: Any
+    """
+    try:
+        if isinstance(field, DateTimeField):
+            # DateTimeFields are timezone-aware, so we need to convert the field
+            # to its naive form before we can accurately compare them for changes.
+            value = getattr(obj, field.name)
+            try:
+                value = field.to_python(value)
+            except TypeError:
+                return value
+            if (
+                value is not None
+                and settings.USE_TZ
+                and not django_timezone.is_naive(value)
+            ):
+                value = django_timezone.make_naive(value, timezone=timezone.utc)
+        elif isinstance(field, JSONField):
+            value = field.to_python(getattr(obj, field.name))
+        elif (
+            not settings.AUDITLOG_USE_FK_STRING_REPRESENTATION
+            and (field.one_to_one or field.many_to_one)
+            and hasattr(field, "rel_class")
+        ):
+            value = getattr(obj, field.get_attname())
+        else:
+            value = getattr(obj, field.name)
+    except (ObjectDoesNotExist, AttributeError):
+        return _get_field_default(obj, field)
+
+    return value
+
+
+def serialize_field_value(
+    field: Any, value: Any, use_json_for_changes: bool = False
+) -> Any:
+    """
+    Serializes a raw field value for the changes dict. Stringification of raw
+    values must go through this function, so that the old and the new side of
+    a diff always serialize the same way.
+
+    :param field: The field the value belongs to.
+    :type field: Any
+    :param value: The raw value, as returned by ``get_raw_field_value``.
+    :type value: Any
+    :param use_json_for_changes: whether or not to use JSON for changes
+        (see settings.AUDITLOG_STORE_JSON_CHANGES)
+    :return: The serialized value: a string, or a JSON-serializable primitive
+        when use_json_for_changes is enabled.
+    :rtype: Any
+    """
+    if use_json_for_changes:
+        # TODO: should we handle the case where the value is a django Model specifically?
+        #       for example, could create a list of ids for ManyToMany fields
+        return value if is_primitive(value) else smart_str(value)
+
+    if isinstance(field, JSONField):
+        try:
+            return json.dumps(value, sort_keys=True, cls=field.encoder)
+        except TypeError:
+            pass
+
+    value = smart_str(value)
+    if type(value).__name__ == "__proxy__":
+        value = str(value)
+    return value
+
+
+def _serialize_field_value_or_default(
+    obj: Model | None, field: Any, value: Any, use_json_for_changes: bool
+) -> Any:
+    """
+    Serializes a raw field value, falling back to the field's default when
+    serialization itself fails: serializing can hit the database, e.g. a
+    model's ``__str__`` loading a related object that was already deleted.
+    """
+    try:
+        return serialize_field_value(field, value, use_json_for_changes)
+    except (ObjectDoesNotExist, AttributeError):
+        return serialize_field_value(
+            field, _get_field_default(obj, field), use_json_for_changes
+        )
 
 
 def get_field_value(obj, field, use_json_for_changes=False):
