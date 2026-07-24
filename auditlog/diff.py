@@ -155,6 +155,7 @@ def serialize_field_value(
         except TypeError:
             pass
 
+    # TODO: non-UTF-8 bytes crash smart_str (see #700, #204)
     value = smart_str(value)
     if type(value).__name__ == "__proxy__":
         value = str(value)
