@@ -16,6 +16,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sessions.backends.db import SessionStore
 from django.core import management
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
@@ -722,6 +723,24 @@ class MiddlewareTest(TestCase):
                 request.user = user
 
                 self.assertEqual(self.middleware._get_actor(request), actor)
+
+    def test_get_actor_without_session(self):
+        params = [
+            (AnonymousUser(), "The user wass anonymous, but session was empty"),
+            (self.user, "The user is authenticated, but session was empty"),
+            (None, "No request.user and session was empty"),
+            (
+                "1234",
+                "The request.user is not a valid user model, but session was empty",
+            ),
+        ]
+        for user, msg in params:
+            with self.subTest(msg):
+                request = self.factory.get("/")
+                request.session = SessionStore()
+                request.user = user
+
+                self.assertEqual(self.middleware._get_actor(request), None)
 
 
 class SimpleIncludeModelTest(TestCase):

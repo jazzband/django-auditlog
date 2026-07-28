@@ -49,6 +49,9 @@ class AuditlogMiddleware:
 
     @staticmethod
     def _get_actor(request):
+        session = getattr(request, "session", None)
+        if session is not None and session.is_empty():
+            return None
         user = getattr(request, "user", None)
         if isinstance(user, get_user_model()) and user.is_authenticated:
             return user
