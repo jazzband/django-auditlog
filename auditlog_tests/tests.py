@@ -713,7 +713,7 @@ class MiddlewareTest(TestCase):
     def test_get_actor(self):
         params = [
             (AnonymousUser(), None, "The user is anonymous so the actor is `None`"),
-            (self.user, self.user, "The use is authenticated so it is the actor"),
+            (self.user, self.user, "The user is authenticated so it is the actor"),
             (None, None, "There is no actor"),
             ("1234", None, "The value of request.user is not a valid user model"),
         ]
