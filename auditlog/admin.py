@@ -11,7 +11,7 @@ from auditlog.mixins import LogEntryAdminMixin
 LogEntry = get_logentry_model()
 
 
-@admin.register(LogEntry)
+#@admin.register(LogEntry)
 class LogEntryAdmin(admin.ModelAdmin, LogEntryAdminMixin):
     date_hierarchy = "timestamp"
     list_select_related = ["content_type", "actor"]
