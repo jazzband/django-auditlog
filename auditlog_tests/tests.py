@@ -3222,7 +3222,7 @@ class NestedContextManagerTest(TestCase):
 
     def test_nested_set_actor_does_not_leak_pre_save_receivers(self):
         before = len(pre_save.receivers)
-        for _ in range(20):
+        for _n in range(20):
             with set_actor(None):
                 with set_actor(None):
                     pass
@@ -3230,7 +3230,7 @@ class NestedContextManagerTest(TestCase):
 
     def test_nested_set_extra_data_does_not_leak_pre_save_receivers(self):
         before = len(pre_save.receivers)
-        for _ in range(20):
+        for _n in range(20):
             with set_extra_data({}):
                 with set_extra_data({}):
                     pass
