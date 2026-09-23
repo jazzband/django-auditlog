@@ -6,6 +6,8 @@
 
 - Add support for Python 3.14 and Django 6.0
 - Add German (de) locale ([#831](https://github.com/jazzband/django-auditlog/pull/831))
+- Add `pre_m2m_log`/`post_m2m_log` signals, emitted when creating log entries for many-to-many field changes
+- Include `object_pks` (primary keys of the changed related objects) alongside `objects` in many-to-many log entry `changes`
 
 #### Fixes
 
