@@ -40,6 +40,5 @@ Releases
 2. Create a new branch `vX.Y.Z` from master for that specific release
 3. Update the CHANGELOG release date
 4. Pull request `vX.Y.Z` -> `master`
-5. As a project lead, once the PR is merged, create and push a tag `vX.Y.Z`: this will trigger the release build and a notification will be sent from Jazzband of the availability of two packages (tgz and wheel)
-6. Test the install
-7. Publish the release to PyPI
+5. As a project lead, once the PR is merged, create and push a tag `vX.Y.Z`: this will trigger the release GitHub action. A maintainer must then approve the deployment for the `pypi` environment, after which the package is published to PyPI via trusted publishing and a draft GitHub release is created
+6. Publish the draft GitHub release
